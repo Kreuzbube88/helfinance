@@ -74,6 +74,21 @@ export function del(path: string): Promise<void> {
   return request<void>('DELETE', path)
 }
 
+// Setup
+export function getSetupStatus(): Promise<{ setupRequired: boolean }> {
+  return get('/setup/status')
+}
+
+export function setupInit(data: {
+  username: string
+  email: string
+  password: string
+  language: string
+  currency: string
+}): Promise<LoginResponse> {
+  return post<LoginResponse>('/setup/init', data)
+}
+
 // Auth
 export function login(username: string, password: string): Promise<LoginResponse> {
   return post<LoginResponse>('/auth/login', { username, password })
@@ -237,7 +252,7 @@ export function getProfile(): Promise<User> {
   return get<User>('/users/profile')
 }
 
-export function updateProfile(data: Partial<Pick<User, 'language' | 'currency'>>): Promise<User> {
+export function updateProfile(data: Partial<Pick<User, 'username' | 'email' | 'language' | 'currency'>>): Promise<User> {
   return put<User>('/users/profile', data)
 }
 
@@ -252,6 +267,10 @@ export function getAdminUsers(): Promise<User[]> {
 
 export function deleteAdminUser(id: number): Promise<void> {
   return del(`/admin/users/${id}`)
+}
+
+export function updateAdminUser(id: number, data: { toggle_admin?: boolean; reset_password?: string }): Promise<void> {
+  return put<void>(`/admin/users/${id}`, data)
 }
 
 export function getAdminSettings(): Promise<Record<string, string>> {

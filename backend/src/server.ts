@@ -16,6 +16,7 @@ import { createDashboardRouter } from './routes/dashboard';
 import { createReportsRouter } from './routes/reports';
 import { createExportRouter } from './routes/exportRoutes';
 import { createNotificationsRouter } from './routes/notifications';
+import { createSetupRouter } from './routes/setup';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,6 +42,7 @@ app.get('/api/health', (_req, res) => {
 
 // API routes
 const v1 = '/api/v1';
+app.use(`${v1}/setup`, createSetupRouter(db));
 app.use(`${v1}/auth`, createAuthRouter(db));
 app.use(`${v1}/users`, createUsersRouter(db));
 app.use(`${v1}/admin`, createAdminRouter(db));

@@ -7,9 +7,11 @@ interface AuthContextValue {
   token: string | null
   isAdmin: boolean
   isLoading: boolean
+  setupRequired: boolean
   login: (token: string, user: User) => void
   logout: () => void
   refreshUser: () => Promise<void>
+  completeSetup: (token: string, user: User) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -17,7 +19,17 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setTokenState] = useState<string | null>(getToken())
-  const [isLoading, setIsLoading] = useState(true)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [setupRequired, setSetupRequired] = useState(false)
+  const [setupLoading, setSetupLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/v1/setup/status')
+      .then(r => r.json())
+      .then((d: { setupRequired: boolean }) => setSetupRequired(d.setupRequired))
+      .catch(() => {})
+      .finally(() => setSetupLoading(false))
+  }, [])
 
   const refreshUser = useCallback(async () => {
     try {
@@ -40,9 +52,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           clearToken()
           setTokenState(null)
         })
-        .finally(() => setIsLoading(false))
+        .finally(() => setAuthLoading(false))
     } else {
-      setIsLoading(false)
+      setAuthLoading(false)
     }
   }, [])
 
@@ -58,16 +70,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }, [])
 
+  const completeSetup = useCallback((t: string, u: User) => {
+    setSetupRequired(false)
+    setToken(t)
+    setTokenState(t)
+    setUser(u)
+  }, [])
+
   return (
     <AuthContext.Provider
       value={{
         user,
         token,
-        isAdmin: user?.is_admin ?? false,
-        isLoading,
+        isAdmin: !!user?.is_admin,
+        isLoading: authLoading || setupLoading,
+        setupRequired,
         login,
         logout,
-        refreshUser
+        refreshUser,
+        completeSetup
       }}
     >
       {children}

@@ -1,9 +1,10 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { ToastProvider } from './contexts/ToastContext'
+import { ToastProvider, useToast } from './contexts/ToastContext'
 import { Layout } from './components/Layout'
 
+import { SetupPage } from './pages/SetupPage'
 import { LoginPage } from './pages/LoginPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -19,19 +20,30 @@ import { AdminPage } from './pages/AdminPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { AboutPage } from './pages/AboutPage'
 
+function LoadingScreen() {
+  return (
+    <div className="loading-screen">
+      <div className="loading-spinner" />
+    </div>
+  )
+}
+
+function AdminRedirect() {
+  const { showToast } = useToast()
+  const navigate = useNavigate()
+  useEffect(() => {
+    showToast('Access denied', 'error')
+    navigate('/dashboard', { replace: true })
+  }, [])
+  return null
+}
+
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { user, isLoading, isAdmin } = useAuth()
 
-  if (isLoading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner" />
-      </div>
-    )
-  }
-
+  if (isLoading) return <LoadingScreen />
   if (!user) return <Navigate to="/login" replace />
-  if (adminOnly && !isAdmin) return <Navigate to="/dashboard" replace />
+  if (adminOnly && !isAdmin) return <AdminRedirect />
 
   return <Layout>{children}</Layout>
 }
@@ -39,20 +51,26 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
 function RootRedirect() {
   const { user, isLoading } = useAuth()
 
-  if (isLoading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner" />
-      </div>
-    )
-  }
-
+  if (isLoading) return <LoadingScreen />
   if (!user) return <Navigate to="/login" replace />
   if (!user.onboarding_done) return <Navigate to="/onboarding" replace />
   return <Navigate to="/dashboard" replace />
 }
 
 function AppRoutes() {
+  const { setupRequired, isLoading } = useAuth()
+
+  if (isLoading) return <LoadingScreen />
+
+  if (setupRequired) {
+    return (
+      <Routes>
+        <Route path="/setup" element={<SetupPage />} />
+        <Route path="*" element={<Navigate to="/setup" replace />} />
+      </Routes>
+    )
+  }
+
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />

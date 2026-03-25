@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import Database from 'better-sqlite3';
 import { authMiddleware } from '../middleware/auth';
 import { adminOnly } from '../middleware/adminOnly';
@@ -75,6 +76,39 @@ export function createAdminRouter(db: Database.Database): Router {
         .prepare('SELECT id, username, email, is_admin, language, currency, created_at FROM users')
         .all() as UserRow[];
       res.json(users);
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  });
+
+  router.put('/users/:id', (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id, 10);
+      const { toggle_admin, reset_password } = req.body as {
+        toggle_admin?: boolean;
+        reset_password?: string;
+      };
+
+      if (toggle_admin !== undefined) {
+        if (userId === req.user!.id) {
+          res.status(400).json({ error: 'Cannot change your own admin flag' });
+          return;
+        }
+        const u = db.prepare('SELECT is_admin FROM users WHERE id = ?').get(userId) as { is_admin: number } | undefined;
+        if (!u) { res.status(404).json({ error: 'User not found' }); return; }
+        db.prepare('UPDATE users SET is_admin = ? WHERE id = ?').run(u.is_admin === 1 ? 0 : 1, userId);
+      }
+
+      if (reset_password !== undefined) {
+        if (reset_password.length < 8) {
+          res.status(400).json({ error: 'Password must be at least 8 characters' });
+          return;
+        }
+        const hash = bcrypt.hashSync(reset_password, 12);
+        db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, userId);
+      }
+
+      res.json({ message: 'User updated' });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }

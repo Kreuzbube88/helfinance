@@ -46,6 +46,11 @@ export function createAuthRouter(db: Database.Database): Router {
         return;
       }
 
+      if (password.length < 8) {
+        res.status(400).json({ error: 'Password must be at least 8 characters' });
+        return;
+      }
+
       const existing = db
         .prepare('SELECT id FROM users WHERE username = ? OR email = ?')
         .get(username, email);

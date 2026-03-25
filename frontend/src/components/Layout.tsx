@@ -154,6 +154,7 @@ export function Layout({ children }: LayoutProps) {
                 {user?.username?.slice(0, 2).toUpperCase() || 'HF'}
               </span>
               <span className="avatar-name">{user?.username}</span>
+              {isAdmin && <span className="badge badge-warning" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>Admin</span>}
             </div>
           </div>
         </header>

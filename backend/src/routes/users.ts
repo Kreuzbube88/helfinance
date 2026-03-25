@@ -37,9 +37,22 @@ export function createUsersRouter(db: Database.Database): Router {
 
   router.put('/profile', (req: Request, res: Response) => {
     try {
-      const { language, currency } = req.body as { language?: string; currency?: string };
-      db.prepare('UPDATE users SET language = COALESCE(?, language), currency = COALESCE(?, currency) WHERE id = ?')
-        .run(language ?? null, currency ?? null, req.user!.id);
+      const { username, email, language, currency } = req.body as {
+        username?: string;
+        email?: string;
+        language?: string;
+        currency?: string;
+      };
+      if (username) {
+        const conflict = db.prepare('SELECT id FROM users WHERE username = ? AND id != ?').get(username, req.user!.id);
+        if (conflict) { res.status(409).json({ error: 'Username already taken' }); return; }
+      }
+      if (email) {
+        const conflict = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email, req.user!.id);
+        if (conflict) { res.status(409).json({ error: 'Email already taken' }); return; }
+      }
+      db.prepare('UPDATE users SET username = COALESCE(?, username), email = COALESCE(?, email), language = COALESCE(?, language), currency = COALESCE(?, currency) WHERE id = ?')
+        .run(username ?? null, email ?? null, language ?? null, currency ?? null, req.user!.id);
       const user = db
         .prepare('SELECT id, username, email, is_admin, language, currency, onboarding_done, created_at FROM users WHERE id = ?')
         .get(req.user!.id) as UserRow;
@@ -67,6 +80,11 @@ export function createUsersRouter(db: Database.Database): Router {
 
       if (!old_password || !new_password) {
         res.status(400).json({ error: 'old_password and new_password are required' });
+        return;
+      }
+
+      if (new_password.length < 8) {
+        res.status(400).json({ error: 'Password must be at least 8 characters' });
         return;
       }
 

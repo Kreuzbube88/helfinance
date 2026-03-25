@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
-import { getAdminSettings, updateAdminSettings, sendTestEmail, getAdminUsers, deleteAdminUser } from '../api'
+import { getAdminSettings, updateAdminSettings, sendTestEmail, getAdminUsers, deleteAdminUser, updateAdminUser } from '../api'
 import type { User } from '../types'
 
 export function AdminPage() {
@@ -14,6 +14,8 @@ export function AdminPage() {
   const [users, setUsers] = useState<User[]>([])
   const [saving, setSaving] = useState(false)
   const [testEmail, setTestEmail] = useState('')
+  const [resetPassUserId, setResetPassUserId] = useState<number | null>(null)
+  const [resetPassValue, setResetPassValue] = useState('')
 
   const load = async () => {
     try {
@@ -62,6 +64,29 @@ export function AdminPage() {
     }
   }
 
+  const handleToggleAdmin = async (id: number) => {
+    try {
+      await updateAdminUser(id, { toggle_admin: true })
+      showToast(t('common.success'), 'success')
+      load()
+    } catch (e) {
+      showToast((e as Error).message, 'error')
+    }
+  }
+
+  const handleResetPassword = async (id: number) => {
+    if (!resetPassValue) { showToast('Passwort eingeben', 'error'); return }
+    if (resetPassValue.length < 8) { showToast('Mindestens 8 Zeichen', 'error'); return }
+    try {
+      await updateAdminUser(id, { reset_password: resetPassValue })
+      showToast(t('common.success'), 'success')
+      setResetPassUserId(null)
+      setResetPassValue('')
+    } catch (e) {
+      showToast((e as Error).message, 'error')
+    }
+  }
+
   return (
     <div className="page-content">
       <h1 className="page-title">{t('admin.title')}</h1>
@@ -69,8 +94,10 @@ export function AdminPage() {
       <div className="tabs">
         {(['smtp', 'oidc', 'general', 'users'] as const).map(tb => (
           <button key={tb} className={`tab-btn ${tab === tb ? 'active' : ''}`} onClick={() => setTab(tb)}>
-            {t(`admin.${tb === 'general' ? 'defaultLanguage' : tb === 'users' ? 'users' : tb.toUpperCase()}`).split(' ')[0]}
-            {tb === 'smtp' && ' SMTP'}{tb === 'oidc' && ' OIDC'}{tb === 'general' && ' Allgemein'}{tb === 'users' && ' Benutzer'}
+            {tb === 'smtp' && 'SMTP'}
+            {tb === 'oidc' && 'OIDC'}
+            {tb === 'general' && t('admin.defaultLanguage').split(' ')[0]}
+            {tb === 'users' && t('admin.users')}
           </button>
         ))}
       </div>
@@ -194,9 +221,41 @@ export function AdminPage() {
                       <td>{u.is_admin ? <span className="badge badge-warning">Admin</span> : <span className="badge badge-neutral">User</span>}</td>
                       <td className="text-muted">{new Date(u.created_at).toLocaleDateString('de-DE')}</td>
                       <td>
-                        {u.id !== me?.id && (
-                          <button className="btn btn-sm btn-danger" onClick={() => handleDeleteUser(u.id)}>{t('common.delete')}</button>
-                        )}
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          {u.id !== me?.id && (
+                            <button
+                              className="btn btn-sm btn-secondary"
+                              onClick={() => handleToggleAdmin(u.id)}
+                              title={u.is_admin ? 'Admin-Rechte entziehen' : 'Admin-Rechte vergeben'}
+                            >
+                              {u.is_admin ? '↓ User' : '↑ Admin'}
+                            </button>
+                          )}
+                          {resetPassUserId === u.id ? (
+                            <>
+                              <input
+                                className="form-control"
+                                type="password"
+                                placeholder="Neues Passwort (min. 8)"
+                                value={resetPassValue}
+                                onChange={e => setResetPassValue(e.target.value)}
+                                style={{ width: '10rem' }}
+                              />
+                              <button className="btn btn-sm btn-primary" onClick={() => handleResetPassword(u.id)}>✓</button>
+                              <button className="btn btn-sm btn-ghost" onClick={() => { setResetPassUserId(null); setResetPassValue('') }}>✕</button>
+                            </>
+                          ) : (
+                            <button
+                              className="btn btn-sm btn-secondary"
+                              onClick={() => { setResetPassUserId(u.id); setResetPassValue('') }}
+                            >
+                              PW Reset
+                            </button>
+                          )}
+                          {u.id !== me?.id && (
+                            <button className="btn btn-sm btn-danger" onClick={() => handleDeleteUser(u.id)}>{t('common.delete')}</button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

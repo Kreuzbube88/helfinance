@@ -105,8 +105,19 @@
     "defaultLanguage": "Default Language",
     "defaultCurrency": "Default Currency"
   },
+  "setup": {
+    "subtitle": "Create Admin Account",
+    "submit": "Create Admin Account",
+    "confirmPassword": "Confirm Password",
+    "defaultLanguage": "Default Language",
+    "defaultCurrency": "Default Currency",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Minimum 8 characters required",
+    "usernameTooShort": "Username must be at least 3 characters"
+  },
   "profile": {
     "title": "Profile",
+    "accountInfo": "Account Information",
     "language": "Language",
     "currency": "Currency",
     "changePassword": "Change Password",

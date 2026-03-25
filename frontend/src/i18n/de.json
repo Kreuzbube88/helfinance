@@ -105,8 +105,19 @@
     "defaultLanguage": "Standardsprache",
     "defaultCurrency": "Standardwährung"
   },
+  "setup": {
+    "subtitle": "Admin-Konto erstellen",
+    "submit": "Admin-Konto anlegen",
+    "confirmPassword": "Passwort wiederholen",
+    "defaultLanguage": "Standardsprache",
+    "defaultCurrency": "Standardwährung",
+    "passwordMismatch": "Passwörter stimmen nicht überein",
+    "passwordTooShort": "Mindestens 8 Zeichen erforderlich",
+    "usernameTooShort": "Benutzername muss mindestens 3 Zeichen lang sein"
+  },
   "profile": {
     "title": "Profil",
+    "accountInfo": "Kontoinformationen",
     "language": "Sprache",
     "currency": "Währung",
     "changePassword": "Passwort ändern",

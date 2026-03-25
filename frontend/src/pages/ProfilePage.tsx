@@ -10,6 +10,8 @@ export function ProfilePage() {
   const { t } = useTranslation()
   const { showToast } = useToast()
   const { user, refreshUser } = useAuth()
+  const [username, setUsername] = useState(user?.username ?? '')
+  const [email, setEmail] = useState(user?.email ?? '')
   const [lang, setLang] = useState(user?.language ?? 'de')
   const [currency, setCurrency] = useState(user?.currency ?? 'EUR')
   const [saving, setSaving] = useState(false)
@@ -26,8 +28,8 @@ export function ProfilePage() {
   const saveProfile = async () => {
     try {
       setSaving(true)
-      const updated = await updateProfile({ language: lang, currency })
-      refreshUser()
+      await updateProfile({ username, email, language: lang, currency })
+      await refreshUser()
       i18n.changeLanguage(lang)
       showToast(t('common.success'), 'success')
     } catch (e) {
@@ -40,7 +42,7 @@ export function ProfilePage() {
   const savePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newPass !== confirmPass) { showToast('Passwörter stimmen nicht überein', 'error'); return }
-    if (newPass.length < 6) { showToast('Mindestens 6 Zeichen', 'error'); return }
+    if (newPass.length < 8) { showToast('Mindestens 8 Zeichen', 'error'); return }
     try {
       setChangingPw(true)
       await changePassword(oldPass, newPass)
@@ -69,8 +71,18 @@ export function ProfilePage() {
       <h1 className="page-title">{t('profile.title')}</h1>
 
       <div className="card">
-        <div className="card-title">{t('profile.language')} & {t('profile.currency')}</div>
+        <div className="card-title">{t('profile.accountInfo')}</div>
         <div className="modal-body">
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">{t('auth.username')}</label>
+              <input className="form-control" value={username} onChange={e => setUsername(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('auth.email')}</label>
+              <input className="form-control" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
+          </div>
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">{t('profile.language')}</label>
@@ -103,7 +115,7 @@ export function ProfilePage() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Neues Passwort</label>
-              <input className="form-control" type="password" required minLength={6} value={newPass} onChange={e => setNewPass(e.target.value)} />
+              <input className="form-control" type="password" required minLength={8} value={newPass} onChange={e => setNewPass(e.target.value)} />
             </div>
             <div className="form-group">
               <label className="form-label">Wiederholen</label>
