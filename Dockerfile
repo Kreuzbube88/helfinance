@@ -39,8 +39,7 @@ RUN mkdir -p /data
 
 ENV NODE_ENV=production \
     PORT=3000 \
-    DATABASE_PATH=/data/helfinance.db \
-    SECRET_KEY=changeme
+    DATABASE_PATH=/data/helfinance.db
 
 EXPOSE 3000
 

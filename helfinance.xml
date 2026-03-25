@@ -14,7 +14,7 @@
   <Category>Productivity: Tools:</Category>
   <WebUI>http://[IP]:[PORT:3000]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/Kreuzbube88/helfinance/main/helfinance.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/Kreuzbube88/helfinance/main/logo.png</Icon>
+  <Icon>https://github.com/Kreuzbube88/helfinance/blob/main/frontend/public/favicon.png?raw=true</Icon>
   <ExtraParams/>
   <PostArgs/>
   <CPUset/>

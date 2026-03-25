@@ -56,7 +56,7 @@ app.use(`${v1}/export`, createExportRouter(db));
 app.use(`${v1}/notifications`, createNotificationsRouter(db));
 
 // Serve frontend static files
-const publicDir = path.resolve(__dirname, '../../public');
+const publicDir = path.resolve(__dirname, '../public');
 app.use(express.static(publicDir));
 
 // SPA fallback — serve index.html for all non-API routes
