@@ -69,19 +69,38 @@ All other configuration (SMTP, OIDC, default currency/language) lives in the Adm
 
 ## Unraid Installation
 
-### Via Community Applications (recommended)
-Search for **HELFINANCE** in Community Applications. The template is registered at:
-```
-https://raw.githubusercontent.com/Kreuzbube88/helfinance/main/helfinance.xml
-```
+HELFINANCE is not listed in the Community Applications store. Install it by importing the template URL manually.
 
-### Manual via Docker UI
+### Import template via Community Applications
+
+1. Open **Apps** (Community Applications) in Unraid
+2. Click the **Settings** icon (top right) → **Use custom template URL**
+   *(or go to **Docker** → **Add Container** → **Template** → paste URL)*
+3. Paste the template URL:
+   ```
+   https://raw.githubusercontent.com/Kreuzbube88/helfinance/main/helfinance.xml
+   ```
+4. Click **Apply** — the template pre-fills all fields
+5. Set `SECRET_KEY` to a random secret (e.g. output of `openssl rand -hex 32`)
+6. Click **Apply** to create the container
+
+### Manual via Docker UI (no template)
+
 1. Go to **Docker** → **Add Container**
-2. Repository: `ghcr.io/kreuzbube88/helfinance:latest`
-3. Port mapping: `3000` → `3000` (TCP)
-4. Path mapping: `/mnt/cache/appdata/helfinance` → `/data` (Read/Write)
-5. Add environment variable: `SECRET_KEY` = your random secret
-6. Click **Apply**
+2. Fill in the following fields:
+
+| Field | Value |
+|-------|-------|
+| Name | `helfinance` |
+| Repository | `ghcr.io/kreuzbube88/helfinance:latest` |
+| Network Type | `bridge` |
+| Port | Host `3000` → Container `3000` (TCP) |
+| Path | Host `/mnt/cache/appdata/helfinance` → Container `/data` (RW) |
+| Variable `SECRET_KEY` | your random secret (required) |
+| Variable `DATABASE_PATH` | `/data/helfinance.db` (optional, this is the default) |
+| Variable `PORT` | `3000` (optional, this is the default) |
+
+3. Click **Apply**
 
 Data is stored in `/mnt/cache/appdata/helfinance/helfinance.db`.
 
