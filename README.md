@@ -186,7 +186,7 @@ Backup: copy the `.db` file. Restore: replace it. No migrations needed between m
 - [ ] Recurring transaction import (CSV bank export)
 - [ ] Budget envelope system
 - [ ] Investment portfolio tracker
-- [ ] Mobile app (React Native)
+- [ ] PWA enhancements (offline mode, push notifications)
 - [ ] Two-factor authentication
 - [ ] API key access for external integrations
 
