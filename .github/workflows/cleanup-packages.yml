@@ -1,0 +1,45 @@
+name: Cleanup Dev Packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - name: Delete all dev-* package versions
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner
+            const packageName = 'helfinance'
+            const versions = await github.paginate(
+              github.rest.packages.getAllPackageVersionsForPackageOwnedByUser,
+              { package_type: 'container', package_name: packageName, username: owner, per_page: 100 }
+            )
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+            const devVersions = versions.filter(v => {
+              const tags = v.metadata?.container?.tags ?? []
+              const createdAt = new Date(v.created_at)
+              if (tags.some(tag => tag.startsWith('dev-'))) return true
+              if (tags.length === 0 && createdAt < sevenDaysAgo) return true
+              return false
+            })
+            let deleted = 0
+            for (const version of devVersions) {
+              try {
+                await github.rest.packages.deletePackageVersionForUser({
+                  package_type: 'container', package_name: packageName,
+                  username: owner, package_version_id: version.id,
+                })
+                deleted++
+              } catch (err) {
+                console.error(`Failed: ${err.message}`)
+              }
+            }
+            core.summary.addRaw(`## Cleanup complete\n- Deleted: ${deleted}`)
+            await core.summary.write()

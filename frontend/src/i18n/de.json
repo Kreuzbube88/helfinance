@@ -1,0 +1,178 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "income": "Einnahmen",
+    "expenses": "Ausgaben",
+    "loans": "Kredite",
+    "savings": "Sparziele",
+    "cashflow": "Cashflow",
+    "reports": "Berichte",
+    "household": "Haushalt",
+    "admin": "Admin",
+    "profile": "Profil",
+    "about": "Über",
+    "logout": "Abmelden"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "healthScore": "Finanz-Score",
+    "freeMoney": "Verfügbares Geld",
+    "upcomingBookings": "Nächste Buchungen",
+    "savingsProgress": "Sparfortschritt",
+    "liquidityWarning": "Achtung: Mögliches Liquiditätsproblem diesen Monat",
+    "budget": {
+      "green": "Gut",
+      "yellow": "Achtung",
+      "red": "Kritisch"
+    }
+  },
+  "income": {
+    "title": "Einnahmen",
+    "add": "Einnahme hinzufügen",
+    "name": "Name",
+    "amount": "Betrag",
+    "interval": "Intervall",
+    "bookingDay": "Buchungstag",
+    "effectiveFrom": "Gültig ab",
+    "effectiveTo": "Gültig bis",
+    "monthly": "Monatlich",
+    "yearly": "Jährlich",
+    "once": "Einmalig",
+    "scheduleChange": "Änderung planen"
+  },
+  "expenses": {
+    "title": "Ausgaben",
+    "add": "Ausgabe hinzufügen",
+    "name": "Name",
+    "amount": "Betrag",
+    "interval": "Intervall (Monate)",
+    "category": "Kategorie",
+    "bookingDay": "Buchungstag"
+  },
+  "loans": {
+    "title": "Kredite",
+    "add": "Kredit hinzufügen",
+    "name": "Name",
+    "principal": "Darlehensbetrag",
+    "interestRate": "Zinssatz (%)",
+    "termMonths": "Laufzeit (Monate)",
+    "monthlyRate": "Monatliche Rate",
+    "amortization": "Tilgungsplan",
+    "avalancheHint": "Tipp: Zahlen Sie zuerst den Kredit mit dem höchsten Zinssatz ab (Avalanche-Methode)."
+  },
+  "savings": {
+    "title": "Sparziele",
+    "add": "Sparziel hinzufügen",
+    "name": "Name",
+    "targetAmount": "Zielbetrag",
+    "currentAmount": "Aktueller Betrag",
+    "mode": "Beitragsart",
+    "fixed": "Fest",
+    "dynamic": "Dynamisch",
+    "both": "Beides",
+    "fixedAmount": "Fester Betrag",
+    "bufferAmount": "Puffer",
+    "emergencyReserve": "Notfallreserve",
+    "savingsRate": "Sparquote"
+  },
+  "cashflow": {
+    "title": "Cashflow Kalender",
+    "projectedBalance": "Projizierter Kontostand"
+  },
+  "reports": {
+    "title": "Berichte",
+    "monthly": "Monatlich",
+    "yearly": "Jährlich",
+    "exportPdf": "PDF exportieren",
+    "exportCsv": "CSV exportieren"
+  },
+  "household": {
+    "title": "Haushalt",
+    "invite": "Einladen",
+    "inviteBy": "Benutzername oder E-Mail",
+    "pending": "Ausstehend",
+    "active": "Aktiv",
+    "balance": "Saldo",
+    "sharedExpenses": "Geteilte Ausgaben",
+    "owes": "schuldet"
+  },
+  "admin": {
+    "title": "Admin",
+    "smtp": "E-Mail (SMTP)",
+    "oidc": "OIDC Login",
+    "users": "Benutzer",
+    "testEmail": "Test-E-Mail senden",
+    "defaultLanguage": "Standardsprache",
+    "defaultCurrency": "Standardwährung"
+  },
+  "profile": {
+    "title": "Profil",
+    "language": "Sprache",
+    "currency": "Währung",
+    "changePassword": "Passwort ändern",
+    "disconnectHousehold": "Haushalt trennen"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "username": "Benutzername",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "loginWith": "Anmelden mit"
+  },
+  "onboarding": {
+    "title": "Willkommen bei HELFINANCE",
+    "step1": "Sprache wählen",
+    "step2": "Währung wählen",
+    "step3": "Erste Einnahme",
+    "step4": "Erste Ausgabe",
+    "step5": "Sparziel",
+    "skip": "Überspringen",
+    "next": "Weiter",
+    "finish": "Fertigstellen"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolgreich",
+    "noData": "Keine Daten vorhanden",
+    "confirm": "Bestätigen",
+    "month": "Monat",
+    "year": "Jahr"
+  },
+  "categories": {
+    "Housing": "Wohnen",
+    "Mobility": "Mobilität",
+    "Food & Groceries": "Lebensmittel",
+    "Insurance": "Versicherungen",
+    "Entertainment": "Unterhaltung",
+    "Health": "Gesundheit",
+    "Loans": "Kredite",
+    "Savings": "Sparen",
+    "Miscellaneous": "Sonstiges"
+  },
+  "about": {
+    "title": "Über HELFINANCE",
+    "version": "Version",
+    "features": "Funktionen",
+    "techStack": "Technologie",
+    "privacy": "Datenschutz",
+    "privacyText": "Alle Daten werden lokal gespeichert. Es werden keine externen Dienste genutzt, außer SMTP/OIDC wurde vom Administrator konfiguriert.",
+    "credits": "Erstellt mit Claude.ai — denn gute Prompts bauen großartige Software.",
+    "changelog": "Changelog",
+    "license": "Lizenz"
+  },
+  "calculator": {
+    "title": "Schnellrechner",
+    "want": "Ich möchte kaufen:",
+    "price": "Preis (€)",
+    "calculate": "Berechnen",
+    "monthsToSave": "Monate bis zum Kauf:",
+    "monthlyImpact": "Monatliche Auswirkung:"
+  }
+}

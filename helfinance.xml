@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>HELFINANCE</Name>
+  <Repository>ghcr.io/kreuzbube88/helfinance:latest</Repository>
+  <Registry>https://ghcr.io/kreuzbube88/helfinance</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/Kreuzbube88/helfinance/issues</Support>
+  <Project>https://github.com/Kreuzbube88/helfinance</Project>
+  <ReadMe>https://github.com/Kreuzbube88/helfinance/blob/main/README.md</ReadMe>
+  <Overview>HELFINANCE — Personal Finance Dashboard. Track income, expenses, loans, savings goals, household finances, and more. Features cashflow calendar, yearly reports, PWA support, i18n (DE/EN), OIDC login, and admin panel.</Overview>
+  <Category>Productivity: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:3000]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/Kreuzbube88/helfinance/main/helfinance.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/Kreuzbube88/helfinance/main/logo.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled></DateInstalled>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="Web UI Port" Target="3000" Default="3000" Mode="tcp"
+    Description="Port for the HELFINANCE web interface"
+    Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+  <Config Name="Data" Target="/data" Default="/mnt/cache/appdata/helfinance" Mode="rw"
+    Description="Database and persistent configuration storage"
+    Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/helfinance</Config>
+  <Config Name="SECRET_KEY" Target="SECRET_KEY" Default="" Mode=""
+    Description="Required: random secret for session encryption. Generate with: openssl rand -hex 32"
+    Type="Variable" Display="always" Required="true" Mask="true"></Config>
+  <Config Name="DATABASE_PATH" Target="DATABASE_PATH" Default="/data/helfinance.db" Mode=""
+    Description="Path to SQLite database file inside the container"
+    Type="Variable" Display="advanced" Required="false" Mask="false">/data/helfinance.db</Config>
+  <Config Name="PORT" Target="PORT" Default="3000" Mode=""
+    Description="Internal port (should match the port mapping above)"
+    Type="Variable" Display="advanced" Required="false" Mask="false">3000</Config>
+</Container>

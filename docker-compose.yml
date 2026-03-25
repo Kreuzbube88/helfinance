@@ -1,0 +1,10 @@
+services:
+  helfinance:
+    image: ghcr.io/kreuzbube88/helfinance:latest
+    container_name: helfinance
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+    env_file: .env

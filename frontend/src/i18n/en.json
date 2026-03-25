@@ -1,0 +1,178 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "income": "Income",
+    "expenses": "Expenses",
+    "loans": "Loans",
+    "savings": "Savings Goals",
+    "cashflow": "Cashflow",
+    "reports": "Reports",
+    "household": "Household",
+    "admin": "Admin",
+    "profile": "Profile",
+    "about": "About",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "healthScore": "Financial Score",
+    "freeMoney": "Available Money",
+    "upcomingBookings": "Upcoming Bookings",
+    "savingsProgress": "Savings Progress",
+    "liquidityWarning": "Warning: Possible liquidity issue this month",
+    "budget": {
+      "green": "Good",
+      "yellow": "Warning",
+      "red": "Critical"
+    }
+  },
+  "income": {
+    "title": "Income",
+    "add": "Add Income",
+    "name": "Name",
+    "amount": "Amount",
+    "interval": "Interval",
+    "bookingDay": "Booking Day",
+    "effectiveFrom": "Effective From",
+    "effectiveTo": "Effective To",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "once": "Once",
+    "scheduleChange": "Schedule Change"
+  },
+  "expenses": {
+    "title": "Expenses",
+    "add": "Add Expense",
+    "name": "Name",
+    "amount": "Amount",
+    "interval": "Interval (Months)",
+    "category": "Category",
+    "bookingDay": "Booking Day"
+  },
+  "loans": {
+    "title": "Loans",
+    "add": "Add Loan",
+    "name": "Name",
+    "principal": "Principal",
+    "interestRate": "Interest Rate (%)",
+    "termMonths": "Term (Months)",
+    "monthlyRate": "Monthly Rate",
+    "amortization": "Amortization Schedule",
+    "avalancheHint": "Tip: Pay off the loan with the highest interest rate first (Avalanche method)."
+  },
+  "savings": {
+    "title": "Savings Goals",
+    "add": "Add Savings Goal",
+    "name": "Name",
+    "targetAmount": "Target Amount",
+    "currentAmount": "Current Amount",
+    "mode": "Contribution Mode",
+    "fixed": "Fixed",
+    "dynamic": "Dynamic",
+    "both": "Both",
+    "fixedAmount": "Fixed Amount",
+    "bufferAmount": "Buffer",
+    "emergencyReserve": "Emergency Reserve",
+    "savingsRate": "Savings Rate"
+  },
+  "cashflow": {
+    "title": "Cashflow Calendar",
+    "projectedBalance": "Projected Balance"
+  },
+  "reports": {
+    "title": "Reports",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "exportPdf": "Export PDF",
+    "exportCsv": "Export CSV"
+  },
+  "household": {
+    "title": "Household",
+    "invite": "Invite",
+    "inviteBy": "Username or Email",
+    "pending": "Pending",
+    "active": "Active",
+    "balance": "Balance",
+    "sharedExpenses": "Shared Expenses",
+    "owes": "owes"
+  },
+  "admin": {
+    "title": "Admin",
+    "smtp": "Email (SMTP)",
+    "oidc": "OIDC Login",
+    "users": "Users",
+    "testEmail": "Send Test Email",
+    "defaultLanguage": "Default Language",
+    "defaultCurrency": "Default Currency"
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "currency": "Currency",
+    "changePassword": "Change Password",
+    "disconnectHousehold": "Disconnect Household"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "loginWith": "Login with"
+  },
+  "onboarding": {
+    "title": "Welcome to HELFINANCE",
+    "step1": "Choose Language",
+    "step2": "Choose Currency",
+    "step3": "First Income",
+    "step4": "First Expense",
+    "step5": "Savings Goal",
+    "skip": "Skip",
+    "next": "Next",
+    "finish": "Finish"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "noData": "No data available",
+    "confirm": "Confirm",
+    "month": "Month",
+    "year": "Year"
+  },
+  "categories": {
+    "Housing": "Housing",
+    "Mobility": "Mobility",
+    "Food & Groceries": "Food & Groceries",
+    "Insurance": "Insurance",
+    "Entertainment": "Entertainment",
+    "Health": "Health",
+    "Loans": "Loans",
+    "Savings": "Savings",
+    "Miscellaneous": "Miscellaneous"
+  },
+  "about": {
+    "title": "About HELFINANCE",
+    "version": "Version",
+    "features": "Features",
+    "techStack": "Tech Stack",
+    "privacy": "Privacy",
+    "privacyText": "All data is stored locally. No external services are used unless SMTP/OIDC was configured by the administrator.",
+    "credits": "Built with Claude.ai — because good prompts build great software.",
+    "changelog": "Changelog",
+    "license": "License"
+  },
+  "calculator": {
+    "title": "Quick Calculator",
+    "want": "I want to buy:",
+    "price": "Price (€)",
+    "calculate": "Calculate",
+    "monthsToSave": "Months to save:",
+    "monthlyImpact": "Monthly impact:"
+  }
+}
