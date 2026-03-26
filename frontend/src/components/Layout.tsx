@@ -14,16 +14,23 @@ export function Layout({ children }: LayoutProps) {
   const { user, logout, isAdmin } = useAuth()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() =>
+    localStorage.getItem('helfinance_sidebar') === 'collapsed'
+  )
   const [notifOpen, setNotifOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('helfinance_theme') as 'dark' | 'light') || 'dark'
+    return (localStorage.getItem('helfinance_theme') as 'dark' | 'light') || 'light'
   })
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('helfinance_theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    localStorage.setItem('helfinance_sidebar', sidebarCollapsed ? 'collapsed' : 'expanded')
+  }, [sidebarCollapsed])
 
   useEffect(() => {
     getNotifications()
@@ -56,14 +63,14 @@ export function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="layout">
+    <div className={`layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      <aside className={`sidebar ${sidebarCollapsed ? 'sidebar-collapsed' : ''} ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <span className="logo-icon">₿</span>
@@ -86,6 +93,7 @@ export function Layout({ children }: LayoutProps) {
                 `nav-item ${isActive ? 'nav-item-active' : ''}`
               }
               onClick={() => setSidebarOpen(false)}
+              title={sidebarCollapsed ? item.label : undefined}
             >
               <span className="nav-icon">{item.icon}</span>
               <span className="nav-label">{item.label}</span>
@@ -98,6 +106,7 @@ export function Layout({ children }: LayoutProps) {
             to="/profile"
             className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
             onClick={() => setSidebarOpen(false)}
+            title={sidebarCollapsed ? t('nav.profile') : undefined}
           >
             <span className="nav-icon">◉</span>
             <span className="nav-label">{t('nav.profile')}</span>
@@ -106,13 +115,26 @@ export function Layout({ children }: LayoutProps) {
             to="/about"
             className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
             onClick={() => setSidebarOpen(false)}
+            title={sidebarCollapsed ? t('nav.about') : undefined}
           >
             <span className="nav-icon">ℹ</span>
             <span className="nav-label">{t('nav.about')}</span>
           </NavLink>
-          <button className="nav-item nav-logout" onClick={handleLogout}>
+          <button
+            className="nav-item nav-logout"
+            onClick={handleLogout}
+            title={sidebarCollapsed ? t('nav.logout') : undefined}
+          >
             <span className="nav-icon">⏻</span>
             <span className="nav-label">{t('nav.logout')}</span>
+          </button>
+          <button
+            className="btn btn-ghost sidebar-collapse-btn"
+            onClick={() => setSidebarCollapsed(prev => !prev)}
+            title={sidebarCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'}
+            style={{ justifyContent: 'center', fontSize: '0.75rem' }}
+          >
+            {sidebarCollapsed ? '›' : '‹'}
           </button>
         </div>
       </aside>
@@ -164,6 +186,20 @@ export function Layout({ children }: LayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Bottom nav — mobile only (hidden on desktop via CSS) */}
+      <nav className="bottom-nav">
+        {navItems.slice(0, 5).map(item => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <span className="bottom-nav-icon">{item.icon}</span>
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
 
       {notifOpen && (
         <NotificationPanel

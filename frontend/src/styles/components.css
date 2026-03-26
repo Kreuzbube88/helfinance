@@ -1,96 +1,80 @@
-/* ─── HELFINANCE Glass Component Library ───────────────────────────────────── */
+/* ─── HELFINANCE Component Library ─────────────────────────────────────────── */
 /* All classes use design-system.css tokens exclusively.                        */
 
-/* ─── Glass Cards ─────────────────────────────────────────────────────────── */
+/* ─── Cards ───────────────────────────────────────────────────────────────── */
 .glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-glass);
-  transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 40px var(--glass-shadow-color), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  transform: translateY(-1px);
-}
-
-[data-theme="light"] .glass-card:hover {
-  border-color: rgba(0, 0, 0, 0.12);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
 }
 
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-glass);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
-/* ─── Glass Inputs ────────────────────────────────────────────────────────── */
+/* ─── Inputs ──────────────────────────────────────────────────────────────── */
 .glass-input {
   background: var(--color-surface);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-primary);
   padding: var(--space-2) var(--space-3);
   font-size: var(--font-size-sm);
   font-family: var(--font-family-base);
   width: 100%;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .glass-input:focus {
   outline: none;
   border-color: var(--color-accent);
-  background: var(--color-surface-hover);
-  box-shadow: 0 0 0 3px var(--color-accent-muted), var(--shadow-sm);
+  box-shadow: 0 0 0 3px var(--color-accent-muted);
 }
 
 .glass-input::placeholder {
   color: var(--color-text-muted);
 }
 
-/* ─── Glass Buttons ───────────────────────────────────────────────────────── */
+/* ─── Buttons ─────────────────────────────────────────────────────────────── */
 .glass-button-primary {
   background: var(--color-accent);
   color: var(--color-text-inverse);
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-accent);
-  transition: background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-fast);
+  transition: background var(--transition-base), box-shadow var(--transition-base);
 }
 
 .glass-button-primary:hover:not(:disabled) {
   background: var(--color-accent-hover);
   border-color: var(--color-accent-hover);
-  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.45);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-accent);
 }
 
 .glass-button-primary:active:not(:disabled) {
-  transform: translateY(0);
+  opacity: 0.9;
 }
 
 .glass-button-secondary {
-  background: var(--glass-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--color-surface);
   color: var(--color-text-primary);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  transition: background var(--transition-base), border-color var(--transition-base), transform var(--transition-fast);
+  transition: background var(--transition-base), border-color var(--transition-base);
 }
 
 .glass-button-secondary:hover:not(:disabled) {
   background: var(--color-surface-hover);
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
 }
 
 .glass-button-ghost {
@@ -106,7 +90,7 @@
   color: var(--color-text-primary);
 }
 
-/* ─── Glass Badges ────────────────────────────────────────────────────────── */
+/* ─── Badges ──────────────────────────────────────────────────────────────── */
 .glass-badge {
   display: inline-flex;
   align-items: center;
@@ -115,8 +99,6 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .glass-badge-success { background: var(--color-success-muted); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.2); }
@@ -125,14 +107,12 @@
 .glass-badge-info    { background: var(--color-info-muted);    color: var(--color-info);    border: 1px solid rgba(56, 189, 248, 0.2);  }
 .glass-badge-primary { background: var(--color-accent-muted);  color: var(--color-accent);  border: 1px solid rgba(99, 102, 241, 0.2);  }
 
-/* ─── Glass Modal ─────────────────────────────────────────────────────────── */
+/* ─── Modal ───────────────────────────────────────────────────────────────── */
 .glass-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -142,55 +122,38 @@
 
 .glass-modal {
   background: var(--color-bg-tertiary);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-lg);
   animation: slide-up var(--transition-slow);
 }
 
-[data-theme="light"] .glass-modal {
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 24px 64px rgba(0, 0, 20, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-}
-
-/* ─── Glass Sidebar ───────────────────────────────────────────────────────── */
+/* ─── Sidebar ─────────────────────────────────────────────────────────────── */
 .glass-sidebar {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-right: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-lg);
+  background: var(--color-bg-tertiary);
+  border-right: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
-/* ─── Glass Header ────────────────────────────────────────────────────────── */
+/* ─── Header ──────────────────────────────────────────────────────────────── */
 .glass-header {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-bottom: 1px solid var(--glass-border);
+  background: var(--color-bg-tertiary);
+  border-bottom: 1px solid var(--color-border);
 }
 
-/* ─── Glass Toast ─────────────────────────────────────────────────────────── */
+/* ─── Toast ───────────────────────────────────────────────────────────────── */
 .glass-toast {
   background: var(--color-bg-tertiary);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
 }
 
-[data-theme="light"] .glass-toast {
-  background: rgba(255, 255, 255, 0.92);
-}
-
-/* ─── Glass Progress ──────────────────────────────────────────────────────── */
+/* ─── Progress ────────────────────────────────────────────────────────────── */
 .glass-progress {
   height: 8px;
   background: var(--color-surface);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   overflow: hidden;
 }
@@ -199,7 +162,6 @@
   height: 100%;
   border-radius: var(--radius-full);
   background: linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 70%, var(--color-info)));
-  box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
