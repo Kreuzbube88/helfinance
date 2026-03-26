@@ -1,4 +1,4 @@
-# ![HELFINANCE](logo.png)
+# ![HELFINANCE](frontend/public/logo.png)
 
 **HELFINANCE** — Personal Finance Dashboard
 
