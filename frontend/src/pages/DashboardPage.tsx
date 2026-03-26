@@ -20,7 +20,7 @@ function HealthGauge({ score }: { score: number }) {
 
   return (
     <svg viewBox="0 0 200 120" className="health-gauge">
-      <path d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="var(--color-surface-2)" strokeWidth="12" strokeLinecap="round" />
+      <path d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="var(--color-surface-active)" strokeWidth="12" strokeLinecap="round" />
       <path
         d={`M 30 100 A 70 70 0 ${angle > 90 ? 1 : 0} 1 ${nx} ${ny}`}
         fill="none"

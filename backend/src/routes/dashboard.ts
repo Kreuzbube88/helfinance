@@ -152,12 +152,16 @@ export function createDashboardRouter(db: Database.Database): Router {
 
       res.json({
         health_score: healthScore,
-        monthly_income: Math.round(monthlyIncome * 100) / 100,
-        monthly_expenses: Math.round(monthlyExpenses * 100) / 100,
+        total_income: Math.round(monthlyIncome * 100) / 100,
+        total_expenses: Math.round(monthlyExpenses * 100) / 100,
         free_money: Math.round(freeMoney * 100) / 100,
-        next_bookings: nextBookings,
+        upcoming_bookings: nextBookings.map(b => ({
+          ...b,
+          date: new Date(year, month - 1, b.booking_day).toISOString().slice(0, 10),
+        })),
         savings_goals: goalsProgress,
         liquidity_warning: liquidityWarning,
+        budget_status: savingsRate >= 20 ? 'green' : savingsRate >= 0 ? 'yellow' : 'red',
       });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });

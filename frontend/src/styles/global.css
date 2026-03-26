@@ -1354,8 +1354,8 @@ tbody tr:hover {
   height: 280px;
 }
 
-/* ─── Login Page ──────────────────────────────────────────────────────────── */
-.login-page {
+/* ─── Auth Pages (Login, Setup, Register) ────────────────────────────────── */
+.auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -1364,7 +1364,7 @@ tbody tr:hover {
   background: var(--color-bg-primary);
 }
 
-.login-card {
+.auth-card {
   width: 100%;
   max-width: 400px;
   padding: var(--space-8);
@@ -1372,6 +1372,154 @@ tbody tr:hover {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-md);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.logo-icon-large {
+  font-size: 2.5rem;
+  color: var(--color-accent);
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.auth-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-heading);
+  color: var(--color-text-primary);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-1);
+}
+
+.auth-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.auth-tabs {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--space-5);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family-base);
+  cursor: pointer;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.auth-tab.active {
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-oidc {
+  margin-top: var(--space-4);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.btn-full { width: 100%; }
+
+/* ─── Onboarding Page ─────────────────────────────────────────────────────── */
+.onboarding-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--color-bg-primary);
+}
+
+.onboarding-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.onboarding-header {
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.onboarding-header h1 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-heading);
+  margin-bottom: var(--space-4);
+}
+
+.onboarding-progress {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-bottom: var(--space-3);
+}
+
+.progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+  transition: background var(--transition-base), transform var(--transition-base);
+}
+
+.progress-dot.active {
+  background: var(--color-accent);
+  transform: scale(1.3);
+}
+
+.step-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.onboarding-body {
+  padding: var(--space-6);
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
 }
 
 /* ─── Bottom Nav (mobile) ─────────────────────────────────────────────────── */
