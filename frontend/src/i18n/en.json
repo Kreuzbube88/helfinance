@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "income": "Income",
     "expenses": "Expenses",
+    "transactions": "Transactions",
     "loans": "Loans",
     "savings": "Savings Goals",
     "cashflow": "Cashflow",
@@ -20,6 +21,11 @@
     "upcomingBookings": "Upcoming Bookings",
     "savingsProgress": "Savings Progress",
     "liquidityWarning": "Warning: Possible liquidity issue this month",
+    "budgetTitle": "Budget",
+    "income": "Income",
+    "expenses": "Expenses",
+    "customize": "Customize Dashboard",
+    "widgetsDone": "Done",
     "budget": {
       "green": "Good",
       "yellow": "Warning",
@@ -67,7 +73,15 @@
     "termMonths": "Term (Months)",
     "monthlyRate": "Monthly Rate",
     "amortization": "Amortization Schedule",
-    "avalancheHint": "Tip: Pay off the loan with the highest interest rate first (Avalanche method)."
+    "avalancheHint": "Tip: Pay off the loan with the highest interest rate first (Avalanche method).",
+    "startDate": "Start Date",
+    "pctPaid": "{{pct}}% paid",
+    "monthsLeft": "{{months}} months left",
+    "date": "Date",
+    "payment": "Payment",
+    "principalCol": "Principal",
+    "interestCol": "Interest",
+    "balance": "Balance"
   },
   "savings": {
     "title": "Savings Goals",
@@ -101,7 +115,19 @@
     "monthly": "Monthly",
     "yearly": "Yearly",
     "exportPdf": "Export PDF",
-    "exportCsv": "Export CSV"
+    "exportCsv": "Export CSV",
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "net": "Net",
+    "incomeBreakdown": "Income Breakdown",
+    "expensesByCategory": "Expenses by Category",
+    "expenseBreakdown": "Expense Breakdown",
+    "snapshotArchive": "Archive",
+    "row": "Category",
+    "comparison": "Monthly Comparison",
+    "income": "Income",
+    "expenses": "Expenses",
+    "last6Months": "Last 6 months"
   },
   "household": {
     "title": "Household",
@@ -161,7 +187,10 @@
     "testEmailSent": "Test email sent",
     "enterPassword": "Enter password",
     "passwordMinLength": "Minimum 8 characters",
-    "allowRegistration": "Allow new registrations"
+    "allowRegistration": "Allow new registrations",
+    "discoveryUrl": "Discovery URL",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret"
   },
   "setup": {
     "subtitle": "Create Admin Account",
@@ -230,7 +259,16 @@
     "sidebarCollapse": "Collapse sidebar",
     "sidebarExpand": "Expand sidebar",
     "toggleMenu": "Toggle menu",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "thisMonth": "This Month",
+    "day": "Day",
+    "or": "or",
+    "markAsRead": "Mark as read",
+    "total": "Total",
+    "date": "Date",
+    "type": "Type",
+    "note": "Note",
+    "import": "Import"
   },
   "categories": {
     "Housing": "Housing",
@@ -252,7 +290,38 @@
     "privacyText": "All data is stored locally. No external services are used unless SMTP/OIDC was configured by the administrator.",
     "credits": "Built with Claude.ai — because good prompts build great software.",
     "changelog": "Changelog",
-    "license": "License"
+    "license": "License",
+    "initialRelease": "Initial release — all core modules"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "add": "Add Transaction",
+    "name": "Description",
+    "amount": "Amount",
+    "date": "Date",
+    "type": "Type",
+    "expense": "Expense",
+    "income": "Income",
+    "category": "Category",
+    "note": "Note",
+    "noTransactions": "No transactions yet",
+    "import": "Import CSV",
+    "importDesc": "One row per line: date (YYYY-MM-DD), amount, description, type (income/expense)",
+    "importSuccess": "{{count}} transactions imported",
+    "importError": "Error in line {{line}}: {{msg}}"
+  },
+  "budget": {
+    "limit": "Budget Limit",
+    "setLimit": "Set Limit",
+    "monthlyLimit": "Monthly Limit (€)",
+    "noLimit": "No limit",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "overBudget": "Over budget"
+  },
+  "quickAdd": {
+    "title": "Quick Add Expense",
+    "description": "Description"
   },
   "calculator": {
     "title": "Quick Calculator",

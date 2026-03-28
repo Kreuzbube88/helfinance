@@ -8,24 +8,26 @@ import {
   Chart as ChartJS,
   ArcElement,
   Tooltip,
-  Legend
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale
 } from 'chart.js'
-import { Doughnut } from 'react-chartjs-2'
+import { Doughnut, Bar } from 'react-chartjs-2'
 
-ChartJS.register(ArcElement, Tooltip, Legend)
+ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 const CATEGORY_COLORS = [
   '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
   '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#64748b'
 ]
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-]
+function getMonthName(monthIndex: number, lang: string): string {
+  return new Intl.DateTimeFormat(lang, { month: 'long' }).format(new Date(2000, monthIndex, 1))
+}
 
 export function MonthlyReportPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
 
@@ -107,8 +109,8 @@ export function MonthlyReportPage() {
             onChange={e => setMonth(Number(e.target.value))}
             style={{ width: 'auto' }}
           >
-            {MONTH_NAMES.map((name, i) => (
-              <option key={i} value={i + 1}>{name}</option>
+            {Array.from({ length: 12 }, (_, i) => (
+              <option key={i} value={i + 1}>{getMonthName(i, i18n.language)}</option>
             ))}
           </select>
           <select
@@ -145,15 +147,15 @@ export function MonthlyReportPage() {
           {/* Summary */}
           <div className="summary-numbers">
             <div className="card">
-              <div className="big-number-label">Total Income</div>
+              <div className="big-number-label">{t('reports.totalIncome')}</div>
               <div className="big-number text-success">{fmt(report.total_income)}</div>
             </div>
             <div className="card">
-              <div className="big-number-label">Total Expenses</div>
+              <div className="big-number-label">{t('reports.totalExpenses')}</div>
               <div className="big-number text-danger">{fmt(report.total_expenses)}</div>
             </div>
             <div className="card">
-              <div className="big-number-label">Net</div>
+              <div className="big-number-label">{t('reports.net')}</div>
               <div className={`big-number ${report.net >= 0 ? 'text-success' : 'text-danger'}`}>
                 {fmt(report.net)}
               </div>
@@ -163,7 +165,7 @@ export function MonthlyReportPage() {
           <div className="grid-2">
             {/* Income breakdown */}
             <div className="card">
-              <h3 className="card-title">Income Breakdown</h3>
+              <h3 className="card-title">{t('reports.incomeBreakdown')}</h3>
               {report.income_breakdown.length === 0 ? (
                 <p className="text-muted">{t('common.noData')}</p>
               ) : (
@@ -190,7 +192,7 @@ export function MonthlyReportPage() {
 
             {/* Donut chart */}
             <div className="card">
-              <h3 className="card-title">Expenses by Category</h3>
+              <h3 className="card-title">{t('reports.expensesByCategory')}</h3>
               {donutData && report.expense_breakdown.length > 0 ? (
                 <div style={{ height: '280px' }}>
                   <Doughnut data={donutData} options={donutOptions} />
@@ -203,7 +205,7 @@ export function MonthlyReportPage() {
 
           {/* Expense breakdown */}
           <div className="card">
-            <h3 className="card-title">Expense Breakdown</h3>
+            <h3 className="card-title">{t('reports.expenseBreakdown')}</h3>
             {report.expense_breakdown.length === 0 ? (
               <p className="text-muted">{t('common.noData')}</p>
             ) : (
@@ -234,25 +236,68 @@ export function MonthlyReportPage() {
             )}
           </div>
 
+          {/* Monthly comparison chart */}
+          {report.snapshots && report.snapshots.length > 0 && (() => {
+            const last6 = [...report.snapshots]
+              .sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month)
+              .slice(-6)
+            const labels = last6.map(s => `${getMonthName(s.month - 1, i18n.language).slice(0, 3)} ${s.year}`)
+            const comparisonData = {
+              labels,
+              datasets: [
+                {
+                  label: t('reports.income'),
+                  data: last6.map(s => s.total_income),
+                  backgroundColor: 'rgba(16, 185, 129, 0.7)'
+                },
+                {
+                  label: t('reports.expenses'),
+                  data: last6.map(s => s.total_expenses),
+                  backgroundColor: 'rgba(239, 68, 68, 0.7)'
+                }
+              ]
+            }
+            const barOptions = {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'top' as const, labels: { color: '#94a3b8', font: { size: 12 } } },
+                tooltip: { callbacks: { label: (ctx: { parsed: { y: number } }) => fmt(ctx.parsed.y) } }
+              },
+              scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
+                y: { ticks: { color: '#94a3b8', callback: (v: number | string) => fmt(Number(v)) }, grid: { color: 'rgba(148,163,184,0.1)' } }
+              }
+            }
+            return (
+              <div className="card">
+                <h3 className="card-title">{t('reports.comparison')} <span className="text-muted text-sm">({t('reports.last6Months')})</span></h3>
+                <div style={{ height: '260px' }}>
+                  <Bar data={comparisonData} options={barOptions} />
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Snapshot archive */}
           {report.snapshots && report.snapshots.length > 0 && (
             <div className="card">
-              <h3 className="card-title">Snapshot Archive</h3>
+              <h3 className="card-title">{t('reports.snapshotArchive')}</h3>
               <div className="table-scroll"><table>
                 <thead>
                   <tr>
                     <th>{t('common.year')}</th>
                     <th>{t('common.month')}</th>
-                    <th>Income</th>
-                    <th>Expenses</th>
-                    <th>Net</th>
+                    <th>{t('reports.income')}</th>
+                    <th>{t('reports.expenses')}</th>
+                    <th>{t('reports.net')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {report.snapshots.map(snap => (
                     <tr key={snap.id}>
                       <td>{snap.year}</td>
-                      <td>{MONTH_NAMES[snap.month - 1]}</td>
+                      <td>{getMonthName(snap.month - 1, i18n.language)}</td>
                       <td className="text-success">{fmt(snap.total_income)}</td>
                       <td className="text-danger">{fmt(snap.total_expenses)}</td>
                       <td className={snap.net >= 0 ? 'text-success' : 'text-danger'}>{fmt(snap.net)}</td>

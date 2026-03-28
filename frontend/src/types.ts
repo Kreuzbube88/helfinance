@@ -86,6 +86,20 @@ export interface Category {
   id: number
   name: string
   user_id: number | null
+  icon: string
+  color: string
+  budget_limit: number | null
+}
+
+export interface Transaction {
+  id: number
+  user_id: number
+  name: string
+  amount: number
+  type: 'income' | 'expense'
+  category_id: number | null
+  date: string
+  note: string | null
 }
 
 export interface HouseholdLink {

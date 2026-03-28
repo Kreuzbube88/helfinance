@@ -152,7 +152,7 @@ export function LoginPage() {
 
         {oidcConfig && (
           <div className="auth-oidc">
-            <div className="divider"><span>oder</span></div>
+            <div className="divider"><span>{t('common.or')}</span></div>
             <button className="btn btn-secondary btn-full" onClick={handleOidc}>
               {t('auth.loginWith')} {oidcConfig.display_name}
             </button>

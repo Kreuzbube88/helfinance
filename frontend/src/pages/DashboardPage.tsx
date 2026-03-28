@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
-import { getDashboard } from '../api'
+import { getDashboard, getWidgetPrefs, updateWidgetPref } from '../api'
 import type { DashboardData } from '../types'
 import { Modal } from '../components/Modal'
+import { QuickAddModal } from '../components/QuickAddModal'
+
+const WIDGET_KEYS = ['healthScore', 'budget', 'freeMoney', 'upcomingBookings', 'savingsProgress'] as const
+type WidgetKey = typeof WIDGET_KEYS[number]
 
 function HealthGauge({ score }: { score: number }) {
   const clamp = Math.min(100, Math.max(0, score))
@@ -99,13 +103,27 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [liquidityDismissed, setLiquidityDismissed] = useState(false)
   const [showCalc, setShowCalc] = useState(false)
+  const [showQuickAdd, setShowQuickAdd] = useState(false)
+  const [showCustomize, setShowCustomize] = useState(false)
+  const [widgets, setWidgets] = useState<Record<WidgetKey, boolean>>({
+    healthScore: true, budget: true, freeMoney: true, upcomingBookings: true, savingsProgress: true
+  })
 
   useEffect(() => {
-    getDashboard()
-      .then(setData)
+    Promise.all([getDashboard(), getWidgetPrefs()])
+      .then(([d, prefs]) => {
+        setData(d)
+        setWidgets(prev => ({ ...prev, ...prefs }) as Record<WidgetKey, boolean>)
+      })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
   }, [])
+
+  const toggleWidget = async (key: WidgetKey) => {
+    const next = !widgets[key]
+    setWidgets(prev => ({ ...prev, [key]: next }))
+    try { await updateWidgetPref(key, next) } catch { /* non-critical */ }
+  }
 
   const currency = user?.currency || 'EUR'
   const fmt = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency })
@@ -128,7 +146,12 @@ export function DashboardPage() {
 
   return (
     <div className="page">
-      <h1 className="page-title">{t('dashboard.title')}</h1>
+      <div className="page-header">
+        <h1 className="page-title">{t('dashboard.title')}</h1>
+        <button className="btn btn-secondary btn-sm" onClick={() => setShowCustomize(true)}>
+          ⊞ {t('dashboard.customize')}
+        </button>
+      </div>
 
       {data.liquidity_warning && !liquidityDismissed && (
         <div className="alert alert-warning">
@@ -138,105 +161,125 @@ export function DashboardPage() {
       )}
 
       <div className="dashboard-grid">
-        {/* Health Score */}
-        <div className="card dashboard-card card-health">
-          <h3 className="card-title">{t('dashboard.healthScore')}</h3>
-          <HealthGauge score={data.health_score} />
-        </div>
+        {widgets.healthScore && (
+          <div className="card dashboard-card card-health">
+            <h3 className="card-title">{t('dashboard.healthScore')}</h3>
+            <HealthGauge score={data.health_score} />
+          </div>
+        )}
 
-        {/* Budget Traffic Light */}
-        <div className="card dashboard-card">
-          <h3 className="card-title">Budget</h3>
-          <TrafficLight status={data.budget_status} />
-          <div className="budget-numbers">
-            <div className="budget-row">
-              <span className="text-muted">Einnahmen</span>
-              <span className="text-success">{fmt(data.total_income)}</span>
-            </div>
-            <div className="budget-row">
-              <span className="text-muted">Ausgaben</span>
-              <span className="text-danger">{fmt(data.total_expenses)}</span>
+        {widgets.budget && (
+          <div className="card dashboard-card">
+            <h3 className="card-title">{t('dashboard.budgetTitle')}</h3>
+            <TrafficLight status={data.budget_status} />
+            <div className="budget-numbers">
+              <div className="budget-row">
+                <span className="text-muted">{t('dashboard.income')}</span>
+                <span className="text-success">{fmt(data.total_income)}</span>
+              </div>
+              <div className="budget-row">
+                <span className="text-muted">{t('dashboard.expenses')}</span>
+                <span className="text-danger">{fmt(data.total_expenses)}</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Free Money */}
-        <div className="card dashboard-card card-free-money">
-          <h3 className="card-title">{t('dashboard.freeMoney')}</h3>
-          <div className={`free-money-amount ${data.free_money < 0 ? 'negative' : 'positive'}`}>
-            {fmt(data.free_money)}
+        {widgets.freeMoney && (
+          <div className="card dashboard-card card-free-money">
+            <h3 className="card-title">{t('dashboard.freeMoney')}</h3>
+            <div className={`free-money-amount ${data.free_money < 0 ? 'negative' : 'positive'}`}>
+              {fmt(data.free_money)}
+            </div>
+            <p className="text-muted text-sm">{t('common.thisMonth')}</p>
           </div>
-          <p className="text-muted text-sm">Diesen Monat</p>
-        </div>
+        )}
 
-        {/* Upcoming Bookings */}
-        <div className="card dashboard-card">
-          <h3 className="card-title">{t('dashboard.upcomingBookings')}</h3>
-          {data.upcoming_bookings.length === 0 ? (
-            <p className="text-muted">{t('common.noData')}</p>
-          ) : (
-            <div className="booking-list">
-              {data.upcoming_bookings.slice(0, 3).map((b, i) => (
-                <div key={i} className="booking-item">
-                  <div className="booking-info">
-                    <span className="booking-name">{b.name}</span>
-                    <span className="text-muted text-sm">Tag {b.booking_day}</span>
+        {widgets.upcomingBookings && (
+          <div className="card dashboard-card">
+            <h3 className="card-title">{t('dashboard.upcomingBookings')}</h3>
+            {data.upcoming_bookings.length === 0 ? (
+              <p className="text-muted">{t('common.noData')}</p>
+            ) : (
+              <div className="booking-list">
+                {data.upcoming_bookings.slice(0, 3).map((b, i) => (
+                  <div key={i} className="booking-item">
+                    <div className="booking-info">
+                      <span className="booking-name">{b.name}</span>
+                      <span className="text-muted text-sm">{t('common.day')} {b.booking_day}</span>
+                    </div>
+                    <span className={`booking-amount ${b.type === 'income' ? 'text-success' : 'text-danger'}`}>
+                      {b.type === 'income' ? '+' : '-'}{fmt(b.amount)}
+                    </span>
                   </div>
-                  <span className={`booking-amount ${b.type === 'income' ? 'text-success' : 'text-danger'}`}>
-                    {b.type === 'income' ? '+' : '-'}{fmt(b.amount)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Savings Progress */}
-        <div className="card dashboard-card card-savings">
-          <h3 className="card-title">{t('dashboard.savingsProgress')}</h3>
-          {data.savings_goals.length === 0 ? (
-            <p className="text-muted">{t('common.noData')}</p>
-          ) : (
-            <div className="savings-list">
-              {data.savings_goals.map(goal => {
-                const pct = goal.target_amount > 0
-                  ? Math.min(100, (goal.current_amount / goal.target_amount) * 100)
-                  : 0
-                return (
-                  <div key={goal.id} className="savings-item">
-                    <div className="savings-header">
-                      <span className="savings-name">{goal.name}</span>
-                      <span className="savings-pct">{pct.toFixed(0)}%</span>
+        {widgets.savingsProgress && (
+          <div className="card dashboard-card card-savings">
+            <h3 className="card-title">{t('dashboard.savingsProgress')}</h3>
+            {data.savings_goals.length === 0 ? (
+              <p className="text-muted">{t('common.noData')}</p>
+            ) : (
+              <div className="savings-list">
+                {data.savings_goals.map(goal => {
+                  const pct = goal.target_amount > 0
+                    ? Math.min(100, (goal.current_amount / goal.target_amount) * 100)
+                    : 0
+                  return (
+                    <div key={goal.id} className="savings-item">
+                      <div className="savings-header">
+                        <span className="savings-name">{goal.name}</span>
+                        <span className="savings-pct">{pct.toFixed(0)}%</span>
+                      </div>
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="savings-amounts">
+                        <span className="text-muted text-sm">{fmt(goal.current_amount)}</span>
+                        <span className="text-muted text-sm">{fmt(goal.target_amount)}</span>
+                      </div>
                     </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="savings-amounts">
-                      <span className="text-muted text-sm">{fmt(goal.current_amount)}</span>
-                      <span className="text-muted text-sm">{fmt(goal.target_amount)}</span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Quick Calculator FAB */}
-      <button
-        className="fab"
-        onClick={() => setShowCalc(true)}
-        title={t('calculator.title')}
-      >
-        ⊕
-      </button>
+      {/* FABs */}
+      <button className="fab" onClick={() => setShowQuickAdd(true)} title={t('quickAdd.title')}>+</button>
+      <button className="fab fab-calc" onClick={() => setShowCalc(true)} title={t('calculator.title')}>⊕</button>
 
       {showCalc && (
-        <QuickCalcModal
-          freeMoney={data.free_money}
-          onClose={() => setShowCalc(false)}
-        />
+        <QuickCalcModal freeMoney={data.free_money} onClose={() => setShowCalc(false)} />
+      )}
+      {showQuickAdd && (
+        <QuickAddModal onClose={() => setShowQuickAdd(false)} />
+      )}
+
+      {showCustomize && (
+        <Modal title={t('dashboard.customize')} onClose={() => setShowCustomize(false)} size="sm">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {WIDGET_KEYS.map(key => (
+              <label key={key} className="form-check" style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={widgets[key]}
+                  onChange={() => toggleWidget(key)}
+                />
+                {t(`dashboard.${key === 'healthScore' ? 'healthScore' : key === 'freeMoney' ? 'freeMoney' : key === 'upcomingBookings' ? 'upcomingBookings' : key === 'savingsProgress' ? 'savingsProgress' : 'budgetTitle'}`)}
+              </label>
+            ))}
+          </div>
+          <div className="modal-actions" style={{ marginTop: '1rem' }}>
+            <button className="btn btn-primary" onClick={() => setShowCustomize(false)}>{t('dashboard.widgetsDone')}</button>
+          </div>
+        </Modal>
       )}
     </div>
   )

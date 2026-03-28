@@ -4,9 +4,10 @@ import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import {
   getExpenses, createExpense, updateExpense, deleteExpense,
-  scheduleExpenseChange, getExpenseChanges, deleteExpenseChange
+  scheduleExpenseChange, getExpenseChanges, deleteExpenseChange,
+  getCategories, updateCategory
 } from '../api'
-import type { Expense } from '../types'
+import type { Expense, Category } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 
@@ -31,8 +32,12 @@ export function ExpensesPage() {
   const { showToast } = useToast()
 
   const [items, setItems] = useState<Expense[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(CATEGORIES))
+  const [budgetTarget, setBudgetTarget] = useState<string | null>(null)
+  const [budgetInput, setBudgetInput] = useState('')
+  const [budgetSaving, setBudgetSaving] = useState(false)
 
   // Add/Edit modal
   const [showModal, setShowModal] = useState(false)
@@ -69,10 +74,29 @@ export function ExpensesPage() {
 
   const load = () => {
     setLoading(true)
-    getExpenses()
-      .then(setItems)
+    Promise.all([getExpenses(), getCategories()])
+      .then(([exps, cats]) => { setItems(exps); setCategories(cats) })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
+  }
+
+  const handleSaveBudgetLimit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!budgetTarget) return
+    const cat = categories.find(c => c.name === budgetTarget)
+    if (!cat) return
+    setBudgetSaving(true)
+    try {
+      const limit = budgetInput === '' ? null : parseFloat(budgetInput)
+      await updateCategory(cat.id, { budget_limit: limit })
+      setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, budget_limit: limit } : c))
+      showToast(t('common.success'), 'success')
+      setBudgetTarget(null)
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('common.error'), 'error')
+    } finally {
+      setBudgetSaving(false)
+    }
   }
 
   useEffect(() => { load() }, [])
@@ -254,6 +278,9 @@ export function ExpensesPage() {
             if (catItems.length === 0) return null
             const catTotal = catItems.reduce((s, i) => s + monthlyEquivalent(i), 0)
             const isOpen = expanded.has(cat)
+            const catDef = categories.find(c => c.name === cat)
+            const budgetLimit = catDef?.budget_limit ?? null
+            const budgetPct = budgetLimit && budgetLimit > 0 ? Math.min(100, (catTotal / budgetLimit) * 100) : null
 
             return (
               <div key={cat} className="category-group">
@@ -263,7 +290,22 @@ export function ExpensesPage() {
                     <span className="category-name">{t(`categories.${cat}`)}</span>
                     <span className="badge badge-secondary">{catItems.length}</span>
                   </div>
-                  <span className="category-total text-danger">{fmt(catTotal)}/Mo</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {budgetPct !== null && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <div style={{ width: '80px', height: '6px', background: 'var(--color-surface-active)', borderRadius: '3px', overflow: 'hidden' }}>
+                          <div style={{ width: `${budgetPct}%`, height: '100%', background: budgetPct >= 100 ? '#ef4444' : budgetPct >= 80 ? '#f59e0b' : '#10b981', borderRadius: '3px' }} />
+                        </div>
+                        <span className={`text-sm ${budgetPct >= 100 ? 'text-danger' : 'text-muted'}`}>{budgetPct.toFixed(0)}%</span>
+                      </div>
+                    )}
+                    <span className="category-total text-danger">{fmt(catTotal)}/Mo</span>
+                    <button
+                      className="btn btn-ghost btn-xs"
+                      title={t('budget.setLimit')}
+                      onClick={e => { e.stopPropagation(); setBudgetTarget(cat); setBudgetInput(budgetLimit !== null ? String(budgetLimit) : '') }}
+                    >⊙</button>
+                  </div>
                 </div>
 
                 {isOpen && (
@@ -514,6 +556,30 @@ export function ExpensesPage() {
           onConfirm={() => handleDeleteChange(deleteChangeId.expenseId, deleteChangeId.changeId)}
           onClose={() => setDeleteChangeId(null)}
         />
+      )}
+
+      {budgetTarget !== null && (
+        <Modal title={t('budget.setLimit')} onClose={() => setBudgetTarget(null)} size="sm">
+          <form onSubmit={handleSaveBudgetLimit}>
+            <p className="text-muted text-sm" style={{ marginBottom: '0.75rem' }}>{t(`categories.${budgetTarget}`)}</p>
+            <div className="form-group">
+              <label className="form-label">{t('budget.monthlyLimit')}</label>
+              <input
+                className="form-input"
+                type="number"
+                step="0.01"
+                min="0"
+                value={budgetInput}
+                onChange={e => setBudgetInput(e.target.value)}
+                placeholder={t('budget.noLimit')}
+              />
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => setBudgetTarget(null)}>{t('common.cancel')}</button>
+              <button type="submit" className="btn btn-primary" disabled={budgetSaving}>{budgetSaving ? t('common.loading') : t('common.save')}</button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   )

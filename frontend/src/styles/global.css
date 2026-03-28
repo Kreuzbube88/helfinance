@@ -1285,6 +1285,10 @@ tbody tr:hover {
   box-shadow: 0 8px 28px rgba(79, 70, 229, 0.4);
 }
 
+.fab-calc {
+  bottom: calc(var(--space-8) + 52px + 12px);
+}
+
 /* ─── Calc Result ─────────────────────────────────────────────────────────── */
 .calc-result {
   margin-top: var(--space-4);
@@ -1831,6 +1835,10 @@ tbody tr:hover {
   .fab {
     bottom: var(--space-4);
     right: var(--space-4);
+  }
+
+  .fab-calc {
+    bottom: calc(var(--space-4) + 52px + 10px);
   }
 
   .item-card {

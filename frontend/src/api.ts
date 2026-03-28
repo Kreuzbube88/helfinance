@@ -14,7 +14,9 @@ import type {
   YearlyReport,
   LoginResponse,
   HouseholdLink,
-  SharedExpense
+  SharedExpense,
+  Category,
+  Transaction
 } from './types'
 
 const BASE = '/api/v1'
@@ -299,6 +301,45 @@ export function updateAdminSettings(data: Record<string, string>): Promise<void>
 
 export function sendTestEmail(): Promise<void> {
   return post<void>('/admin/settings/test-email', {})
+}
+
+// Categories
+export function getCategories(): Promise<Category[]> {
+  return get<Category[]>('/categories')
+}
+
+export function updateCategory(id: number, data: Partial<Category>): Promise<Category> {
+  return put<Category>(`/categories/${id}`, data)
+}
+
+// Transactions (V1)
+export function getTransactions(): Promise<Transaction[]> {
+  return get<Transaction[]>('/transactions')
+}
+
+export function createTransaction(data: Omit<Transaction, 'id' | 'user_id'>): Promise<Transaction> {
+  return post<Transaction>('/transactions', data)
+}
+
+export function updateTransaction(id: number, data: Partial<Transaction>): Promise<Transaction> {
+  return put<Transaction>(`/transactions/${id}`, data)
+}
+
+export function deleteTransaction(id: number): Promise<void> {
+  return del(`/transactions/${id}`)
+}
+
+export function importTransactionsCsv(csv: string): Promise<{ imported: number; errors: string[] }> {
+  return post('/transactions/import', { csv })
+}
+
+// Widget preferences (V6)
+export function getWidgetPrefs(): Promise<Record<string, boolean>> {
+  return get<Record<string, boolean>>('/widgets')
+}
+
+export function updateWidgetPref(key: string, visible: boolean): Promise<void> {
+  return put<void>(`/widgets/${key}`, { visible })
 }
 
 // Onboarding

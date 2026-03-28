@@ -5,10 +5,12 @@ import { useAuth } from '../contexts/AuthContext'
 import { getYearlyReport, getToken } from '../api'
 import type { YearlyReport } from '../types'
 
-const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+function getMonthShort(monthIndex: number, lang: string): string {
+  return new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(2000, monthIndex, 1))
+}
 
 export function YearlyReportPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
 
@@ -54,12 +56,12 @@ export function YearlyReportPage() {
   // Build a month map for quick lookup
   const monthMap = new Map(report?.months.map(m => [m.month, m]) ?? [])
 
-  const rows: Array<{ label: string; key: keyof Omit<YearlyReport['months'][number], 'month'>; isNet: boolean }> = [
-    { label: 'Income',          key: 'income',          isNet: false },
-    { label: 'Fixed Expenses',  key: 'fixed_expenses',  isNet: false },
-    { label: 'Provisions',      key: 'provisions',      isNet: false },
-    { label: 'Loans',           key: 'loans',           isNet: false },
-    { label: 'Net Savings',     key: 'net_savings',     isNet: true  }
+  const rows: Array<{ labelKey: string; key: keyof Omit<YearlyReport['months'][number], 'month'>; isNet: boolean }> = [
+    { labelKey: 'reports.income',        key: 'income',          isNet: false },
+    { labelKey: 'expenses.title',        key: 'fixed_expenses',  isNet: false },
+    { labelKey: 'savings.title',         key: 'provisions',      isNet: false },
+    { labelKey: 'loans.title',           key: 'loans',           isNet: false },
+    { labelKey: 'reports.net',           key: 'net_savings',     isNet: true  }
   ]
 
   return (
@@ -102,17 +104,17 @@ export function YearlyReportPage() {
             <table className="report-table">
               <thead>
                 <tr>
-                  <th style={{ minWidth: '140px' }}>Row</th>
-                  {MONTH_SHORT.map((m, i) => (
-                    <th key={i}>{m}</th>
+                  <th style={{ minWidth: '140px' }}>{t('reports.row')}</th>
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <th key={i}>{getMonthShort(i, i18n.language)}</th>
                   ))}
-                  <th className="total-col">Total</th>
+                  <th className="total-col">{t('common.total')}</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map(row => (
                   <tr key={row.key}>
-                    <td style={{ fontWeight: 600 }}>{row.label}</td>
+                    <td style={{ fontWeight: 600 }}>{t(row.labelKey)}</td>
                     {Array.from({ length: 12 }, (_, i) => {
                       const mData = monthMap.get(i + 1)
                       const val = mData ? mData[row.key] : 0

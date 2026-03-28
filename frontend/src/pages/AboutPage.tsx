@@ -93,7 +93,7 @@ export function AboutPage() {
           <div style={{ fontSize: '0.875rem' }}>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               <span className="badge badge-success">v1.0.0</span>
-              <span className="text-muted">Initial release — all core modules</span>
+              <span className="text-muted">{t('about.initialRelease')}</span>
             </div>
           </div>
         </div>

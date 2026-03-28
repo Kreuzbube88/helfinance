@@ -17,6 +17,8 @@ import { createReportsRouter } from './routes/reports';
 import { createExportRouter } from './routes/exportRoutes';
 import { createNotificationsRouter } from './routes/notifications';
 import { createSetupRouter } from './routes/setup';
+import { createTransactionsRouter } from './routes/transactions';
+import { createWidgetsRouter } from './routes/widgets';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -56,6 +58,8 @@ app.use(`${v1}/dashboard`, createDashboardRouter(db));
 app.use(`${v1}/reports`, createReportsRouter(db));
 app.use(`${v1}/export`, createExportRouter(db));
 app.use(`${v1}/notifications`, createNotificationsRouter(db));
+app.use(`${v1}/transactions`, createTransactionsRouter(db));
+app.use(`${v1}/widgets`, createWidgetsRouter(db));
 
 // Serve frontend static files
 const publicDir = path.resolve(__dirname, '../public');

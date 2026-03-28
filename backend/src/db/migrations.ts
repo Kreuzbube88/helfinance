@@ -140,6 +140,36 @@ export function runMigrations(db: Database.Database): void {
 
   // Add category TEXT column to expenses (idempotent — fails silently if already exists)
   try { db.exec('ALTER TABLE expenses ADD COLUMN category TEXT'); } catch {}
+
+  // V1: Manual transactions log
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      amount REAL NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('income','expense')),
+      category_id INTEGER,
+      date TEXT NOT NULL,
+      note TEXT,
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(category_id) REFERENCES categories(id)
+    );
+  `);
+
+  // V2: Budget limits per category
+  try { db.exec('ALTER TABLE categories ADD COLUMN budget_limit REAL DEFAULT NULL'); } catch {}
+
+  // V6: Widget preferences stored per user as JSON in settings-like table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS widget_preferences (
+      user_id INTEGER NOT NULL,
+      widget_key TEXT NOT NULL,
+      visible INTEGER DEFAULT 1,
+      PRIMARY KEY(user_id, widget_key),
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+  `);
 }
 
 interface DefaultCategory {

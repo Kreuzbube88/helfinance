@@ -59,7 +59,7 @@ export function NotificationPanel({ onClose, onUnreadCountChange }: Notification
     <div className="notification-panel-overlay" onClick={onClose}>
       <div className="notification-panel" onClick={e => e.stopPropagation()}>
         <div className="notification-panel-header">
-          <h3>Notifications</h3>
+          <h3>{t('common.notifications')}</h3>
           <button className="btn btn-ghost" onClick={onClose}>✕</button>
         </div>
         <div className="notification-panel-body">
@@ -84,7 +84,7 @@ export function NotificationPanel({ onClose, onUnreadCountChange }: Notification
                   <button
                     className="btn btn-ghost btn-sm"
                     onClick={() => handleMarkRead(n.id)}
-                    title="Mark as read"
+                    title={t('common.markAsRead')}
                   >
                     ✓
                   </button>

@@ -10,6 +10,7 @@ interface CategoryRow {
   color: string;
   is_default: number;
   sort_order: number;
+  budget_limit: number | null;
 }
 
 export function createCategoriesRouter(db: Database.Database): Router {
@@ -66,9 +67,10 @@ export function createCategoriesRouter(db: Database.Database): Router {
         color?: string;
         sort_order?: number;
       };
+      const { budget_limit } = req.body as { budget_limit?: number | null };
       db.prepare(
-        'UPDATE categories SET name = COALESCE(?, name), icon = COALESCE(?, icon), color = COALESCE(?, color), sort_order = COALESCE(?, sort_order) WHERE id = ?'
-      ).run(name ?? null, icon ?? null, color ?? null, sort_order ?? null, catId);
+        'UPDATE categories SET name = COALESCE(?, name), icon = COALESCE(?, icon), color = COALESCE(?, color), sort_order = COALESCE(?, sort_order), budget_limit = ? WHERE id = ?'
+      ).run(name ?? null, icon ?? null, color ?? null, sort_order ?? null, budget_limit !== undefined ? budget_limit : existing.budget_limit ?? null, catId);
       const updated = db.prepare('SELECT * FROM categories WHERE id = ?').get(catId) as CategoryRow;
       res.json(updated);
     } catch (e) {

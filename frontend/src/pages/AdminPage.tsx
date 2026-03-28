@@ -149,16 +149,16 @@ export function AdminPage() {
             <div className="card-title">{t('admin.oidc')}</div>
             <div className="modal-body">
               <div className="form-group">
-                <label className="form-label">Discovery URL</label>
+                <label className="form-label">{t('admin.discoveryUrl')}</label>
                 <input className="form-control" value={settings.oidc_discovery_url ?? ''} onChange={e => set('oidc_discovery_url', e.target.value)} placeholder="https://auth.example.com/.well-known/openid-configuration" />
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Client ID</label>
+                  <label className="form-label">{t('admin.clientId')}</label>
                   <input className="form-control" value={settings.oidc_client_id ?? ''} onChange={e => set('oidc_client_id', e.target.value)} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Client Secret</label>
+                  <label className="form-label">{t('admin.clientSecret')}</label>
                   <input className="form-control" type="password" value={settings.oidc_client_secret ?? ''} onChange={e => set('oidc_client_secret', e.target.value)} />
                 </div>
               </div>

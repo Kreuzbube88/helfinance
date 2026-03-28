@@ -165,8 +165,8 @@ export function LoansPage() {
                     </div>
                     <div style={{ marginTop: '0.5rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
-                        <span className="text-muted">{pctPaid.toFixed(0)}% paid</span>
-                        <span className="text-muted">{remaining} months left</span>
+                        <span className="text-muted">{t('loans.pctPaid', { pct: pctPaid.toFixed(0) })}</span>
+                        <span className="text-muted">{t('loans.monthsLeft', { months: remaining })}</span>
                       </div>
                       <div className="progress-bar">
                         <div className="progress-fill" style={{ width: `${pctPaid}%` }} />
@@ -211,7 +211,7 @@ export function LoansPage() {
                 <input className="form-input" type="number" min="1" value={form.term_months} onChange={e => f('term_months', e.target.value)} required />
               </div>
               <div className="form-group">
-                <label className="form-label">Start Date</label>
+                <label className="form-label">{t('loans.startDate')}</label>
                 <input className="form-input" type="date" value={form.start_date} onChange={e => f('start_date', e.target.value)} required />
               </div>
             </div>
@@ -246,11 +246,11 @@ export function LoansPage() {
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Date</th>
-                      <th>Payment</th>
-                      <th>Principal</th>
-                      <th>Interest</th>
-                      <th>Balance</th>
+                      <th>{t('loans.date')}</th>
+                      <th>{t('loans.payment')}</th>
+                      <th>{t('loans.principalCol')}</th>
+                      <th>{t('loans.interestCol')}</th>
+                      <th>{t('loans.balance')}</th>
                     </tr>
                   </thead>
                   <tbody>

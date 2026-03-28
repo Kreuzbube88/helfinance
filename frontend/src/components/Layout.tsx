@@ -56,6 +56,7 @@ export function Layout({ children }: LayoutProps) {
     { path: '/dashboard', label: t('nav.dashboard'), icon: '⊞' },
     { path: '/income', label: t('nav.income'), icon: '↑' },
     { path: '/expenses', label: t('nav.expenses'), icon: '↓' },
+    { path: '/transactions', label: t('nav.transactions'), icon: '⇄' },
     { path: '/loans', label: t('nav.loans'), icon: '⊙' },
     { path: '/savings', label: t('nav.savings'), icon: '◈' },
     { path: '/cashflow', label: t('nav.cashflow'), icon: '≈' },

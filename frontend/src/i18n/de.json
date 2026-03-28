@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "income": "Einnahmen",
     "expenses": "Ausgaben",
+    "transactions": "Buchungen",
     "loans": "Kredite",
     "savings": "Sparziele",
     "cashflow": "Cashflow",
@@ -20,6 +21,11 @@
     "upcomingBookings": "Nächste Buchungen",
     "savingsProgress": "Sparfortschritt",
     "liquidityWarning": "Achtung: Mögliches Liquiditätsproblem diesen Monat",
+    "budgetTitle": "Budget",
+    "income": "Einnahmen",
+    "expenses": "Ausgaben",
+    "customize": "Dashboard anpassen",
+    "widgetsDone": "Fertig",
     "budget": {
       "green": "Gut",
       "yellow": "Achtung",
@@ -67,7 +73,15 @@
     "termMonths": "Laufzeit (Monate)",
     "monthlyRate": "Monatliche Rate",
     "amortization": "Tilgungsplan",
-    "avalancheHint": "Tipp: Zahlen Sie zuerst den Kredit mit dem höchsten Zinssatz ab (Avalanche-Methode)."
+    "avalancheHint": "Tipp: Zahlen Sie zuerst den Kredit mit dem höchsten Zinssatz ab (Avalanche-Methode).",
+    "startDate": "Startdatum",
+    "pctPaid": "{{pct}}% bezahlt",
+    "monthsLeft": "{{months}} Monate verbleibend",
+    "date": "Datum",
+    "payment": "Rate",
+    "principalCol": "Tilgung",
+    "interestCol": "Zinsen",
+    "balance": "Restschuld"
   },
   "savings": {
     "title": "Sparziele",
@@ -101,7 +115,19 @@
     "monthly": "Monatlich",
     "yearly": "Jährlich",
     "exportPdf": "PDF exportieren",
-    "exportCsv": "CSV exportieren"
+    "exportCsv": "CSV exportieren",
+    "totalIncome": "Gesamteinnahmen",
+    "totalExpenses": "Gesamtausgaben",
+    "net": "Saldo",
+    "incomeBreakdown": "Einnahmen",
+    "expensesByCategory": "Ausgaben nach Kategorie",
+    "expenseBreakdown": "Ausgabenaufschlüsselung",
+    "snapshotArchive": "Archiv",
+    "row": "Kategorie",
+    "comparison": "Monatsvergleich",
+    "income": "Einnahmen",
+    "expenses": "Ausgaben",
+    "last6Months": "Letzte 6 Monate"
   },
   "household": {
     "title": "Haushalt",
@@ -161,7 +187,10 @@
     "testEmailSent": "Test-E-Mail gesendet",
     "enterPassword": "Passwort eingeben",
     "passwordMinLength": "Mindestens 8 Zeichen",
-    "allowRegistration": "Neue Registrierungen erlauben"
+    "allowRegistration": "Neue Registrierungen erlauben",
+    "discoveryUrl": "Discovery URL",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret"
   },
   "setup": {
     "subtitle": "Admin-Konto erstellen",
@@ -230,7 +259,16 @@
     "sidebarCollapse": "Sidebar einklappen",
     "sidebarExpand": "Sidebar ausklappen",
     "toggleMenu": "Menü öffnen",
-    "notifications": "Benachrichtigungen"
+    "notifications": "Benachrichtigungen",
+    "thisMonth": "Diesen Monat",
+    "day": "Tag",
+    "or": "oder",
+    "markAsRead": "Als gelesen markieren",
+    "total": "Gesamt",
+    "date": "Datum",
+    "type": "Typ",
+    "note": "Notiz",
+    "import": "Importieren"
   },
   "categories": {
     "Housing": "Wohnen",
@@ -252,7 +290,38 @@
     "privacyText": "Alle Daten werden lokal gespeichert. Es werden keine externen Dienste genutzt, außer SMTP/OIDC wurde vom Administrator konfiguriert.",
     "credits": "Erstellt mit Claude.ai — denn gute Prompts bauen großartige Software.",
     "changelog": "Changelog",
-    "license": "Lizenz"
+    "license": "Lizenz",
+    "initialRelease": "Erstveröffentlichung — alle Kernmodule"
+  },
+  "transactions": {
+    "title": "Buchungen",
+    "add": "Buchung hinzufügen",
+    "name": "Beschreibung",
+    "amount": "Betrag",
+    "date": "Datum",
+    "type": "Typ",
+    "expense": "Ausgabe",
+    "income": "Einnahme",
+    "category": "Kategorie",
+    "note": "Notiz",
+    "noTransactions": "Noch keine Buchungen vorhanden",
+    "import": "CSV importieren",
+    "importDesc": "Eine Zeile pro Buchung: Datum (JJJJ-MM-TT), Betrag, Beschreibung, Typ (income/expense)",
+    "importSuccess": "{{count}} Buchungen importiert",
+    "importError": "Fehler in Zeile {{line}}: {{msg}}"
+  },
+  "budget": {
+    "limit": "Budget-Limit",
+    "setLimit": "Limit setzen",
+    "monthlyLimit": "Monatliches Limit (€)",
+    "noLimit": "Kein Limit",
+    "spent": "Ausgegeben",
+    "remaining": "Verbleibend",
+    "overBudget": "Budget überschritten"
+  },
+  "quickAdd": {
+    "title": "Ausgabe schnell erfassen",
+    "description": "Beschreibung"
   },
   "calculator": {
     "title": "Schnellrechner",

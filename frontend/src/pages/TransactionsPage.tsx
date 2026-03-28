@@ -1,0 +1,269 @@
+import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useToast } from '../contexts/ToastContext'
+import { useAuth } from '../contexts/AuthContext'
+import {
+  getTransactions, createTransaction, deleteTransaction,
+  getCategories, importTransactionsCsv
+} from '../api'
+import type { Transaction, Category } from '../types'
+import { Modal } from '../components/Modal'
+import { ConfirmModal } from '../components/ConfirmModal'
+
+const EMPTY_FORM = {
+  name: '',
+  amount: '',
+  type: 'expense' as 'income' | 'expense',
+  category_id: '',
+  date: new Date().toISOString().slice(0, 10),
+  note: ''
+}
+
+export function TransactionsPage() {
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const { showToast } = useToast()
+
+  const [items, setItems] = useState<Transaction[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [showImport, setShowImport] = useState(false)
+  const [csvText, setCsvText] = useState('')
+  const [importing, setImporting] = useState(false)
+
+  const currency = user?.currency || 'EUR'
+  const fmt = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency })
+
+  const load = () => {
+    setLoading(true)
+    Promise.all([getTransactions(), getCategories()])
+      .then(([txs, cats]) => { setItems(txs); setCategories(cats) })
+      .catch(() => showToast(t('common.error'), 'error'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { load() }, [])
+
+  const f = (field: keyof typeof EMPTY_FORM, val: string) =>
+    setForm(prev => ({ ...prev, [field]: val }))
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const created = await createTransaction({
+        name: form.name,
+        amount: parseFloat(form.amount),
+        type: form.type,
+        category_id: form.category_id ? parseInt(form.category_id) : null,
+        date: form.date,
+        note: form.note || null
+      })
+      setItems(prev => [created, ...prev])
+      showToast(t('common.success'), 'success')
+      setShowModal(false)
+      setForm(EMPTY_FORM)
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('common.error'), 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteTransaction(id)
+      setItems(prev => prev.filter(i => i.id !== id))
+      showToast(t('common.success'), 'success')
+    } catch {
+      showToast(t('common.error'), 'error')
+    }
+  }
+
+  const handleImport = async () => {
+    if (!csvText.trim()) return
+    setImporting(true)
+    try {
+      const result = await importTransactionsCsv(csvText)
+      showToast(t('transactions.importSuccess', { count: result.imported }), 'success')
+      if (result.errors.length > 0) {
+        result.errors.forEach(e => showToast(e, 'error'))
+      }
+      setShowImport(false)
+      setCsvText('')
+      load()
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('common.error'), 'error')
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  const getCatName = (id: number | null) => {
+    if (!id) return '—'
+    const cat = categories.find(c => c.id === id)
+    return cat ? t(`categories.${cat.name}`, { defaultValue: cat.name }) : '—'
+  }
+
+  // Group by month
+  const grouped = items.reduce<Record<string, Transaction[]>>((acc, tx) => {
+    const key = tx.date.slice(0, 7)
+    if (!acc[key]) acc[key] = []
+    acc[key].push(tx)
+    return acc
+  }, {})
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1 className="page-title">{t('transactions.title')}</h1>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
+            {t('transactions.import')}
+          </button>
+          <button className="btn btn-primary" onClick={() => { setForm(EMPTY_FORM); setShowModal(true) }}>
+            + {t('transactions.add')}
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <p className="text-muted">{t('common.loading')}</p>
+      ) : items.length === 0 ? (
+        <div className="empty-state">
+          <p>{t('transactions.noTransactions')}</p>
+          <button className="btn btn-primary" onClick={() => { setForm(EMPTY_FORM); setShowModal(true) }}>
+            {t('transactions.add')}
+          </button>
+        </div>
+      ) : (
+        Object.entries(grouped).sort((a, b) => b[0].localeCompare(a[0])).map(([month, txs]) => (
+          <div key={month} className="card" style={{ marginBottom: '1rem' }}>
+            <h3 className="card-title" style={{ marginBottom: '0.75rem' }}>
+              {new Date(month + '-01').toLocaleDateString('de-DE', { year: 'numeric', month: 'long' })}
+            </h3>
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{t('transactions.date')}</th>
+                    <th>{t('transactions.name')}</th>
+                    <th>{t('transactions.type')}</th>
+                    <th>{t('transactions.category')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('transactions.amount')}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {txs.map(tx => (
+                    <tr key={tx.id}>
+                      <td className="text-muted">{new Date(tx.date + 'T00:00:00').toLocaleDateString('de-DE')}</td>
+                      <td>
+                        <span>{tx.name}</span>
+                        {tx.note && <div className="text-muted text-sm">{tx.note}</div>}
+                      </td>
+                      <td>
+                        <span className={`badge ${tx.type === 'income' ? 'badge-success' : 'badge-neutral'}`}>
+                          {t(`transactions.${tx.type}`)}
+                        </span>
+                      </td>
+                      <td className="text-muted">{getCatName(tx.category_id)}</td>
+                      <td style={{ textAlign: 'right' }} className={tx.type === 'income' ? 'text-success' : 'text-danger'}>
+                        {tx.type === 'income' ? '+' : '-'}{fmt(tx.amount)}
+                      </td>
+                      <td>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setDeleteId(tx.id)}>✕</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))
+      )}
+
+      {showModal && (
+        <Modal title={t('transactions.add')} onClose={() => setShowModal(false)}>
+          <form onSubmit={handleSave}>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">{t('transactions.date')}</label>
+                <input className="form-input" type="date" value={form.date} onChange={e => f('date', e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('transactions.type')}</label>
+                <select className="form-select" value={form.type} onChange={e => f('type', e.target.value)}>
+                  <option value="expense">{t('transactions.expense')}</option>
+                  <option value="income">{t('transactions.income')}</option>
+                </select>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('transactions.name')}</label>
+              <input className="form-input" value={form.name} onChange={e => f('name', e.target.value)} required />
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">{t('transactions.amount')}</label>
+                <input className="form-input" type="number" step="0.01" min="0" value={form.amount} onChange={e => f('amount', e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('transactions.category')}</label>
+                <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
+                  <option value="">—</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      {t(`categories.${cat.name}`, { defaultValue: cat.name })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('transactions.note')}</label>
+              <input className="form-input" value={form.note} onChange={e => f('note', e.target.value)} />
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? t('common.loading') : t('common.save')}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {showImport && (
+        <Modal title={t('transactions.import')} onClose={() => setShowImport(false)}>
+          <p className="text-muted text-sm" style={{ marginBottom: '0.75rem' }}>{t('transactions.importDesc')}</p>
+          <textarea
+            className="form-input"
+            rows={8}
+            style={{ fontFamily: 'monospace', fontSize: '0.8rem', resize: 'vertical' }}
+            placeholder="2025-01-15,50.00,Supermarkt,expense&#10;2025-01-01,3000.00,Gehalt,income"
+            value={csvText}
+            onChange={e => setCsvText(e.target.value)}
+          />
+          <div className="modal-actions" style={{ marginTop: '0.75rem' }}>
+            <button className="btn btn-secondary" onClick={() => setShowImport(false)}>{t('common.cancel')}</button>
+            <button className="btn btn-primary" onClick={handleImport} disabled={importing || !csvText.trim()}>
+              {importing ? t('common.loading') : t('common.import')}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {deleteId !== null && (
+        <ConfirmModal
+          onConfirm={() => handleDelete(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
+      )}
+    </div>
+  )
+}
