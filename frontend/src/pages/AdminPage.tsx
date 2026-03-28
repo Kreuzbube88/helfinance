@@ -89,7 +89,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className="page-content">
+    <div className="page">
       <h1 className="page-title">{t('admin.title')}</h1>
 
       <div className="tabs">
@@ -195,6 +195,10 @@ export function AdminPage() {
                   <option value="CHF">CHF</option>
                 </select>
               </div>
+              <label className="form-check">
+                <input type="checkbox" checked={settings.allow_registration !== 'false'} onChange={e => set('allow_registration', e.target.checked ? 'true' : 'false')} />
+                {t('admin.allowRegistration')}
+              </label>
               <button className="btn btn-primary" onClick={save} disabled={saving}>{t('common.save')}</button>
             </div>
           </div>

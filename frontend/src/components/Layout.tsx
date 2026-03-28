@@ -81,12 +81,6 @@ export function Layout({ children }: LayoutProps) {
             <img src="/favicon.png" alt="Logo" className="logo-icon" />
             <span className="logo-text">HELFINANCE</span>
           </div>
-          <button
-            className="sidebar-close btn btn-ghost"
-            onClick={() => setSidebarOpen(false)}
-          >
-            ✕
-          </button>
         </div>
 
         <nav className="sidebar-nav">
@@ -132,14 +126,6 @@ export function Layout({ children }: LayoutProps) {
           >
             <span className="nav-icon">⏻</span>
             <span className="nav-label">{t('nav.logout')}</span>
-          </button>
-          <button
-            className="btn btn-ghost sidebar-collapse-btn"
-            onClick={() => setSidebarCollapsed(prev => !prev)}
-            title={sidebarCollapsed ? t('common.sidebarExpand') : t('common.sidebarCollapse')}
-            style={{ justifyContent: 'center', fontSize: '0.75rem' }}
-          >
-            {sidebarCollapsed ? '›' : '‹'}
           </button>
         </div>
       </aside>

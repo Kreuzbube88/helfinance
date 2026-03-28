@@ -15,12 +15,13 @@ export function LoginPage() {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [oidcConfig, setOidcConfig] = useState<{ enabled: boolean; display_name: string; url: string } | null>(null)
 
   useEffect(() => {
     if (user) {
-      navigate(user.onboarding_done ? '/dashboard' : '/onboarding', { replace: true })
+      navigate('/dashboard', { replace: true })
     }
   }, [user, navigate])
 
@@ -39,11 +40,16 @@ export function LoginPage() {
       if (mode === 'login') {
         const res = await login(username, password)
         authLogin(res.token, res.user)
-        navigate(res.user.onboarding_done ? '/dashboard' : '/onboarding', { replace: true })
+        navigate('/dashboard', { replace: true })
       } else {
+        if (password !== confirmPassword) {
+          showToast(t('setup.passwordMismatch'), 'error')
+          setLoading(false)
+          return
+        }
         const res = await register(username, email, password)
         authLogin(res.token, res.user)
-        navigate('/onboarding', { replace: true })
+        navigate('/dashboard', { replace: true })
       }
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('common.error'), 'error')
@@ -120,6 +126,20 @@ export function LoginPage() {
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             />
           </div>
+
+          {mode === 'register' && (
+            <div className="form-group">
+              <label className="form-label">{t('setup.confirmPassword')}</label>
+              <input
+                className="form-input"
+                type="password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+              />
+            </div>
+          )}
 
           <button
             type="submit"

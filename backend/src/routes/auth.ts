@@ -35,6 +35,12 @@ export function createAuthRouter(db: Database.Database): Router {
 
   router.post('/register', (req: Request, res: Response) => {
     try {
+      const allowReg = db.prepare("SELECT value FROM settings WHERE key = 'allow_registration'").get() as SettingRow | undefined;
+      if (allowReg?.value === 'false') {
+        res.status(403).json({ error: 'Registration is disabled' });
+        return;
+      }
+
       const { username, email, password } = req.body as {
         username: string;
         email: string;

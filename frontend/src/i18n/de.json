@@ -82,7 +82,13 @@
     "fixedAmount": "Fester Betrag",
     "bufferAmount": "Puffer",
     "emergencyReserve": "Notfallreserve",
-    "savingsRate": "Sparquote"
+    "savingsRate": "Sparquote",
+    "emergencyTargetLabel": "Ziel: {{target}} (3× monatliches Einkommen)",
+    "currentEmergencySavings": "Aktuelles Notfallguthaben (€)",
+    "savingsRateDescription": "Diesen Monat Gehalt eingeben, um den dynamischen Sparbeitrag neu zu berechnen.",
+    "thisMonthsSalary": "Gehalt diesen Monat (€)",
+    "recalculate": "Neu berechnen",
+    "dynamicSavingsThisMonth": "Dynamisches Sparen diesen Monat: "
   },
   "cashflow": {
     "title": "Cashflow Kalender",
@@ -154,7 +160,8 @@
     "enterEmail": "E-Mail-Adresse eingeben",
     "testEmailSent": "Test-E-Mail gesendet",
     "enterPassword": "Passwort eingeben",
-    "passwordMinLength": "Mindestens 8 Zeichen"
+    "passwordMinLength": "Mindestens 8 Zeichen",
+    "allowRegistration": "Neue Registrierungen erlauben"
   },
   "setup": {
     "subtitle": "Admin-Konto erstellen",

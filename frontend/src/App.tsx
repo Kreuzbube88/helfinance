@@ -7,7 +7,6 @@ import { Layout } from './components/Layout'
 
 import { SetupPage } from './pages/SetupPage'
 import { LoginPage } from './pages/LoginPage'
-import { OnboardingPage } from './pages/OnboardingPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { IncomePage } from './pages/IncomePage'
 import { ExpensesPage } from './pages/ExpensesPage'
@@ -55,7 +54,6 @@ function RootRedirect() {
 
   if (isLoading) return <LoadingScreen />
   if (!user) return <Navigate to="/login" replace />
-  if (!user.onboarding_done) return <Navigate to="/onboarding" replace />
   return <Navigate to="/dashboard" replace />
 }
 
@@ -78,14 +76,6 @@ function AppRoutes() {
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage />} />
 
-      <Route
-        path="/onboarding"
-        element={
-          <ProtectedRoute>
-            <OnboardingPage />
-          </ProtectedRoute>
-        }
-      />
       <Route
         path="/dashboard"
         element={

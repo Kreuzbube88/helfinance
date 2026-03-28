@@ -215,10 +215,10 @@ export function SavingsPage() {
           <div className="card">
             <h3 className="card-title">{t('savings.emergencyReserve')}</h3>
             <p className="text-muted text-sm" style={{ marginBottom: '1rem' }}>
-              Target: {fmt(emergencyTarget)} (3× monthly income)
+              {t('savings.emergencyTargetLabel', { target: fmt(emergencyTarget) })}
             </p>
             <div className="form-group">
-              <label className="form-label">Current emergency savings (€)</label>
+              <label className="form-label">{t('savings.currentEmergencySavings')}</label>
               <input
                 className="form-input"
                 type="number"
@@ -248,11 +248,11 @@ export function SavingsPage() {
           <div className="card">
             <h3 className="card-title">{t('savings.savingsRate')}</h3>
             <p className="text-muted text-sm" style={{ marginBottom: '1rem' }}>
-              Enter this month's salary to recalculate dynamic savings contribution.
+              {t('savings.savingsRateDescription')}
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
               <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                <label className="form-label">This month's salary (€)</label>
+                <label className="form-label">{t('savings.thisMonthsSalary')}</label>
                 <input
                   className="form-input"
                   type="number"
@@ -263,12 +263,12 @@ export function SavingsPage() {
                 />
               </div>
               <button className="btn btn-primary" onClick={handleRecalc} disabled={recalcLoading}>
-                {recalcLoading ? t('common.loading') : 'Recalculate'}
+                {recalcLoading ? t('common.loading') : t('savings.recalculate')}
               </button>
             </div>
             {dynamicResult !== null && (
               <div className="card" style={{ marginTop: '1rem', background: 'var(--color-surface-2)' }}>
-                <span className="text-muted">Dynamic savings this month: </span>
+                <span className="text-muted">{t('savings.dynamicSavingsThisMonth')}</span>
                 <strong className={dynamicResult >= 0 ? 'text-success' : 'text-danger'}>
                   {fmt(dynamicResult)}
                 </strong>

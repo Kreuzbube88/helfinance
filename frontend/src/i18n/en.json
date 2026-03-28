@@ -82,7 +82,13 @@
     "fixedAmount": "Fixed Amount",
     "bufferAmount": "Buffer",
     "emergencyReserve": "Emergency Reserve",
-    "savingsRate": "Savings Rate"
+    "savingsRate": "Savings Rate",
+    "emergencyTargetLabel": "Target: {{target}} (3× monthly income)",
+    "currentEmergencySavings": "Current emergency savings (€)",
+    "savingsRateDescription": "Enter this month's salary to recalculate dynamic savings contribution.",
+    "thisMonthsSalary": "This month's salary (€)",
+    "recalculate": "Recalculate",
+    "dynamicSavingsThisMonth": "Dynamic savings this month: "
   },
   "cashflow": {
     "title": "Cashflow Calendar",
@@ -154,7 +160,8 @@
     "enterEmail": "Enter email address",
     "testEmailSent": "Test email sent",
     "enterPassword": "Enter password",
-    "passwordMinLength": "Minimum 8 characters"
+    "passwordMinLength": "Minimum 8 characters",
+    "allowRegistration": "Allow new registrations"
   },
   "setup": {
     "subtitle": "Create Admin Account",
