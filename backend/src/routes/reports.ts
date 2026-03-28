@@ -5,9 +5,11 @@ import {
   calcYearlyProjection,
   calcDailyCashflow,
   normalizeToMonthly,
+  calcRequiredReserveMonthly,
   IncomeRecord,
   ExpenseRecord,
   ChangeRecord,
+  OverrideRecord,
 } from '../services/financeCalc';
 
 interface IncomeRow {
@@ -42,6 +44,17 @@ interface SnapshotRow {
   savings_total: number;
 }
 
+interface OverrideRow {
+  booking_type: 'income' | 'expense';
+  booking_id: number;
+  month: string;
+  override_amount: number;
+}
+
+interface LoanRateRow {
+  monthly_rate: number | null;
+}
+
 
 interface IncomeChangeRow {
   income_id: number;
@@ -69,6 +82,19 @@ export function createReportsRouter(db: Database.Database): Router {
 
       const incomes = db.prepare('SELECT * FROM income WHERE user_id = ?').all(userId) as IncomeRow[];
       const expenses = db.prepare('SELECT * FROM expenses WHERE user_id = ?').all(userId) as ExpenseRow[];
+      const overrideRows = db
+        .prepare('SELECT * FROM booking_overrides WHERE user_id = ?')
+        .all(userId) as OverrideRow[];
+      const overrides: OverrideRecord[] = overrideRows.map((o) => ({
+        booking_type: o.booking_type,
+        booking_id: o.booking_id,
+        month: o.month,
+        override_amount: o.override_amount,
+      }));
+      const loanRows = db
+        .prepare('SELECT monthly_rate FROM loans WHERE user_id = ?')
+        .all(userId) as LoanRateRow[];
+      const loanMonthlyTotal = loanRows.reduce((sum, l) => sum + (l.monthly_rate ?? 0), 0);
 
       const monthlyIncome = incomes.reduce((sum, inc) => {
         if (inc.effective_from && inc.effective_from > `${datePrefix}-01`) return sum;
@@ -79,6 +105,14 @@ export function createReportsRouter(db: Database.Database): Router {
       }, 0);
 
       const totalExpenses = expenses.reduce((sum, e) => sum + normalizeToMonthly(e.amount, e.interval_months), 0);
+
+      const requiredSavings = calcRequiredReserveMonthly(
+        expenses.map((e) => ({ id: e.id, amount: e.amount, interval_months: e.interval_months })),
+        overrides,
+        datePrefix
+      );
+      const normalizedNet = monthlyIncome - totalExpenses;
+      const effectiveNet = normalizedNet - requiredSavings - loanMonthlyTotal;
 
       // Group expenses by category name
       const categoryNames = [...new Set(expenses.map((e) => e.category || 'Miscellaneous'))];
@@ -104,7 +138,7 @@ export function createReportsRouter(db: Database.Database): Router {
         month,
         Math.round(monthlyIncome * 100) / 100,
         Math.round(totalExpenses * 100) / 100,
-        Math.round((monthlyIncome - totalExpenses) * 100) / 100,
+        Math.round(normalizedNet * 100) / 100,
         JSON.stringify({ expense_breakdown: expenseBreakdown })
       );
 
@@ -118,7 +152,10 @@ export function createReportsRouter(db: Database.Database): Router {
         month,
         total_income: Math.round(monthlyIncome * 100) / 100,
         total_expenses: Math.round(totalExpenses * 100) / 100,
-        net: Math.round((monthlyIncome - totalExpenses) * 100) / 100,
+        net: Math.round(normalizedNet * 100) / 100,
+        required_savings: Math.round(requiredSavings * 100) / 100,
+        loan_monthly_total: Math.round(loanMonthlyTotal * 100) / 100,
+        effective_net: Math.round(effectiveNet * 100) / 100,
         income_breakdown: incomes.map((i) => ({ name: i.name, amount: i.amount, interval: i.interval })),
         expense_breakdown: expenseBreakdown,
         snapshots: snapshots.map((s) => ({
@@ -151,6 +188,19 @@ export function createReportsRouter(db: Database.Database): Router {
       const expenseChanges = db
         .prepare('SELECT ec.* FROM expense_changes ec JOIN expenses e ON ec.expense_id = e.id WHERE e.user_id = ?')
         .all(userId) as ExpenseChangeRow[];
+      const overrideRowsY = db
+        .prepare('SELECT * FROM booking_overrides WHERE user_id = ?')
+        .all(userId) as OverrideRow[];
+      const overridesY: OverrideRecord[] = overrideRowsY.map((o) => ({
+        booking_type: o.booking_type,
+        booking_id: o.booking_id,
+        month: o.month,
+        override_amount: o.override_amount,
+      }));
+      const loanRowsY = db
+        .prepare('SELECT monthly_rate FROM loans WHERE user_id = ?')
+        .all(userId) as LoanRateRow[];
+      const loanMonthlyTotalY = loanRowsY.reduce((sum, l) => sum + (l.monthly_rate ?? 0), 0);
 
       const incomeRecords: IncomeRecord[] = incomes.map((i) => ({
         id: i.id,
@@ -184,24 +234,27 @@ export function createReportsRouter(db: Database.Database): Router {
         effective_from: c.effective_from,
       }));
 
-      const projection = calcYearlyProjection(year, incomeRecords, expenseRecords, icChanges, ecChanges);
+      const projection = calcYearlyProjection(
+        year, incomeRecords, expenseRecords, icChanges, ecChanges, overridesY, loanMonthlyTotalY
+      );
 
       // Map to frontend YearlyReport shape
       const months = projection.map((m) => ({
         month: m.month,
         income: Math.round(m.income * 100) / 100,
         fixed_expenses: Math.round(m.expenses * 100) / 100,
-        provisions: 0,
-        loans: 0,
+        provisions: Math.round(m.required_savings * 100) / 100,
+        loans: Math.round(loanMonthlyTotalY * 100) / 100,
         net_savings: Math.round(m.savings * 100) / 100,
+        effective_net: Math.round(m.effective_net * 100) / 100,
       }));
 
       const totals = months.reduce(
         (acc, m) => ({
           income: acc.income + m.income,
           fixed_expenses: acc.fixed_expenses + m.fixed_expenses,
-          provisions: 0,
-          loans: 0,
+          provisions: acc.provisions + m.provisions,
+          loans: acc.loans + m.loans,
           net_savings: acc.net_savings + m.net_savings,
         }),
         { income: 0, fixed_expenses: 0, provisions: 0, loans: 0, net_savings: 0 }

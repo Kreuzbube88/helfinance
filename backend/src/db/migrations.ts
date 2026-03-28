@@ -160,6 +160,11 @@ export function runMigrations(db: Database.Database): void {
   // V2: Budget limits per category
   try { db.exec('ALTER TABLE categories ADD COLUMN budget_limit REAL DEFAULT NULL'); } catch {}
 
+  // V7: Link transactions to income/expense sources for auto-generation
+  try { db.exec('ALTER TABLE transactions ADD COLUMN income_id INTEGER REFERENCES income(id) ON DELETE SET NULL'); } catch {}
+  try { db.exec('ALTER TABLE transactions ADD COLUMN expense_id INTEGER REFERENCES expenses(id) ON DELETE SET NULL'); } catch {}
+  try { db.exec('ALTER TABLE transactions ADD COLUMN is_auto INTEGER DEFAULT 0'); } catch {}
+
   // V6: Widget preferences stored per user as JSON in settings-like table
   db.exec(`
     CREATE TABLE IF NOT EXISTS widget_preferences (
@@ -170,6 +175,67 @@ export function runMigrations(db: Database.Database): void {
       FOREIGN KEY(user_id) REFERENCES users(id)
     );
   `);
+
+  // V8: Month-specific booking overrides
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS booking_overrides (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      booking_type TEXT NOT NULL CHECK(booking_type IN ('income','expense')),
+      booking_id INTEGER NOT NULL,
+      month TEXT NOT NULL,
+      override_amount REAL NOT NULL,
+      UNIQUE(booking_type, booking_id, month),
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+  `);
+
+  // V8: Savings account with initial balance + transaction log
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS savings_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL UNIQUE,
+      initial_balance REAL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS savings_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      date TEXT NOT NULL,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+  `);
+
+  // V8: Loan special payments
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS loan_special_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      loan_id INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      date TEXT NOT NULL,
+      FOREIGN KEY(loan_id) REFERENCES loans(id) ON DELETE CASCADE
+    );
+  `);
+
+  // V8: Extend loans with type and dynamic interest flag
+  try { db.exec("ALTER TABLE loans ADD COLUMN loan_type TEXT DEFAULT 'annuity' CHECK(loan_type IN ('annuity','real_estate'))"); } catch {}
+  try { db.exec('ALTER TABLE loans ADD COLUMN interest_rate_dynamic INTEGER DEFAULT 0'); } catch {}
+
+  // V8: Extend savings_goals with target_date and priority
+  try { db.exec('ALTER TABLE savings_goals ADD COLUMN target_date TEXT'); } catch {}
+  try { db.exec('ALTER TABLE savings_goals ADD COLUMN priority INTEGER DEFAULT 0'); } catch {}
+
+  // V8: Income gets category and is_active
+  try { db.exec('ALTER TABLE income ADD COLUMN category_id INTEGER REFERENCES categories(id)'); } catch {}
+  try { db.exec('ALTER TABLE income ADD COLUMN is_active INTEGER DEFAULT 1'); } catch {}
+
+  // V8: Expenses get is_active
+  try { db.exec('ALTER TABLE expenses ADD COLUMN is_active INTEGER DEFAULT 1'); } catch {}
 }
 
 interface DefaultCategory {

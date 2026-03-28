@@ -4,8 +4,10 @@ import { authMiddleware } from '../middleware/auth';
 import {
   calcHealthScore,
   calcDailyCashflow,
+  calcRequiredReserveMonthly,
   IncomeRecord,
   ExpenseRecord,
+  OverrideRecord,
 } from '../services/financeCalc';
 
 interface IncomeRow {
@@ -40,6 +42,17 @@ interface LoanRow {
   monthly_rate: number | null;
 }
 
+interface OverrideRow {
+  booking_type: 'income' | 'expense';
+  booking_id: number;
+  month: string;
+  override_amount: number;
+}
+
+interface SavingsAccountRow {
+  initial_balance: number;
+}
+
 export function createDashboardRouter(db: Database.Database): Router {
   const router = Router();
 
@@ -68,6 +81,25 @@ export function createDashboardRouter(db: Database.Database): Router {
       const savingsGoals = db
         .prepare('SELECT * FROM savings_goals WHERE user_id = ?')
         .all(userId) as SavingsGoalRow[];
+
+      const overrideRows = db
+        .prepare('SELECT * FROM booking_overrides WHERE user_id = ?')
+        .all(userId) as OverrideRow[];
+      const overrides: OverrideRecord[] = overrideRows.map((o) => ({
+        booking_type: o.booking_type,
+        booking_id: o.booking_id,
+        month: o.month,
+        override_amount: o.override_amount,
+      }));
+
+      const savingsAccount = db
+        .prepare('SELECT initial_balance FROM savings_accounts WHERE user_id = ?')
+        .get(userId) as SavingsAccountRow | undefined;
+      const savingsTxSum = (
+        db.prepare('SELECT COALESCE(SUM(amount), 0) as total FROM savings_transactions WHERE user_id = ?')
+          .get(userId) as { total: number }
+      ).total;
+      const currentSavingsBalance = (savingsAccount?.initial_balance ?? 0) + savingsTxSum;
 
       // Monthly income (monthly interval only for simple calc)
       const monthlyIncome = incomes.reduce((sum, inc) => {
@@ -150,6 +182,15 @@ export function createDashboardRouter(db: Database.Database): Router {
       const dailyCashflow = calcDailyCashflow(incomeRecords, expenseRecords, year, month);
       const liquidityWarning = dailyCashflow.some((d) => d.balance < 0);
 
+      // Reserve warning: current savings balance below 3× required monthly reserve
+      const currentMonthStr = `${year}-${String(month).padStart(2, '0')}`;
+      const requiredReserve = calcRequiredReserveMonthly(
+        expenses.map((e) => ({ id: e.id, amount: e.amount, interval_months: e.interval_months })),
+        overrides,
+        currentMonthStr
+      );
+      const reserveWarning = currentSavingsBalance < requiredReserve * 3;
+
       res.json({
         health_score: healthScore,
         total_income: Math.round(monthlyIncome * 100) / 100,
@@ -161,6 +202,9 @@ export function createDashboardRouter(db: Database.Database): Router {
         })),
         savings_goals: goalsProgress,
         liquidity_warning: liquidityWarning,
+        reserve_warning: reserveWarning,
+        required_reserve_monthly: Math.round(requiredReserve * 100) / 100,
+        savings_balance: Math.round(currentSavingsBalance * 100) / 100,
         budget_status: savingsRate >= 20 ? 'green' : savingsRate >= 0 ? 'yellow' : 'red',
       });
     } catch (e) {

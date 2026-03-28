@@ -12,6 +12,8 @@ export interface ProjectionMonth {
   income: number;
   expenses: number;
   savings: number;
+  required_savings: number;
+  effective_net: number;
 }
 
 export interface DailyBooking {
@@ -63,6 +65,18 @@ export interface SharedExpenseRecord {
   user_a_id: number;
 }
 
+export interface OverrideRecord {
+  booking_type: 'income' | 'expense';
+  booking_id: number;
+  month: string; // YYYY-MM
+  override_amount: number;
+}
+
+export interface SpecialPayment {
+  amount: number;
+  date: string; // YYYY-MM
+}
+
 export function normalizeToMonthly(amount: number, intervalMonths: number): number {
   return amount / intervalMonths;
 }
@@ -73,6 +87,33 @@ export function calcProvisionBuffer(
   return expenses
     .filter((e) => e.interval_months > 1)
     .reduce((sum, e) => sum + normalizeToMonthly(e.amount, e.interval_months), 0);
+}
+
+/** Total monthly reserve required across all recurring bookings (overrides take precedence). */
+export function calcRequiredReserveMonthly(
+  expenses: Array<{ id: number; amount: number; interval_months: number }>,
+  overrides: OverrideRecord[],
+  month: string
+): number {
+  return expenses.reduce((sum, e) => {
+    const ov = overrides.find((o) => o.booking_type === 'expense' && o.booking_id === e.id && o.month === month);
+    const base = ov ? ov.override_amount : e.amount;
+    return sum + base / e.interval_months;
+  }, 0);
+}
+
+/** Resolve effective amount for a booking in a given month (override > base). */
+export function resolveAmount(
+  bookingType: 'income' | 'expense',
+  bookingId: number,
+  baseAmount: number,
+  month: string,
+  overrides: OverrideRecord[]
+): number {
+  const ov = overrides.find(
+    (o) => o.booking_type === bookingType && o.booking_id === bookingId && o.month === month
+  );
+  return ov ? ov.override_amount : baseAmount;
 }
 
 export function calcDynamicSavings(
@@ -100,7 +141,8 @@ export function generateAmortization(
   principal: number,
   annualRatePct: number,
   termMonths: number,
-  startDate: string
+  startDate: string,
+  specialPayments: SpecialPayment[] = []
 ): AmortizationRow[] {
   const monthlyPayment = calcLoanMonthlyRate(principal, annualRatePct, termMonths);
   const r = annualRatePct / 12 / 100;
@@ -109,19 +151,28 @@ export function generateAmortization(
   const start = new Date(startDate);
 
   for (let i = 1; i <= termMonths; i++) {
-    const interest = annualRatePct === 0 ? 0 : balance * r;
-    const principalPaid = monthlyPayment - interest;
-    balance = Math.max(0, balance - principalPaid);
+    if (balance <= 0) break;
 
     const date = new Date(start);
     date.setMonth(date.getMonth() + i - 1);
+    const monthStr = date.toISOString().slice(0, 7);
+
+    const interest = annualRatePct === 0 ? 0 : balance * r;
+    const principalPaid = Math.min(monthlyPayment - interest, balance);
+    balance -= principalPaid;
+
+    // Apply special payments for this month
+    const specialTotal = specialPayments
+      .filter((sp) => sp.date === monthStr)
+      .reduce((sum, sp) => sum + sp.amount, 0);
+    balance = Math.max(0, balance - specialTotal);
 
     schedule.push({
       month: i,
-      date: date.toISOString().slice(0, 7),
-      payment: Math.round(monthlyPayment * 100) / 100,
+      date: monthStr,
+      payment: Math.round((monthlyPayment + specialTotal) * 100) / 100,
       interest: Math.round(interest * 100) / 100,
-      principal: Math.round(principalPaid * 100) / 100,
+      principal: Math.round((principalPaid + specialTotal) * 100) / 100,
       balance: Math.round(balance * 100) / 100,
     });
   }
@@ -134,12 +185,15 @@ export function calcYearlyProjection(
   incomes: IncomeRecord[],
   expenses: ExpenseRecord[],
   incomeChanges: ChangeRecord[],
-  expenseChanges: ChangeRecord[]
+  expenseChanges: ChangeRecord[],
+  overrides: OverrideRecord[] = [],
+  loanMonthlyTotal = 0
 ): ProjectionMonth[] {
   const result: ProjectionMonth[] = [];
 
   for (let month = 1; month <= 12; month++) {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-01`;
+    const monthStr = dateStr.slice(0, 7);
 
     let totalIncome = 0;
     for (const inc of incomes) {
@@ -151,15 +205,15 @@ export function calcYearlyProjection(
         .filter((c) => c.income_id === inc.id && c.effective_from <= dateStr)
         .sort((a, b) => b.effective_from.localeCompare(a.effective_from));
 
-      const amount = applicableChanges.length > 0 ? applicableChanges[0].new_amount : inc.amount;
+      const baseAmount = applicableChanges.length > 0 ? applicableChanges[0].new_amount : inc.amount;
+      const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
 
       if (inc.interval === 'monthly') {
         totalIncome += amount;
       } else if (inc.interval === 'yearly') {
         totalIncome += amount / 12;
       } else if (inc.interval === 'once') {
-        // include only in exact month
-        if (inc.effective_from && inc.effective_from.startsWith(dateStr.slice(0, 7))) {
+        if (inc.effective_from && inc.effective_from.startsWith(monthStr)) {
           totalIncome += amount;
         }
       }
@@ -174,9 +228,9 @@ export function calcYearlyProjection(
         .filter((c) => c.expense_id === exp.id && c.effective_from <= dateStr)
         .sort((a, b) => b.effective_from.localeCompare(a.effective_from));
 
-      const amount = applicableChanges.length > 0 ? applicableChanges[0].new_amount : exp.amount;
+      const baseAmount = applicableChanges.length > 0 ? applicableChanges[0].new_amount : exp.amount;
+      const amount = resolveAmount('expense', exp.id, baseAmount, monthStr, overrides);
 
-      // For non-monthly intervals, check if this month is a booking month
       const startDate = exp.effective_from || `${year}-01-01`;
       const startMonth = new Date(startDate).getMonth() + 1;
       const monthsElapsed = (year - new Date(startDate).getFullYear()) * 12 + month - startMonth;
@@ -188,11 +242,21 @@ export function calcYearlyProjection(
       }
     }
 
+    const normalizedNet = totalIncome - totalExpenses;
+    const requiredSavings = calcRequiredReserveMonthly(
+      expenses.map((e) => ({ id: e.id, amount: e.amount, interval_months: e.interval_months })),
+      overrides,
+      monthStr
+    );
+    const effectiveNet = normalizedNet - requiredSavings - loanMonthlyTotal;
+
     result.push({
       month,
       income: Math.round(totalIncome * 100) / 100,
       expenses: Math.round(totalExpenses * 100) / 100,
-      savings: Math.round((totalIncome - totalExpenses) * 100) / 100,
+      savings: Math.round(normalizedNet * 100) / 100,
+      required_savings: Math.round(requiredSavings * 100) / 100,
+      effective_net: Math.round(effectiveNet * 100) / 100,
     });
   }
 

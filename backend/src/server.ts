@@ -19,6 +19,7 @@ import { createNotificationsRouter } from './routes/notifications';
 import { createSetupRouter } from './routes/setup';
 import { createTransactionsRouter } from './routes/transactions';
 import { createWidgetsRouter } from './routes/widgets';
+import { createOverridesRouter } from './routes/overrides';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -60,6 +61,7 @@ app.use(`${v1}/export`, createExportRouter(db));
 app.use(`${v1}/notifications`, createNotificationsRouter(db));
 app.use(`${v1}/transactions`, createTransactionsRouter(db));
 app.use(`${v1}/widgets`, createWidgetsRouter(db));
+app.use(`${v1}/overrides`, createOverridesRouter(db));
 
 // Serve frontend static files
 const publicDir = path.resolve(__dirname, '../public');

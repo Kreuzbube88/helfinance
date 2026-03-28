@@ -21,6 +21,7 @@
     "upcomingBookings": "Upcoming Bookings",
     "savingsProgress": "Savings Progress",
     "liquidityWarning": "Warning: Possible liquidity issue this month",
+    "reserveWarning": "Warning: Savings balance {{balance}} is below required reserve {{required}}",
     "budgetTitle": "Budget",
     "income": "Income",
     "expenses": "Expenses",
@@ -81,7 +82,11 @@
     "payment": "Payment",
     "principalCol": "Principal",
     "interestCol": "Interest",
-    "balance": "Balance"
+    "balance": "Balance",
+    "specialPayments": "Special Payments",
+    "loanType": "Loan Type",
+    "annuity": "Annuity",
+    "realEstate": "Real Estate"
   },
   "savings": {
     "title": "Savings Goals",
@@ -102,7 +107,14 @@
     "savingsRateDescription": "Enter this month's salary to recalculate dynamic savings contribution.",
     "thisMonthsSalary": "This month's salary (€)",
     "recalculate": "Recalculate",
-    "dynamicSavingsThisMonth": "Dynamic savings this month: "
+    "dynamicSavingsThisMonth": "Dynamic savings this month: ",
+    "currentBalance": "Current Balance",
+    "initialBalance": "Initial Balance",
+    "transactions": "Transactions",
+    "addTransaction": "Add Transaction",
+    "targetDate": "Target Date",
+    "requiredMonthly": "Required/month",
+    "priority": "Priority"
   },
   "cashflow": {
     "title": "Cashflow Calendar",
@@ -127,7 +139,10 @@
     "comparison": "Monthly Comparison",
     "income": "Income",
     "expenses": "Expenses",
-    "last6Months": "Last 6 months"
+    "last6Months": "Last 6 months",
+    "requiredSavings": "Required Reserve",
+    "loanMonthlyTotal": "Loan Payments",
+    "effectiveNet": "Effective Net"
   },
   "household": {
     "title": "Household",
@@ -268,7 +283,9 @@
     "date": "Date",
     "type": "Type",
     "note": "Note",
-    "import": "Import"
+    "import": "Import",
+    "add": "Add",
+    "description": "Description"
   },
   "categories": {
     "Housing": "Housing",

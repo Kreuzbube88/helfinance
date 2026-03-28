@@ -160,6 +160,20 @@ export function MonthlyReportPage() {
                 {fmt(report.net)}
               </div>
             </div>
+            <div className="card">
+              <div className="big-number-label">{t('reports.requiredSavings')}</div>
+              <div className="big-number text-warning">{fmt(report.required_savings ?? 0)}</div>
+            </div>
+            <div className="card">
+              <div className="big-number-label">{t('reports.loanMonthlyTotal')}</div>
+              <div className="big-number text-danger">{fmt(report.loan_monthly_total ?? 0)}</div>
+            </div>
+            <div className="card">
+              <div className="big-number-label">{t('reports.effectiveNet')}</div>
+              <div className={`big-number ${(report.effective_net ?? 0) >= 0 ? 'text-success' : 'text-danger'}`}>
+                {fmt(report.effective_net ?? 0)}
+              </div>
+            </div>
           </div>
 
           <div className="grid-2">

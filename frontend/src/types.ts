@@ -18,6 +18,8 @@ export interface Income {
   booking_day: number
   effective_from: string
   effective_to: string | null
+  category_id: number | null
+  is_active: number
   created_at: string
 }
 
@@ -39,6 +41,7 @@ export interface Expense {
   category: string
   effective_from: string
   effective_to: string | null
+  is_active: number
   created_at: string
 }
 
@@ -59,7 +62,16 @@ export interface Loan {
   term_months: number
   monthly_rate: number
   start_date: string
+  loan_type: 'annuity' | 'real_estate'
+  interest_rate_dynamic: number
   created_at: string
+}
+
+export interface LoanSpecialPayment {
+  id: number
+  loan_id: number
+  amount: number
+  date: string
 }
 
 export interface AmortizationRow {
@@ -79,7 +91,33 @@ export interface SavingsGoal {
   contribution_mode: 'fixed' | 'dynamic' | 'both'
   fixed_amount: number | null
   buffer_amount: number | null
+  target_date: string | null
+  priority: number
+  required_monthly_saving: number | null
   created_at: string
+}
+
+export interface SavingsAccount {
+  initial_balance: number
+  current_balance: number
+}
+
+export interface SavingsTransaction {
+  id: number
+  user_id: number
+  amount: number
+  date: string
+  description: string | null
+  created_at: string
+}
+
+export interface BookingOverride {
+  id: number
+  user_id: number
+  booking_type: 'income' | 'expense'
+  booking_id: number
+  month: string
+  override_amount: number
 }
 
 export interface Category {
@@ -100,6 +138,9 @@ export interface Transaction {
   category_id: number | null
   date: string
   note: string | null
+  income_id: number | null
+  expense_id: number | null
+  is_auto: number
 }
 
 export interface HouseholdLink {
@@ -151,6 +192,9 @@ export interface DashboardData {
   upcoming_bookings: UpcomingBooking[]
   savings_goals: SavingsGoal[]
   liquidity_warning: boolean
+  reserve_warning: boolean
+  required_reserve_monthly: number
+  savings_balance: number
   budget_status: 'green' | 'yellow' | 'red'
   total_income: number
   total_expenses: number
@@ -180,6 +224,9 @@ export interface MonthlyReport {
   total_income: number
   total_expenses: number
   net: number
+  required_savings: number
+  loan_monthly_total: number
+  effective_net: number
   snapshots: MonthlySnapshot[]
 }
 
@@ -192,6 +239,7 @@ export interface YearlyReport {
     provisions: number
     loans: number
     net_savings: number
+    effective_net: number
   }[]
   totals: {
     income: number

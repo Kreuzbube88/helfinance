@@ -21,6 +21,7 @@
     "upcomingBookings": "Nächste Buchungen",
     "savingsProgress": "Sparfortschritt",
     "liquidityWarning": "Achtung: Mögliches Liquiditätsproblem diesen Monat",
+    "reserveWarning": "Achtung: Sparkontostand {{balance}} liegt unter der benötigten Reserve {{required}}",
     "budgetTitle": "Budget",
     "income": "Einnahmen",
     "expenses": "Ausgaben",
@@ -81,7 +82,11 @@
     "payment": "Rate",
     "principalCol": "Tilgung",
     "interestCol": "Zinsen",
-    "balance": "Restschuld"
+    "balance": "Restschuld",
+    "specialPayments": "Sondertilgungen",
+    "loanType": "Kreditart",
+    "annuity": "Annuität",
+    "realEstate": "Immobiliendarlehen"
   },
   "savings": {
     "title": "Sparziele",
@@ -102,7 +107,14 @@
     "savingsRateDescription": "Diesen Monat Gehalt eingeben, um den dynamischen Sparbeitrag neu zu berechnen.",
     "thisMonthsSalary": "Gehalt diesen Monat (€)",
     "recalculate": "Neu berechnen",
-    "dynamicSavingsThisMonth": "Dynamisches Sparen diesen Monat: "
+    "dynamicSavingsThisMonth": "Dynamisches Sparen diesen Monat: ",
+    "currentBalance": "Aktueller Kontostand",
+    "initialBalance": "Anfangsguthaben",
+    "transactions": "Buchungen",
+    "addTransaction": "Buchung hinzufügen",
+    "targetDate": "Zieldatum",
+    "requiredMonthly": "Erforderlich/Monat",
+    "priority": "Priorität"
   },
   "cashflow": {
     "title": "Cashflow Kalender",
@@ -127,7 +139,10 @@
     "comparison": "Monatsvergleich",
     "income": "Einnahmen",
     "expenses": "Ausgaben",
-    "last6Months": "Letzte 6 Monate"
+    "last6Months": "Letzte 6 Monate",
+    "requiredSavings": "Benötigte Rücklage",
+    "loanMonthlyTotal": "Kreditraten",
+    "effectiveNet": "Effektives Netto"
   },
   "household": {
     "title": "Haushalt",
@@ -268,7 +283,9 @@
     "date": "Datum",
     "type": "Typ",
     "note": "Notiz",
-    "import": "Importieren"
+    "import": "Importieren",
+    "add": "Hinzufügen",
+    "description": "Beschreibung"
   },
   "categories": {
     "Housing": "Wohnen",

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
-import { getLoans, createLoan, deleteLoan, getLoanAmortization } from '../api'
-import type { Loan, AmortizationRow } from '../types'
+import { getLoans, createLoan, deleteLoan, getLoanAmortization, getLoanSpecialPayments, createLoanSpecialPayment, deleteLoanSpecialPayment } from '../api'
+import type { Loan, AmortizationRow, LoanSpecialPayment } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 
@@ -18,8 +18,11 @@ const EMPTY_FORM = {
   principal: '',
   interest_rate_pct: '',
   term_months: '',
-  start_date: new Date().toISOString().slice(0, 10)
+  start_date: new Date().toISOString().slice(0, 10),
+  loan_type: 'annuity' as Loan['loan_type']
 }
+
+const EMPTY_SP_FORM = { amount: '', date: '' }
 
 const PAGE_SIZE = 12
 
@@ -39,6 +42,12 @@ export function LoansPage() {
   const [amortRows, setAmortRows] = useState<AmortizationRow[]>([])
   const [amortLoading, setAmortLoading] = useState(false)
   const [amortPage, setAmortPage] = useState(0)
+
+  const [spLoan, setSpLoan] = useState<Loan | null>(null)
+  const [specialPayments, setSpecialPayments] = useState<LoanSpecialPayment[]>([])
+  const [spForm, setSpForm] = useState(EMPTY_SP_FORM)
+  const [spSaving, setSpSaving] = useState(false)
+  const [deleteSpId, setDeleteSpId] = useState<{ loanId: number; spId: number } | null>(null)
 
   const currency = user?.currency || 'EUR'
   const fmt = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency })
@@ -68,7 +77,8 @@ export function LoansPage() {
         principal: parseFloat(form.principal),
         interest_rate_pct: parseFloat(form.interest_rate_pct),
         term_months: parseInt(form.term_months),
-        start_date: form.start_date
+        start_date: form.start_date,
+        loan_type: form.loan_type
       })
       setLoans(prev => [...prev, created])
       showToast(t('common.success'), 'success')
@@ -102,6 +112,46 @@ export function LoansPage() {
       showToast(t('common.error'), 'error')
     } finally {
       setAmortLoading(false)
+    }
+  }
+
+  const openSpecialPayments = async (loan: Loan) => {
+    setSpLoan(loan)
+    setSpForm(EMPTY_SP_FORM)
+    try {
+      const sps = await getLoanSpecialPayments(loan.id)
+      setSpecialPayments(sps)
+    } catch {
+      showToast(t('common.error'), 'error')
+    }
+  }
+
+  const handleAddSp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!spLoan) return
+    setSpSaving(true)
+    try {
+      const sp = await createLoanSpecialPayment(spLoan.id, {
+        amount: parseFloat(spForm.amount),
+        date: spForm.date
+      })
+      setSpecialPayments(prev => [...prev, sp])
+      setSpForm(EMPTY_SP_FORM)
+      showToast(t('common.success'), 'success')
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('common.error'), 'error')
+    } finally {
+      setSpSaving(false)
+    }
+  }
+
+  const handleDeleteSp = async (loanId: number, spId: number) => {
+    try {
+      await deleteLoanSpecialPayment(loanId, spId)
+      setSpecialPayments(prev => prev.filter(sp => sp.id !== spId))
+      showToast(t('common.success'), 'success')
+    } catch {
+      showToast(t('common.error'), 'error')
     }
   }
 
@@ -177,6 +227,9 @@ export function LoansPage() {
                     <button className="btn btn-secondary btn-sm" onClick={() => openAmortization(loan)}>
                       {t('loans.amortization')}
                     </button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => openSpecialPayments(loan)}>
+                      {t('loans.specialPayments')}
+                    </button>
                     <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(loan.id)}>
                       {t('common.delete')}
                     </button>
@@ -214,6 +267,14 @@ export function LoansPage() {
                 <label className="form-label">{t('loans.startDate')}</label>
                 <input className="form-input" type="date" value={form.start_date} onChange={e => f('start_date', e.target.value)} required />
               </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">{t('loans.loanType')}</label>
+              <select className="form-select" value={form.loan_type} onChange={e => f('loan_type', e.target.value as Loan['loan_type'])}>
+                <option value="annuity">{t('loans.annuity')}</option>
+                <option value="real_estate">{t('loans.realEstate')}</option>
+              </select>
             </div>
 
             {liveMonthly > 0 && (
@@ -292,6 +353,77 @@ export function LoansPage() {
         <ConfirmModal
           onConfirm={() => handleDelete(deleteId)}
           onClose={() => setDeleteId(null)}
+        />
+      )}
+
+      {spLoan && (
+        <Modal title={`${t('loans.specialPayments')} — ${spLoan.name}`} onClose={() => setSpLoan(null)}>
+          <form onSubmit={handleAddSp} style={{ marginBottom: '1rem' }}>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">{t('common.amount')}</label>
+                <input
+                  className="form-input"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={spForm.amount}
+                  onChange={e => setSpForm(p => ({ ...p, amount: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('common.date')} (YYYY-MM)</label>
+                <input
+                  className="form-input"
+                  type="month"
+                  value={spForm.date}
+                  onChange={e => setSpForm(p => ({ ...p, date: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={spSaving}>
+              {spSaving ? t('common.loading') : t('common.add')}
+            </button>
+          </form>
+
+          {specialPayments.length === 0 ? (
+            <p className="text-muted text-sm">{t('common.noData')}</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>{t('common.date')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('common.amount')}</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {specialPayments.map(sp => (
+                  <tr key={sp.id}>
+                    <td>{sp.date}</td>
+                    <td style={{ textAlign: 'right' }}>{fmt(sp.amount)}</td>
+                    <td>
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => setDeleteSpId({ loanId: spLoan.id, spId: sp.id })}
+                      >
+                        {t('common.delete')}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Modal>
+      )}
+
+      {deleteSpId !== null && (
+        <ConfirmModal
+          onConfirm={() => handleDeleteSp(deleteSpId.loanId, deleteSpId.spId)}
+          onClose={() => setDeleteSpId(null)}
         />
       )}
     </div>

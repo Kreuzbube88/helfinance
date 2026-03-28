@@ -160,6 +160,12 @@ export function DashboardPage() {
         </div>
       )}
 
+      {data.reserve_warning && (
+        <div className="alert alert-warning">
+          <span>⚠ {t('dashboard.reserveWarning', { required: fmt(data.required_reserve_monthly * 3), balance: fmt(data.savings_balance) })}</span>
+        </div>
+      )}
+
       <div className="dashboard-grid">
         {widgets.healthScore && (
           <div className="card dashboard-card card-health">

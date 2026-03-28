@@ -4,8 +4,12 @@ import type {
   IncomeChange,
   Expense,
   Loan,
+  LoanSpecialPayment,
   AmortizationRow,
   SavingsGoal,
+  SavingsAccount,
+  SavingsTransaction,
+  BookingOverride,
   Notification,
   MonthlySnapshot,
   DashboardData,
@@ -331,6 +335,60 @@ export function deleteTransaction(id: number): Promise<void> {
 
 export function importTransactionsCsv(csv: string): Promise<{ imported: number; errors: string[] }> {
   return post('/transactions/import', { csv })
+}
+
+// Loan Special Payments
+export function getLoanSpecialPayments(loanId: number): Promise<LoanSpecialPayment[]> {
+  return get<LoanSpecialPayment[]>(`/loans/${loanId}/special-payments`)
+}
+
+export function createLoanSpecialPayment(loanId: number, data: { amount: number; date: string }): Promise<LoanSpecialPayment> {
+  return post<LoanSpecialPayment>(`/loans/${loanId}/special-payments`, data)
+}
+
+export function deleteLoanSpecialPayment(loanId: number, spId: number): Promise<void> {
+  return del(`/loans/${loanId}/special-payments/${spId}`)
+}
+
+// Savings Account & Transactions
+export function getSavingsBalance(): Promise<SavingsAccount> {
+  return get<SavingsAccount>('/savings/balance')
+}
+
+export function setSavingsInitialBalance(initial_balance: number): Promise<{ initial_balance: number }> {
+  return put<{ initial_balance: number }>('/savings/balance/initial', { initial_balance })
+}
+
+export function getSavingsTransactions(): Promise<SavingsTransaction[]> {
+  return get<SavingsTransaction[]>('/savings/transactions')
+}
+
+export function createSavingsTransaction(data: { amount: number; date: string; description?: string }): Promise<SavingsTransaction> {
+  return post<SavingsTransaction>('/savings/transactions', data)
+}
+
+export function deleteSavingsTransaction(id: number): Promise<void> {
+  return del(`/savings/transactions/${id}`)
+}
+
+// Booking Overrides
+export function getOverrides(params?: { booking_type?: string; booking_id?: number }): Promise<BookingOverride[]> {
+  const qs = params
+    ? '?' + new URLSearchParams(
+        Object.entries(params)
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)])
+      ).toString()
+    : ''
+  return get<BookingOverride[]>(`/overrides${qs}`)
+}
+
+export function upsertOverride(data: Omit<BookingOverride, 'id' | 'user_id'>): Promise<BookingOverride> {
+  return post<BookingOverride>('/overrides', data)
+}
+
+export function deleteOverride(id: number): Promise<void> {
+  return del(`/overrides/${id}`)
 }
 
 // Widget preferences (V6)
