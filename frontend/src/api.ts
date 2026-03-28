@@ -176,7 +176,7 @@ export function getLoans(): Promise<Loan[]> {
   return get<Loan[]>('/loans')
 }
 
-export function createLoan(data: Omit<Loan, 'id' | 'user_id' | 'created_at' | 'monthly_rate'>): Promise<Loan> {
+export function createLoan(data: Omit<Loan, 'id' | 'user_id' | 'created_at' | 'monthly_rate' | 'interest_rate_dynamic'>): Promise<Loan> {
   return post<Loan>('/loans', data)
 }
 
@@ -197,7 +197,7 @@ export function getSavingsGoals(): Promise<SavingsGoal[]> {
   return get<SavingsGoal[]>('/savings')
 }
 
-export function createSavingsGoal(data: Omit<SavingsGoal, 'id' | 'user_id' | 'created_at'>): Promise<SavingsGoal> {
+export function createSavingsGoal(data: Omit<SavingsGoal, 'id' | 'user_id' | 'created_at' | 'required_monthly_saving'>): Promise<SavingsGoal> {
   return post<SavingsGoal>('/savings', data)
 }
 
@@ -321,7 +321,7 @@ export function getTransactions(): Promise<Transaction[]> {
   return get<Transaction[]>('/transactions')
 }
 
-export function createTransaction(data: Omit<Transaction, 'id' | 'user_id'>): Promise<Transaction> {
+export function createTransaction(data: Omit<Transaction, 'id' | 'user_id' | 'income_id' | 'expense_id' | 'is_auto'>): Promise<Transaction> {
   return post<Transaction>('/transactions', data)
 }
 

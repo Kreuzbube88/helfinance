@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import {
-  getTransactions, createTransaction, deleteTransaction,
+  getTransactions, createTransaction, updateTransaction, deleteTransaction,
   getCategories, importTransactionsCsv
 } from '../api'
 import type { Transaction, Category } from '../types'
@@ -28,6 +28,7 @@ export function TransactionsPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [editing, setEditing] = useState<Transaction | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
@@ -51,22 +52,46 @@ export function TransactionsPage() {
   const f = (field: keyof typeof EMPTY_FORM, val: string) =>
     setForm(prev => ({ ...prev, [field]: val }))
 
+  const openEdit = (tx: Transaction) => {
+    setEditing(tx)
+    setForm({
+      name: tx.name,
+      amount: String(tx.amount),
+      type: tx.type,
+      category_id: tx.category_id ? String(tx.category_id) : '',
+      date: tx.date,
+      note: tx.note ?? ''
+    })
+    setShowModal(true)
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setEditing(null)
+    setForm(EMPTY_FORM)
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
+    const payload = {
+      name: form.name,
+      amount: parseFloat(form.amount),
+      type: form.type,
+      category_id: form.category_id ? parseInt(form.category_id) : null,
+      date: form.date,
+      note: form.note || null
+    }
     try {
-      const created = await createTransaction({
-        name: form.name,
-        amount: parseFloat(form.amount),
-        type: form.type,
-        category_id: form.category_id ? parseInt(form.category_id) : null,
-        date: form.date,
-        note: form.note || null
-      })
-      setItems(prev => [created, ...prev])
+      if (editing) {
+        const updated = await updateTransaction(editing.id, payload)
+        setItems(prev => prev.map(i => i.id === editing.id ? updated : i))
+      } else {
+        const created = await createTransaction(payload)
+        setItems(prev => [created, ...prev])
+      }
       showToast(t('common.success'), 'success')
-      setShowModal(false)
-      setForm(EMPTY_FORM)
+      closeModal()
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('common.error'), 'error')
     } finally {
@@ -125,7 +150,7 @@ export function TransactionsPage() {
           <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
             {t('transactions.import')}
           </button>
-          <button className="btn btn-primary" onClick={() => { setForm(EMPTY_FORM); setShowModal(true) }}>
+          <button className="btn btn-primary" onClick={() => { setEditing(null); setForm(EMPTY_FORM); setShowModal(true) }}>
             + {t('transactions.add')}
           </button>
         </div>
@@ -136,7 +161,7 @@ export function TransactionsPage() {
       ) : items.length === 0 ? (
         <div className="empty-state">
           <p>{t('transactions.noTransactions')}</p>
-          <button className="btn btn-primary" onClick={() => { setForm(EMPTY_FORM); setShowModal(true) }}>
+          <button className="btn btn-primary" onClick={() => { setEditing(null); setForm(EMPTY_FORM); setShowModal(true) }}>
             {t('transactions.add')}
           </button>
         </div>
@@ -164,6 +189,7 @@ export function TransactionsPage() {
                       <td className="text-muted">{new Date(tx.date + 'T00:00:00').toLocaleDateString('de-DE')}</td>
                       <td>
                         <span>{tx.name}</span>
+                        {tx.is_auto ? <span className="badge badge-neutral" style={{ marginLeft: '0.4rem', fontSize: '0.7rem' }}>auto</span> : null}
                         {tx.note && <div className="text-muted text-sm">{tx.note}</div>}
                       </td>
                       <td>
@@ -175,7 +201,8 @@ export function TransactionsPage() {
                       <td style={{ textAlign: 'right' }} className={tx.type === 'income' ? 'text-success' : 'text-danger'}>
                         {tx.type === 'income' ? '+' : '-'}{fmt(tx.amount)}
                       </td>
-                      <td>
+                      <td style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button className="btn btn-ghost btn-sm" onClick={() => openEdit(tx)}>✎</button>
                         <button className="btn btn-ghost btn-sm" onClick={() => setDeleteId(tx.id)}>✕</button>
                       </td>
                     </tr>
@@ -188,7 +215,7 @@ export function TransactionsPage() {
       )}
 
       {showModal && (
-        <Modal title={t('transactions.add')} onClose={() => setShowModal(false)}>
+        <Modal title={editing ? t('common.edit') : t('transactions.add')} onClose={closeModal}>
           <form onSubmit={handleSave}>
             <div className="form-row">
               <div className="form-group">
@@ -229,7 +256,7 @@ export function TransactionsPage() {
               <input className="form-input" value={form.note} onChange={e => f('note', e.target.value)} />
             </div>
             <div className="modal-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>
+              <button type="button" className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button>
               <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? t('common.loading') : t('common.save')}
               </button>

@@ -11,6 +11,156 @@ interface TransactionRow {
   category_id: number | null;
   date: string;
   note: string | null;
+  income_id: number | null;
+  expense_id: number | null;
+  is_auto: number;
+}
+
+interface IncomeRow {
+  id: number;
+  name: string;
+  amount: number;
+  interval: 'monthly' | 'yearly' | 'once';
+  booking_day: number;
+  effective_from: string | null;
+  effective_to: string | null;
+}
+
+interface ExpenseRow {
+  id: number;
+  name: string;
+  amount: number;
+  interval_months: number;
+  booking_day: number;
+  effective_from: string | null;
+  effective_to: string | null;
+}
+
+/** Returns the number of days in a given month (1-indexed). */
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
+/** Clamps booking_day to the last valid day of the given month. */
+function clampDay(year: number, month: number, day: number): number {
+  return Math.min(day, daysInMonth(year, month));
+}
+
+/** Format Date as YYYY-MM-DD */
+function toDateStr(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Computes all past booking dates for a recurring entry.
+ * Returns dates from effectiveFrom up to min(today, effectiveTo), max 24 months back.
+ */
+function computeBookingDates(
+  effectiveFrom: string | null,
+  effectiveTo: string | null,
+  bookingDay: number,
+  intervalMonths: number
+): string[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const cutoff = new Date(today);
+  cutoff.setMonth(cutoff.getMonth() - 24);
+
+  const start = effectiveFrom ? new Date(effectiveFrom) : cutoff;
+  const end = effectiveTo ? new Date(effectiveTo) : today;
+
+  const rangeStart = start > cutoff ? start : cutoff;
+  const rangeEnd = end < today ? end : today;
+
+  if (rangeStart > rangeEnd) return [];
+
+  const dates: string[] = [];
+
+  // Find first occurrence: start from rangeStart's year/month
+  let year = rangeStart.getFullYear();
+  let month = rangeStart.getMonth() + 1; // 1-indexed
+
+  // Align to the effective_from month so intervals stay consistent
+  if (effectiveFrom) {
+    const fromDate = new Date(effectiveFrom);
+    const fromYear = fromDate.getFullYear();
+    const fromMonth = fromDate.getMonth() + 1;
+    // How many full intervals have passed since effective_from?
+    const totalMonthsElapsed = (year - fromYear) * 12 + (month - fromMonth);
+    const intervalsElapsed = Math.floor(totalMonthsElapsed / intervalMonths);
+    const alignedMonths = fromMonth - 1 + intervalsElapsed * intervalMonths;
+    year = fromYear + Math.floor(alignedMonths / 12);
+    month = (alignedMonths % 12) + 1;
+  }
+
+  for (let i = 0; i < 300; i++) { // safety cap
+    const day = clampDay(year, month, bookingDay);
+    const d = new Date(year, month - 1, day);
+    if (d > rangeEnd) break;
+    if (d >= rangeStart) {
+      dates.push(toDateStr(d));
+    }
+    month += intervalMonths;
+    if (month > 12) {
+      year += Math.floor((month - 1) / 12);
+      month = ((month - 1) % 12) + 1;
+    }
+  }
+
+  return dates;
+}
+
+/**
+ * Auto-generates transaction records for all past income/expense booking days.
+ * Idempotent: skips dates that already have a transaction with the same income_id/expense_id.
+ */
+function generateAutoTransactions(db: Database.Database, userId: number): void {
+  const incomes = db
+    .prepare('SELECT id, name, amount, interval, booking_day, effective_from, effective_to FROM income WHERE user_id = ?')
+    .all(userId) as IncomeRow[];
+
+  const expenses = db
+    .prepare('SELECT id, name, amount, interval_months, booking_day, effective_from, effective_to FROM expenses WHERE user_id = ?')
+    .all(userId) as ExpenseRow[];
+
+  const checkIncome = db.prepare('SELECT id FROM transactions WHERE income_id = ? AND date = ?');
+  const checkExpense = db.prepare('SELECT id FROM transactions WHERE expense_id = ? AND date = ?');
+  const insertTx = db.prepare(
+    'INSERT INTO transactions (user_id, name, amount, type, date, income_id, expense_id, is_auto) VALUES (?,?,?,?,?,?,?,1)'
+  );
+
+  const insertMany = db.transaction(() => {
+    for (const inc of incomes) {
+      let dates: string[];
+      if (inc.interval === 'once') {
+        dates = inc.effective_from ? [inc.effective_from.slice(0, 10)] : [];
+      } else if (inc.interval === 'yearly') {
+        dates = computeBookingDates(inc.effective_from, inc.effective_to, inc.booking_day, 12);
+      } else {
+        // monthly
+        dates = computeBookingDates(inc.effective_from, inc.effective_to, inc.booking_day, 1);
+      }
+      for (const date of dates) {
+        const existing = checkIncome.get(inc.id, date);
+        if (!existing) {
+          insertTx.run(userId, inc.name, inc.amount, 'income', date, inc.id, null);
+        }
+      }
+    }
+
+    for (const exp of expenses) {
+      const dates = computeBookingDates(exp.effective_from, exp.effective_to, exp.booking_day, exp.interval_months);
+      for (const date of dates) {
+        const existing = checkExpense.get(exp.id, date);
+        if (!existing) {
+          insertTx.run(userId, exp.name, exp.amount, 'expense', date, null, exp.id);
+        }
+      }
+    }
+  });
+
+  insertMany();
 }
 
 export function createTransactionsRouter(db: Database.Database): Router {
@@ -19,6 +169,7 @@ export function createTransactionsRouter(db: Database.Database): Router {
 
   router.get('/', (req: Request, res: Response) => {
     try {
+      generateAutoTransactions(db, req.user!.id);
       const rows = db
         .prepare('SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC, id DESC')
         .all(req.user!.id) as TransactionRow[];

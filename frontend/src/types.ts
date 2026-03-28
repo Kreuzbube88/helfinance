@@ -247,6 +247,7 @@ export interface YearlyReport {
     provisions: number
     loans: number
     net_savings: number
+    effective_net: number
   }
 }
 
