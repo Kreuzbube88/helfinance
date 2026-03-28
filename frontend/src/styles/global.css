@@ -19,6 +19,7 @@ html, body {
   background-color: var(--color-bg-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 /* Number elements use monospace */
@@ -111,8 +112,9 @@ html, body {
 }
 
 .logo-icon {
-  font-size: var(--font-size-xl);
-  color: var(--color-accent);
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
@@ -126,6 +128,10 @@ html, body {
 
 .sidebar-close {
   display: none;
+}
+
+.sidebar.sidebar-open .sidebar-close {
+  display: flex;
 }
 
 .sidebar-collapse-btn {
@@ -223,6 +229,7 @@ html, body {
   min-height: 100vh;
   flex: 1;
   transition: margin-left var(--transition-base);
+  overflow-x: hidden;
 }
 
 .layout.sidebar-collapsed .main-wrapper {
@@ -244,7 +251,7 @@ html, body {
 }
 
 .hamburger {
-  display: none;
+  display: flex;
 }
 
 .header-right {
@@ -316,6 +323,8 @@ html, body {
   flex-direction: column;
   gap: var(--space-6);
   max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .page-header {
@@ -1522,9 +1531,10 @@ tbody tr:hover {
   margin-top: var(--space-4);
 }
 
-/* ─── Bottom Nav (mobile) ─────────────────────────────────────────────────── */
-.bottom-nav {
-  display: none;
+/* ─── Table Scroll Wrapper ────────────────────────────────────────────────── */
+.table-scroll {
+  overflow-x: auto;
+  width: 100%;
 }
 
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
@@ -1535,15 +1545,20 @@ tbody tr:hover {
 }
 
 @media (max-width: 768px) {
-  .hamburger {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  /* Sidebar hidden on mobile — bottom nav takes over */
+  /* Sidebar hidden by default on mobile — shown as drawer via sidebar-open */
   .sidebar {
     display: none;
+  }
+
+  .sidebar.sidebar-open {
+    display: flex;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: 200;
+    box-shadow: var(--shadow-lg);
   }
 
   .sidebar-collapse-btn {
@@ -1560,7 +1575,8 @@ tbody tr:hover {
 
   .main-content {
     padding: var(--space-4);
-    padding-bottom: calc(var(--space-4) + 60px);
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   .grid-2,
@@ -1594,51 +1610,7 @@ tbody tr:hover {
   }
 
   .fab {
-    bottom: calc(var(--space-4) + 60px);
+    bottom: var(--space-4);
     right: var(--space-4);
-  }
-
-  /* Bottom nav bar */
-  .bottom-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: var(--color-bg-tertiary);
-    border-top: 1px solid var(--color-border);
-    box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.06);
-    z-index: 100;
-    align-items: stretch;
-    justify-content: space-around;
-  }
-
-  .bottom-nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    flex: 1;
-    padding: var(--space-1);
-    color: var(--color-text-muted);
-    text-decoration: none;
-    font-size: 0.6rem;
-    font-weight: var(--font-weight-medium);
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: color var(--transition-base);
-  }
-
-  .bottom-nav-item.active,
-  .bottom-nav-item:hover {
-    color: var(--color-accent);
-  }
-
-  .bottom-nav-icon {
-    font-size: var(--font-size-lg);
-    line-height: 1;
   }
 }

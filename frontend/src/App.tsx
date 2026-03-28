@@ -75,7 +75,6 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/about" element={<AboutPage />} />
 
       <Route
         path="/onboarding"
@@ -170,6 +169,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <ProtectedRoute>
+            <AboutPage />
           </ProtectedRoute>
         }
       />

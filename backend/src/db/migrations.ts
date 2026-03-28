@@ -137,6 +137,9 @@ export function runMigrations(db: Database.Database): void {
       UNIQUE(user_id, year, month)
     );
   `);
+
+  // Add category TEXT column to expenses (idempotent — fails silently if already exists)
+  try { db.exec('ALTER TABLE expenses ADD COLUMN category TEXT'); } catch {}
 }
 
 interface DefaultCategory {

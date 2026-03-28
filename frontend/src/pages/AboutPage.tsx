@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 
 const VERSION = '1.0.0'
 
@@ -48,7 +47,7 @@ export function AboutPage() {
   const [licenseOpen, setLicenseOpen] = useState(false)
 
   return (
-    <div className="page-content" style={{ maxWidth: 800, margin: '0 auto' }}>
+    <div className="page" style={{ maxWidth: 800 }}>
       <div className="card about-page">
         <div className="about-logo">
           <img src="/logo.png" alt="HELFINANCE" />
@@ -117,9 +116,6 @@ export function AboutPage() {
           {licenseOpen && <pre className="license-text">{MIT_TEXT}</pre>}
         </div>
 
-        <div style={{ textAlign: 'center' }}>
-          <Link to="/dashboard" className="btn btn-ghost btn-sm">← Dashboard</Link>
-        </div>
       </div>
     </div>
   )

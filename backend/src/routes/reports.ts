@@ -25,17 +25,23 @@ interface ExpenseRow {
   name: string;
   amount: number;
   interval_months: number;
+  category: string | null;
   category_id: number | null;
   booking_day: number;
   effective_from: string | null;
   effective_to: string | null;
 }
 
-interface CategoryRow {
+interface SnapshotRow {
   id: number;
-  name: string;
-  color: string;
+  user_id: number;
+  year: number;
+  month: number;
+  income_total: number;
+  expense_total: number;
+  savings_total: number;
 }
+
 
 interface IncomeChangeRow {
   income_id: number;
@@ -63,7 +69,6 @@ export function createReportsRouter(db: Database.Database): Router {
 
       const incomes = db.prepare('SELECT * FROM income WHERE user_id = ?').all(userId) as IncomeRow[];
       const expenses = db.prepare('SELECT * FROM expenses WHERE user_id = ?').all(userId) as ExpenseRow[];
-      const categories = db.prepare('SELECT * FROM categories WHERE user_id = ?').all(userId) as CategoryRow[];
 
       const monthlyIncome = incomes.reduce((sum, inc) => {
         if (inc.effective_from && inc.effective_from > `${datePrefix}-01`) return sum;
@@ -73,31 +78,16 @@ export function createReportsRouter(db: Database.Database): Router {
         return sum;
       }, 0);
 
-      const expenseBreakdown = expenses.map((exp) => ({
-        id: exp.id,
-        name: exp.name,
-        amount: exp.amount,
-        monthly_amount: normalizeToMonthly(exp.amount, exp.interval_months),
-        category_id: exp.category_id,
-        interval_months: exp.interval_months,
-      }));
+      const totalExpenses = expenses.reduce((sum, e) => sum + normalizeToMonthly(e.amount, e.interval_months), 0);
 
-      // Category totals
-      const categoryTotals = categories.map((cat) => {
-        const catExpenses = expenseBreakdown.filter((e) => e.category_id === cat.id);
-        const total = catExpenses.reduce((sum, e) => sum + e.monthly_amount, 0);
-        return { category_id: cat.id, name: cat.name, color: cat.color, total: Math.round(total * 100) / 100 };
-      });
-
-      const uncategorizedTotal = expenseBreakdown
-        .filter((e) => !e.category_id)
-        .reduce((sum, e) => sum + e.monthly_amount, 0);
-
-      if (uncategorizedTotal > 0) {
-        categoryTotals.push({ category_id: 0, name: 'Uncategorized', color: '#9ca3af', total: Math.round(uncategorizedTotal * 100) / 100 });
-      }
-
-      const totalExpenses = expenseBreakdown.reduce((sum, e) => sum + e.monthly_amount, 0);
+      // Group expenses by category name
+      const categoryNames = [...new Set(expenses.map((e) => e.category || 'Miscellaneous'))];
+      const expenseBreakdown = categoryNames.map((catName) => {
+        const catExpenses = expenses.filter((e) => (e.category || 'Miscellaneous') === catName);
+        const items = catExpenses.map((e) => ({ name: e.name, amount: Math.round(normalizeToMonthly(e.amount, e.interval_months) * 100) / 100 }));
+        const total = items.reduce((s, i) => s + i.amount, 0);
+        return { category: catName, items, total: Math.round(total * 100) / 100 };
+      }).filter((g) => g.items.length > 0);
 
       // Upsert snapshot
       db.prepare(
@@ -115,18 +105,33 @@ export function createReportsRouter(db: Database.Database): Router {
         Math.round(monthlyIncome * 100) / 100,
         Math.round(totalExpenses * 100) / 100,
         Math.round((monthlyIncome - totalExpenses) * 100) / 100,
-        JSON.stringify({ category_totals: categoryTotals })
+        JSON.stringify({ expense_breakdown: expenseBreakdown })
       );
+
+      // Fetch snapshots archive
+      const snapshots = db
+        .prepare('SELECT rowid as id, * FROM monthly_snapshots WHERE user_id = ? ORDER BY year DESC, month DESC')
+        .all(userId) as SnapshotRow[];
 
       res.json({
         year,
         month,
-        income_total: Math.round(monthlyIncome * 100) / 100,
-        expense_total: Math.round(totalExpenses * 100) / 100,
-        savings_total: Math.round((monthlyIncome - totalExpenses) * 100) / 100,
-        income_breakdown: incomes.map((i) => ({ id: i.id, name: i.name, amount: i.amount, interval: i.interval })),
+        total_income: Math.round(monthlyIncome * 100) / 100,
+        total_expenses: Math.round(totalExpenses * 100) / 100,
+        net: Math.round((monthlyIncome - totalExpenses) * 100) / 100,
+        income_breakdown: incomes.map((i) => ({ name: i.name, amount: i.amount, interval: i.interval })),
         expense_breakdown: expenseBreakdown,
-        category_totals: categoryTotals,
+        snapshots: snapshots.map((s) => ({
+          id: s.id,
+          user_id: s.user_id,
+          year: s.year,
+          month: s.month,
+          total_income: s.income_total,
+          total_expenses: s.expense_total,
+          total_savings: s.savings_total,
+          net: s.savings_total,
+          created_at: '',
+        })),
       });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
@@ -180,7 +185,29 @@ export function createReportsRouter(db: Database.Database): Router {
       }));
 
       const projection = calcYearlyProjection(year, incomeRecords, expenseRecords, icChanges, ecChanges);
-      res.json({ year, months: projection });
+
+      // Map to frontend YearlyReport shape
+      const months = projection.map((m) => ({
+        month: m.month,
+        income: Math.round(m.income * 100) / 100,
+        fixed_expenses: Math.round(m.expenses * 100) / 100,
+        provisions: 0,
+        loans: 0,
+        net_savings: Math.round(m.savings * 100) / 100,
+      }));
+
+      const totals = months.reduce(
+        (acc, m) => ({
+          income: acc.income + m.income,
+          fixed_expenses: acc.fixed_expenses + m.fixed_expenses,
+          provisions: 0,
+          loans: 0,
+          net_savings: acc.net_savings + m.net_savings,
+        }),
+        { income: 0, fixed_expenses: 0, provisions: 0, loans: 0, net_savings: 0 }
+      );
+
+      res.json({ year, months, totals });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
@@ -216,7 +243,7 @@ export function createReportsRouter(db: Database.Database): Router {
       }));
 
       const cashflow = calcDailyCashflow(incomeRecords, expenseRecords, year, month);
-      res.json({ year, month, days: cashflow });
+      res.json(cashflow);
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }

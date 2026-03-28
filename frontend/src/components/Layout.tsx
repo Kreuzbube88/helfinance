@@ -43,6 +43,11 @@ export function Layout({ children }: LayoutProps) {
     navigate('/login')
   }
 
+  const handleHamburger = () => {
+    if (window.innerWidth <= 768) setSidebarOpen(true)
+    else setSidebarCollapsed(prev => !prev)
+  }
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark')
   }
@@ -73,7 +78,7 @@ export function Layout({ children }: LayoutProps) {
       <aside className={`sidebar ${sidebarCollapsed ? 'sidebar-collapsed' : ''} ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <span className="logo-icon">₿</span>
+            <img src="/favicon.png" alt="Logo" className="logo-icon" />
             <span className="logo-text">HELFINANCE</span>
           </div>
           <button
@@ -145,8 +150,8 @@ export function Layout({ children }: LayoutProps) {
         <header className="header">
           <button
             className="hamburger btn btn-ghost"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open menu"
+            onClick={handleHamburger}
+            aria-label="Toggle menu"
           >
             ☰
           </button>
@@ -186,20 +191,6 @@ export function Layout({ children }: LayoutProps) {
           {children}
         </main>
       </div>
-
-      {/* Bottom nav — mobile only (hidden on desktop via CSS) */}
-      <nav className="bottom-nav">
-        {navItems.slice(0, 5).map(item => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
-          >
-            <span className="bottom-nav-icon">{item.icon}</span>
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
-      </nav>
 
       {notifOpen && (
         <NotificationPanel

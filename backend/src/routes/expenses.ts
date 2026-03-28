@@ -8,6 +8,7 @@ interface ExpenseRow {
   name: string;
   amount: number;
   interval_months: number;
+  category: string | null;
   category_id: number | null;
   booking_day: number;
   effective_from: string | null;
@@ -21,6 +22,20 @@ interface ExpenseChangeRow {
   effective_from: string;
 }
 
+function mapRow(row: ExpenseRow) {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    name: row.name,
+    amount: row.amount,
+    interval_months: row.interval_months,
+    category: row.category ?? '',
+    booking_day: row.booking_day,
+    effective_from: row.effective_from ?? '',
+    effective_to: row.effective_to ?? null,
+  };
+}
+
 export function createExpensesRouter(db: Database.Database): Router {
   const router = Router();
 
@@ -31,7 +46,7 @@ export function createExpensesRouter(db: Database.Database): Router {
       const rows = db
         .prepare('SELECT * FROM expenses WHERE user_id = ? ORDER BY id ASC')
         .all(req.user!.id) as ExpenseRow[];
-      res.json(rows);
+      res.json(rows.map(mapRow));
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
@@ -39,12 +54,12 @@ export function createExpensesRouter(db: Database.Database): Router {
 
   router.post('/', (req: Request, res: Response) => {
     try {
-      const { name, amount, interval_months, category_id, booking_day, effective_from, effective_to } =
+      const { name, amount, interval_months, category, booking_day, effective_from, effective_to } =
         req.body as {
           name: string;
           amount: number;
           interval_months?: number;
-          category_id?: number;
+          category?: string;
           booking_day?: number;
           effective_from?: string;
           effective_to?: string;
@@ -55,20 +70,20 @@ export function createExpensesRouter(db: Database.Database): Router {
       }
       const result = db
         .prepare(
-          'INSERT INTO expenses (user_id, name, amount, interval_months, category_id, booking_day, effective_from, effective_to) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          'INSERT INTO expenses (user_id, name, amount, interval_months, category, booking_day, effective_from, effective_to) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         )
         .run(
           req.user!.id,
           name,
           amount,
           interval_months ?? 1,
-          category_id ?? null,
+          category ?? null,
           booking_day ?? 1,
           effective_from ?? null,
           effective_to ?? null
         );
       const row = db.prepare('SELECT * FROM expenses WHERE id = ?').get(result.lastInsertRowid) as ExpenseRow;
-      res.status(201).json(row);
+      res.status(201).json(mapRow(row));
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
@@ -84,12 +99,12 @@ export function createExpensesRouter(db: Database.Database): Router {
         res.status(404).json({ error: 'Expense not found' });
         return;
       }
-      const { name, amount, interval_months, category_id, booking_day, effective_from, effective_to } =
+      const { name, amount, interval_months, category, booking_day, effective_from, effective_to } =
         req.body as {
           name?: string;
           amount?: number;
           interval_months?: number;
-          category_id?: number;
+          category?: string;
           booking_day?: number;
           effective_from?: string;
           effective_to?: string;
@@ -99,7 +114,7 @@ export function createExpensesRouter(db: Database.Database): Router {
           name = COALESCE(?, name),
           amount = COALESCE(?, amount),
           interval_months = COALESCE(?, interval_months),
-          category_id = COALESCE(?, category_id),
+          category = COALESCE(?, category),
           booking_day = COALESCE(?, booking_day),
           effective_from = COALESCE(?, effective_from),
           effective_to = COALESCE(?, effective_to)
@@ -108,14 +123,14 @@ export function createExpensesRouter(db: Database.Database): Router {
         name ?? null,
         amount ?? null,
         interval_months ?? null,
-        category_id ?? null,
+        category ?? null,
         booking_day ?? null,
         effective_from ?? null,
         effective_to ?? null,
         id
       );
       const updated = db.prepare('SELECT * FROM expenses WHERE id = ?').get(id) as ExpenseRow;
-      res.json(updated);
+      res.json(mapRow(updated));
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }

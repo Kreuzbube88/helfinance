@@ -182,6 +182,7 @@ export function ExpensesPage() {
 
                 {isOpen && (
                   <div className="category-items">
+                    <div className="table-scroll">
                     <table className="table">
                       <thead>
                         <tr>
@@ -225,6 +226,7 @@ export function ExpensesPage() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 )}
               </div>

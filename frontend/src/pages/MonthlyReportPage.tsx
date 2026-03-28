@@ -167,7 +167,7 @@ export function MonthlyReportPage() {
               {report.income_breakdown.length === 0 ? (
                 <p className="text-muted">{t('common.noData')}</p>
               ) : (
-                <table>
+                <div className="table-scroll"><table>
                   <thead>
                     <tr>
                       <th>{t('income.name')}</th>
@@ -184,7 +184,7 @@ export function MonthlyReportPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               )}
             </div>
 
@@ -207,7 +207,7 @@ export function MonthlyReportPage() {
             {report.expense_breakdown.length === 0 ? (
               <p className="text-muted">{t('common.noData')}</p>
             ) : (
-              <table>
+              <div className="table-scroll"><table>
                 <thead>
                   <tr>
                     <th>{t('expenses.name')}</th>
@@ -230,7 +230,7 @@ export function MonthlyReportPage() {
                     </React.Fragment>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </div>
 
@@ -238,7 +238,7 @@ export function MonthlyReportPage() {
           {report.snapshots && report.snapshots.length > 0 && (
             <div className="card">
               <h3 className="card-title">Snapshot Archive</h3>
-              <table>
+              <div className="table-scroll"><table>
                 <thead>
                   <tr>
                     <th>{t('common.year')}</th>
@@ -259,7 +259,7 @@ export function MonthlyReportPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           )}
         </>
