@@ -262,7 +262,7 @@ export function MonthlyReportPage() {
               maintainAspectRatio: false,
               plugins: {
                 legend: { position: 'top' as const, labels: { color: '#94a3b8', font: { size: 12 } } },
-                tooltip: { callbacks: { label: (ctx: { parsed: { y: number } }) => fmt(ctx.parsed.y) } }
+                tooltip: { callbacks: { label: (ctx: { parsed: { y: number | null } }) => fmt(ctx.parsed.y ?? 0) } }
               },
               scales: {
                 x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
