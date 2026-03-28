@@ -234,8 +234,8 @@ export function acceptHousehold(id: number): Promise<HouseholdLink> {
   return post<HouseholdLink>(`/household/confirm/${id}`, {})
 }
 
-export function cancelHousehold(id: number): Promise<void> {
-  return del(`/household/${id}`)
+export function cancelHousehold(_id?: number): Promise<void> {
+  return del('/household')
 }
 
 export function getHouseholdBalance(): Promise<{ userAOwes: number; userBOwes: number; net: number }> {

@@ -43,8 +43,8 @@ export function ProfilePage() {
 
   const savePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (newPass !== confirmPass) { showToast('Passwörter stimmen nicht überein', 'error'); return }
-    if (newPass.length < 8) { showToast('Mindestens 8 Zeichen', 'error'); return }
+    if (newPass !== confirmPass) { showToast(t('profile.passwordMismatch'), 'error'); return }
+    if (newPass.length < 8) { showToast(t('profile.passwordTooShort'), 'error'); return }
     try {
       setChangingPw(true)
       await changePassword(oldPass, newPass)
@@ -111,16 +111,16 @@ export function ProfilePage() {
         <div className="card-title">{t('profile.changePassword')}</div>
         <form onSubmit={savePassword} className="modal-body">
           <div className="form-group">
-            <label className="form-label">Aktuelles Passwort</label>
+            <label className="form-label">{t('profile.currentPassword')}</label>
             <input className="form-control" type="password" required value={oldPass} onChange={e => setOldPass(e.target.value)} />
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Neues Passwort</label>
+              <label className="form-label">{t('profile.newPassword')}</label>
               <input className="form-control" type="password" required minLength={8} value={newPass} onChange={e => setNewPass(e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">Wiederholen</label>
+              <label className="form-label">{t('profile.repeatPassword')}</label>
               <input className="form-control" type="password" required value={confirmPass} onChange={e => setConfirmPass(e.target.value)} />
             </div>
           </div>
@@ -132,7 +132,7 @@ export function ProfilePage() {
         <div className="card">
           <div className="card-title">{t('profile.disconnectHousehold')}</div>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
-            Verbunden mit: <strong>{household.partner_username}</strong>
+            {t('profile.connectedWith')}: <strong>{household.partner_username}</strong>
           </p>
           <button className="btn btn-danger" onClick={() => setShowDisconnectConfirm(true)}>{t('profile.disconnectHousehold')}</button>
         </div>

@@ -46,10 +46,10 @@ export function AdminPage() {
   }
 
   const handleTestEmail = async () => {
-    if (!testEmail) { showToast('E-Mail-Adresse eingeben', 'error'); return }
+    if (!testEmail) { showToast(t('admin.enterEmail'), 'error'); return }
     try {
       await sendTestEmail()
-      showToast('Test-E-Mail gesendet', 'success')
+      showToast(t('admin.testEmailSent'), 'success')
     } catch (e) {
       showToast((e as Error).message, 'error')
     }
@@ -76,8 +76,8 @@ export function AdminPage() {
   }
 
   const handleResetPassword = async (id: number) => {
-    if (!resetPassValue) { showToast('Passwort eingeben', 'error'); return }
-    if (resetPassValue.length < 8) { showToast('Mindestens 8 Zeichen', 'error'); return }
+    if (!resetPassValue) { showToast(t('admin.enterPassword'), 'error'); return }
+    if (resetPassValue.length < 8) { showToast(t('admin.passwordMinLength'), 'error'); return }
     try {
       await updateAdminUser(id, { reset_password: resetPassValue })
       showToast(t('common.success'), 'success')
@@ -95,9 +95,9 @@ export function AdminPage() {
       <div className="tabs">
         {(['smtp', 'oidc', 'general', 'users'] as const).map(tb => (
           <button key={tb} className={`tab-btn ${tab === tb ? 'active' : ''}`} onClick={() => setTab(tb)}>
-            {tb === 'smtp' && 'SMTP'}
-            {tb === 'oidc' && 'OIDC'}
-            {tb === 'general' && t('admin.defaultLanguage').split(' ')[0]}
+            {tb === 'smtp' && t('admin.smtp')}
+            {tb === 'oidc' && t('admin.oidc')}
+            {tb === 'general' && t('admin.generalSettings')}
             {tb === 'users' && t('admin.users')}
           </button>
         ))}
@@ -110,31 +110,31 @@ export function AdminPage() {
             <div className="modal-body">
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Host</label>
+                  <label className="form-label">{t('admin.smtpHost')}</label>
                   <input className="form-control" value={settings.smtp_host ?? ''} onChange={e => set('smtp_host', e.target.value)} placeholder="smtp.example.com" />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Port</label>
+                  <label className="form-label">{t('admin.smtpPort')}</label>
                   <input className="form-control" type="number" value={settings.smtp_port ?? '587'} onChange={e => set('smtp_port', e.target.value)} />
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Benutzer</label>
+                  <label className="form-label">{t('admin.smtpUser')}</label>
                   <input className="form-control" value={settings.smtp_user ?? ''} onChange={e => set('smtp_user', e.target.value)} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Passwort</label>
+                  <label className="form-label">{t('admin.smtpPass')}</label>
                   <input className="form-control" type="password" value={settings.smtp_pass ?? ''} onChange={e => set('smtp_pass', e.target.value)} />
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Von (Absender)</label>
+                <label className="form-label">{t('admin.smtpFrom')}</label>
                 <input className="form-control" type="email" value={settings.smtp_from ?? ''} onChange={e => set('smtp_from', e.target.value)} placeholder="noreply@example.com" />
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', alignItems: 'flex-end' }}>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Test-E-Mail an</label>
+                  <label className="form-label">{t('admin.smtpTestTo')}</label>
                   <input className="form-control" type="email" value={testEmail} onChange={e => setTestEmail(e.target.value)} placeholder="test@example.com" />
                 </div>
                 <button className="btn btn-secondary" onClick={handleTestEmail}>{t('admin.testEmail')}</button>
@@ -163,12 +163,12 @@ export function AdminPage() {
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Anzeigename</label>
+                <label className="form-label">{t('admin.oidcDisplayName')}</label>
                 <input className="form-control" value={settings.oidc_display_name ?? 'SSO'} onChange={e => set('oidc_display_name', e.target.value)} />
               </div>
               <label className="form-check">
                 <input type="checkbox" checked={settings.oidc_enabled === 'true'} onChange={e => set('oidc_enabled', e.target.checked ? 'true' : 'false')} />
-                OIDC aktivieren
+                {t('admin.oidcEnable')}
               </label>
               <button className="btn btn-primary" onClick={save} disabled={saving}>{t('common.save')}</button>
             </div>
@@ -177,7 +177,7 @@ export function AdminPage() {
 
         {tab === 'general' && (
           <div className="card">
-            <div className="card-title">Allgemeine Einstellungen</div>
+            <div className="card-title">{t('admin.generalSettings')}</div>
             <div className="modal-body">
               <div className="form-group">
                 <label className="form-label">{t('admin.defaultLanguage')}</label>
@@ -207,10 +207,10 @@ export function AdminPage() {
               <table>
                 <thead>
                   <tr>
-                    <th>Benutzername</th>
-                    <th>E-Mail</th>
-                    <th>Rolle</th>
-                    <th>Erstellt</th>
+                    <th>{t('admin.tableUsername')}</th>
+                    <th>{t('admin.tableEmail')}</th>
+                    <th>{t('admin.tableRole')}</th>
+                    <th>{t('admin.tableCreated')}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -219,7 +219,7 @@ export function AdminPage() {
                     <tr key={u.id}>
                       <td><strong>{u.username}</strong></td>
                       <td className="text-muted">{u.email}</td>
-                      <td>{u.is_admin ? <span className="badge badge-warning">Admin</span> : <span className="badge badge-neutral">User</span>}</td>
+                      <td>{u.is_admin ? <span className="badge badge-warning">{t('admin.rolAdmin')}</span> : <span className="badge badge-neutral">{t('admin.rolUser')}</span>}</td>
                       <td className="text-muted">{new Date(u.created_at).toLocaleDateString('de-DE')}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -227,9 +227,9 @@ export function AdminPage() {
                             <button
                               className="btn btn-sm btn-secondary"
                               onClick={() => handleToggleAdmin(u.id)}
-                              title={u.is_admin ? 'Admin-Rechte entziehen' : 'Admin-Rechte vergeben'}
+                              title={u.is_admin ? t('admin.demoteUser') : t('admin.promoteAdmin')}
                             >
-                              {u.is_admin ? '↓ User' : '↑ Admin'}
+                              {u.is_admin ? `↓ ${t('admin.rolUser')}` : `↑ ${t('admin.rolAdmin')}`}
                             </button>
                           )}
                           {resetPassUserId === u.id ? (
@@ -237,7 +237,7 @@ export function AdminPage() {
                               <input
                                 className="form-control"
                                 type="password"
-                                placeholder="Neues Passwort (min. 8)"
+                                placeholder={t('admin.newPasswordPlaceholder')}
                                 value={resetPassValue}
                                 onChange={e => setResetPassValue(e.target.value)}
                                 style={{ width: '10rem' }}
@@ -250,7 +250,7 @@ export function AdminPage() {
                               className="btn btn-sm btn-secondary"
                               onClick={() => { setResetPassUserId(u.id); setResetPassValue('') }}
                             >
-                              PW Reset
+                              {t('admin.pwReset')}
                             </button>
                           )}
                           {u.id !== me?.id && (

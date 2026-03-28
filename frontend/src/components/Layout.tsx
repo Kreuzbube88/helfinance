@@ -136,7 +136,7 @@ export function Layout({ children }: LayoutProps) {
           <button
             className="btn btn-ghost sidebar-collapse-btn"
             onClick={() => setSidebarCollapsed(prev => !prev)}
-            title={sidebarCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'}
+            title={sidebarCollapsed ? t('common.sidebarExpand') : t('common.sidebarCollapse')}
             style={{ justifyContent: 'center', fontSize: '0.75rem' }}
           >
             {sidebarCollapsed ? '›' : '‹'}
@@ -151,7 +151,7 @@ export function Layout({ children }: LayoutProps) {
           <button
             className="hamburger btn btn-ghost"
             onClick={handleHamburger}
-            aria-label="Toggle menu"
+            aria-label={t('common.toggleMenu')}
           >
             ☰
           </button>
@@ -160,7 +160,7 @@ export function Layout({ children }: LayoutProps) {
             <button
               className="btn btn-ghost theme-toggle"
               onClick={toggleTheme}
-              title="Toggle theme"
+              title={t('common.toggleTheme')}
             >
               {theme === 'dark' ? '☀' : '☾'}
             </button>
@@ -168,7 +168,7 @@ export function Layout({ children }: LayoutProps) {
             <button
               className="btn btn-ghost notif-btn"
               onClick={() => setNotifOpen(true)}
-              aria-label="Notifications"
+              aria-label={t('common.notifications')}
             >
               🔔
               {unreadCount > 0 && (
@@ -181,7 +181,7 @@ export function Layout({ children }: LayoutProps) {
                 {user?.username?.slice(0, 2).toUpperCase() || 'HF'}
               </span>
               <span className="avatar-name">{user?.username}</span>
-              {isAdmin && <span className="badge badge-warning" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>Admin</span>}
+              {isAdmin && <span className="badge badge-warning" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>{t('admin.title')}</span>}
             </div>
           </div>
         </header>

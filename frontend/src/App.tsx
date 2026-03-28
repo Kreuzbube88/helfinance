@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider, useToast } from './contexts/ToastContext'
 import { Layout } from './components/Layout'
@@ -31,8 +32,9 @@ function LoadingScreen() {
 function AdminRedirect() {
   const { showToast } = useToast()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   useEffect(() => {
-    showToast('Access denied', 'error')
+    showToast(t('common.accessDenied'), 'error')
     navigate('/dashboard', { replace: true })
   }, [])
   return null

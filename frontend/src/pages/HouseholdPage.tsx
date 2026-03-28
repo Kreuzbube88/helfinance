@@ -136,7 +136,7 @@ export function HouseholdPage() {
       <div className="page">
         <h1 className="page-title">{t('household.title')}</h1>
         <div className="card household-status">
-          <p className="text-muted">Connect with a partner to share expenses and track your household finances together.</p>
+          <p className="text-muted">{t('household.connectHint')}</p>
           <form onSubmit={handleInvite} style={{ display: 'flex', gap: '0.75rem', width: '100%', maxWidth: '400px' }}>
             <input
               className="form-input"
@@ -163,9 +163,9 @@ export function HouseholdPage() {
           <h1 className="page-title">{t('household.title')}</h1>
           <div className="card household-status">
             <span className="badge badge-warning">{t('household.pending')}</span>
-            <p>Waiting for <strong>{partnerName}</strong> to accept your invitation.</p>
+            <p>{t('household.waitingAccept', { name: partnerName })}</p>
             <button className="btn btn-danger btn-sm" onClick={() => setShowCancelConfirm(true)}>
-              Cancel Invitation
+              {t('household.cancelInvitation')}
             </button>
           </div>
         </div>
@@ -178,13 +178,13 @@ export function HouseholdPage() {
         <h1 className="page-title">{t('household.title')}</h1>
         <div className="card household-status">
           <span className="badge badge-info">{t('household.pending')}</span>
-          <p>You have a pending invitation from <strong>{partnerName}</strong>.</p>
+          <p>{t('household.pendingFrom', { name: partnerName })}</p>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button className="btn btn-primary" onClick={handleAccept} disabled={accepting}>
-              {accepting ? t('common.loading') : 'Accept Invitation'}
+              {accepting ? t('common.loading') : t('household.acceptInvitation')}
             </button>
             <button className="btn btn-danger btn-sm" onClick={() => setShowCancelConfirm(true)}>
-              Decline
+              {t('household.decline')}
             </button>
           </div>
         </div>
@@ -211,11 +211,11 @@ export function HouseholdPage() {
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <p style={{ fontWeight: 600 }}>Connected with <span className="text-primary">{partnerName}</span></p>
+            <p style={{ fontWeight: 600 }}>{t('household.connectedWith')} <span className="text-primary">{partnerName}</span></p>
             <span className="badge badge-success">{t('household.active')}</span>
           </div>
           <button className="btn btn-danger btn-sm" onClick={() => setShowCancelConfirm(true)}>
-            Disconnect
+            {t('household.disconnect')}
           </button>
         </div>
       </div>
@@ -228,8 +228,8 @@ export function HouseholdPage() {
         <h3 className="card-title">{t('household.balance')}</h3>
         <p style={{ fontWeight: 600, fontSize: '1.1rem' }}>
           {iOwe
-            ? <>You owe <span className="text-danger">{partnerName} {fmt(diff)}</span> this month</>
-            : <><span className="text-success">{partnerName} owes you {fmt(diff)}</span> this month</>
+            ? <span className="text-danger">{t('household.youOwe', { name: partnerName, amount: fmt(diff) })}</span>
+            : <span className="text-success">{t('household.owesYou', { name: partnerName, amount: fmt(diff) })}</span>
           }
         </p>
       </div>
@@ -246,8 +246,8 @@ export function HouseholdPage() {
                   <th>{t('expenses.name')}</th>
                   <th>{t('expenses.amount')}</th>
                   <th>Split A / B</th>
-                  <th>Paid By</th>
-                  <th>Your Share</th>
+                  <th>{t('household.paidBy')}</th>
+                  <th>{t('household.yourShare')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -257,7 +257,7 @@ export function HouseholdPage() {
                     <td>{fmt(exp.amount)}</td>
                     <td>{exp.split_pct_a}% / {exp.split_pct_b}%</td>
                     <td className="text-muted" style={{ fontSize: '0.85rem' }}>
-                      {exp.paid_by === user?.id ? 'You' : partnerName}
+                      {exp.paid_by === user?.id ? t('household.you') : partnerName}
                     </td>
                     <td>{fmt(myShare(exp))}</td>
                   </tr>
@@ -269,7 +269,7 @@ export function HouseholdPage() {
           <p className="text-muted" style={{ marginBottom: '1rem' }}>{t('common.noData')}</p>
         )}
 
-        <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', fontSize: '0.9rem' }}>Add Shared Expense</h4>
+        <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', fontSize: '0.9rem' }}>{t('household.addSharedExpense')}</h4>
         <form onSubmit={handleAddExpense}>
           <div className="form-row">
             <div className="form-group">
@@ -296,7 +296,7 @@ export function HouseholdPage() {
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Split % (A)</label>
+              <label className="form-label">{t('household.splitPctA')}</label>
               <input
                 className="form-input"
                 type="number"
@@ -307,7 +307,7 @@ export function HouseholdPage() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Split % (B)</label>
+              <label className="form-label">{t('household.splitPctB')}</label>
               <input
                 className="form-input"
                 type="number"
@@ -319,20 +319,20 @@ export function HouseholdPage() {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Paid By</label>
+            <label className="form-label">{t('household.paidBy')}</label>
             <select
               className="form-select"
               value={expForm.paid_by}
               onChange={e => setExpForm(p => ({ ...p, paid_by: e.target.value }))}
             >
-              <option value={user?.id ?? ''}>{user?.username ?? 'You'}</option>
+              <option value={user?.id ?? ''}>{user?.username ?? t('household.you')}</option>
               <option value={household.user_a_id === user?.id ? household.user_b_id : household.user_a_id}>
                 {partnerName}
               </option>
             </select>
           </div>
           <button type="submit" className="btn btn-primary" disabled={addingExp}>
-            {addingExp ? t('common.loading') : 'Add Expense'}
+            {addingExp ? t('common.loading') : t('household.addExpense')}
           </button>
         </form>
       </div>

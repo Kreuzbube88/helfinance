@@ -243,7 +243,14 @@ export function createReportsRouter(db: Database.Database): Router {
       }));
 
       const cashflow = calcDailyCashflow(incomeRecords, expenseRecords, year, month);
-      res.json(cashflow);
+      const transformed = cashflow.map(d => ({
+        day: d.day,
+        date: `${year}-${String(month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`,
+        income_bookings: d.bookings.filter(b => b.type === 'income').map(b => ({ name: b.name, amount: b.amount })),
+        expense_bookings: d.bookings.filter(b => b.type === 'expense').map(b => ({ name: b.name, amount: b.amount })),
+        projected_balance: d.balance,
+      }));
+      res.json(transformed);
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }

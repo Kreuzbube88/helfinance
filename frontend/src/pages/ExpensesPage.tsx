@@ -32,7 +32,7 @@ export function ExpensesPage() {
 
   const [items, setItems] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(CATEGORIES))
 
   // Add/Edit modal
   const [showModal, setShowModal] = useState(false)
@@ -78,7 +78,7 @@ export function ExpensesPage() {
   useEffect(() => { load() }, [])
 
   const grouped = CATEGORIES.reduce<Record<string, Expense[]>>((acc, cat) => {
-    acc[cat] = items.filter(i => i.category === cat)
+    acc[cat] = items.filter(i => (i.category || 'Miscellaneous') === cat)
     return acc
   }, {})
 

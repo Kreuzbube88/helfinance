@@ -49,14 +49,22 @@ export function createHouseholdRouter(db: Database.Database): Router {
     try {
       const link = getUserLink(req.user!.id);
       if (!link) {
-        res.json({ linked: false });
+        res.json(null);
         return;
       }
       const partnerId = link.user_a_id === req.user!.id ? link.user_b_id : link.user_a_id;
       const partner = db
         .prepare('SELECT id, username, email FROM users WHERE id = ?')
         .get(partnerId) as UserRow | undefined;
-      res.json({ linked: true, link, partner });
+      res.json({
+        id: link.id,
+        user_a_id: link.user_a_id,
+        user_b_id: link.user_b_id,
+        status: link.status,
+        invited_by: link.invited_by,
+        partner_username: partner?.username ?? null,
+        partner_email: partner?.email ?? null,
+      });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
@@ -64,8 +72,9 @@ export function createHouseholdRouter(db: Database.Database): Router {
 
   router.post('/invite', async (req: Request, res: Response) => {
     try {
-      const { username, email } = req.body as { username?: string; email?: string };
-      if (!username && !email) {
+      const { username, email, usernameOrEmail } = req.body as { username?: string; email?: string; usernameOrEmail?: string };
+      const val = usernameOrEmail || username || email;
+      if (!val) {
         res.status(400).json({ error: 'username or email required' });
         return;
       }
@@ -77,10 +86,10 @@ export function createHouseholdRouter(db: Database.Database): Router {
       }
 
       let target: UserRow | undefined;
-      if (username) {
-        target = db.prepare('SELECT id, username, email FROM users WHERE username = ?').get(username) as UserRow | undefined;
-      } else if (email) {
-        target = db.prepare('SELECT id, username, email FROM users WHERE email = ?').get(email) as UserRow | undefined;
+      if (val.includes('@')) {
+        target = db.prepare('SELECT id, username, email FROM users WHERE email = ?').get(val) as UserRow | undefined;
+      } else {
+        target = db.prepare('SELECT id, username, email FROM users WHERE username = ?').get(val) as UserRow | undefined;
       }
 
       if (!target) {
