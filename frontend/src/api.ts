@@ -128,6 +128,14 @@ export function scheduleIncomeChange(id: number, data: { new_amount: number; eff
   return post<IncomeChange>(`/income/${id}/changes`, data)
 }
 
+export function getIncomeChanges(id: number): Promise<IncomeChange[]> {
+  return get<IncomeChange[]>(`/income/${id}/changes`)
+}
+
+export function deleteIncomeChange(incomeId: number, changeId: number): Promise<void> {
+  return del(`/income/${incomeId}/changes/${changeId}`)
+}
+
 // Expenses
 export function getExpenses(): Promise<Expense[]> {
   return get<Expense[]>('/expenses')
@@ -147,6 +155,14 @@ export function deleteExpense(id: number): Promise<void> {
 
 export function scheduleExpenseChange(id: number, data: { new_amount: number; effective_from: string }): Promise<void> {
   return post<void>(`/expenses/${id}/changes`, data)
+}
+
+export function getExpenseChanges(id: number): Promise<{ id: number; expense_id: number; new_amount: number; effective_from: string }[]> {
+  return get(`/expenses/${id}/changes`)
+}
+
+export function deleteExpenseChange(expenseId: number, changeId: number): Promise<void> {
+  return del(`/expenses/${expenseId}/changes/${changeId}`)
 }
 
 // Loans

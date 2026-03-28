@@ -4,6 +4,7 @@ import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import { getAdminSettings, updateAdminSettings, sendTestEmail, getAdminUsers, deleteAdminUser, updateAdminUser } from '../api'
 import type { User } from '../types'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 export function AdminPage() {
   const { t } = useTranslation()
@@ -15,6 +16,7 @@ export function AdminPage() {
   const [saving, setSaving] = useState(false)
   const [testEmail, setTestEmail] = useState('')
   const [resetPassUserId, setResetPassUserId] = useState<number | null>(null)
+  const [deleteUserId, setDeleteUserId] = useState<number | null>(null)
   const [resetPassValue, setResetPassValue] = useState('')
 
   const load = async () => {
@@ -54,7 +56,6 @@ export function AdminPage() {
   }
 
   const handleDeleteUser = async (id: number) => {
-    if (!confirm(t('common.confirm') + '?')) return
     try {
       await deleteAdminUser(id)
       showToast(t('common.success'), 'success')
@@ -253,7 +254,7 @@ export function AdminPage() {
                             </button>
                           )}
                           {u.id !== me?.id && (
-                            <button className="btn btn-sm btn-danger" onClick={() => handleDeleteUser(u.id)}>{t('common.delete')}</button>
+                            <button className="btn btn-sm btn-danger" onClick={() => setDeleteUserId(u.id)}>{t('common.delete')}</button>
                           )}
                         </div>
                       </td>
@@ -265,6 +266,13 @@ export function AdminPage() {
           </div>
         )}
       </div>
+
+      {deleteUserId !== null && (
+        <ConfirmModal
+          onConfirm={() => handleDeleteUser(deleteUserId)}
+          onClose={() => setDeleteUserId(null)}
+        />
+      )}
     </div>
   )
 }

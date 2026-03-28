@@ -11,6 +11,7 @@ import {
   createSharedExpense
 } from '../api'
 import type { HouseholdLink, SharedExpense } from '../types'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 const EMPTY_EXPENSE = {
   name: '',
@@ -34,6 +35,7 @@ export function HouseholdPage() {
   const [sharedExpenses, setSharedExpenses] = useState<SharedExpense[]>([])
   const [expForm, setExpForm] = useState(EMPTY_EXPENSE)
   const [addingExp, setAddingExp] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
 
   const currency = user?.currency || 'EUR'
   const fmt = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency })
@@ -85,7 +87,7 @@ export function HouseholdPage() {
   }
 
   const handleCancel = async () => {
-    if (!household || !confirm(t('common.confirm'))) return
+    if (!household) return
     try {
       await cancelHousehold(household.id)
       setHousehold(null)
@@ -162,7 +164,7 @@ export function HouseholdPage() {
           <div className="card household-status">
             <span className="badge badge-warning">{t('household.pending')}</span>
             <p>Waiting for <strong>{partnerName}</strong> to accept your invitation.</p>
-            <button className="btn btn-danger btn-sm" onClick={handleCancel}>
+            <button className="btn btn-danger btn-sm" onClick={() => setShowCancelConfirm(true)}>
               Cancel Invitation
             </button>
           </div>
@@ -181,7 +183,7 @@ export function HouseholdPage() {
             <button className="btn btn-primary" onClick={handleAccept} disabled={accepting}>
               {accepting ? t('common.loading') : 'Accept Invitation'}
             </button>
-            <button className="btn btn-danger btn-sm" onClick={handleCancel}>
+            <button className="btn btn-danger btn-sm" onClick={() => setShowCancelConfirm(true)}>
               Decline
             </button>
           </div>
@@ -212,7 +214,7 @@ export function HouseholdPage() {
             <p style={{ fontWeight: 600 }}>Connected with <span className="text-primary">{partnerName}</span></p>
             <span className="badge badge-success">{t('household.active')}</span>
           </div>
-          <button className="btn btn-danger btn-sm" onClick={handleCancel}>
+          <button className="btn btn-danger btn-sm" onClick={() => setShowCancelConfirm(true)}>
             Disconnect
           </button>
         </div>
@@ -334,6 +336,13 @@ export function HouseholdPage() {
           </button>
         </form>
       </div>
+
+      {showCancelConfirm && (
+        <ConfirmModal
+          onConfirm={handleCancel}
+          onClose={() => setShowCancelConfirm(false)}
+        />
+      )}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getLoans, createLoan, deleteLoan, getLoanAmortization } from '../api'
 import type { Loan, AmortizationRow } from '../types'
 import { Modal } from '../components/Modal'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 function calcMonthlyRate(principal: number, annualPct: number, termMonths: number): number {
   if (principal <= 0 || annualPct <= 0 || termMonths <= 0) return 0
@@ -33,6 +34,7 @@ export function LoansPage() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
 
+  const [deleteId, setDeleteId] = useState<number | null>(null)
   const [amortLoan, setAmortLoan] = useState<Loan | null>(null)
   const [amortRows, setAmortRows] = useState<AmortizationRow[]>([])
   const [amortLoading, setAmortLoading] = useState(false)
@@ -80,7 +82,6 @@ export function LoansPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm(t('common.confirm'))) return
     try {
       await deleteLoan(id)
       setLoans(prev => prev.filter(l => l.id !== id))
@@ -176,7 +177,7 @@ export function LoansPage() {
                     <button className="btn btn-secondary btn-sm" onClick={() => openAmortization(loan)}>
                       {t('loans.amortization')}
                     </button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(loan.id)}>
+                    <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(loan.id)}>
                       {t('common.delete')}
                     </button>
                   </div>
@@ -285,6 +286,13 @@ export function LoansPage() {
             </>
           )}
         </Modal>
+      )}
+
+      {deleteId !== null && (
+        <ConfirmModal
+          onConfirm={() => handleDelete(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
       )}
     </div>
   )

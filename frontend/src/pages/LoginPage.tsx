@@ -62,9 +62,9 @@ export function LoginPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          <span className="logo-icon-large">₿</span>
+          <img src="/favicon.png" alt="Helfinance" className="auth-logo-img" />
           <h1 className="auth-title">HELFINANCE</h1>
-          <p className="auth-subtitle">Personal Finance Dashboard</p>
+          <p className="auth-subtitle">{t('auth.subtitle')}</p>
         </div>
 
         <div className="auth-tabs">

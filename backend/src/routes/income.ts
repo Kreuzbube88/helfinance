@@ -160,6 +160,31 @@ export function createIncomeRouter(db: Database.Database): Router {
     }
   });
 
+  router.delete('/:id/changes/:changeId', (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const changeId = parseInt(req.params.changeId, 10);
+      const existing = db
+        .prepare('SELECT * FROM income WHERE id = ? AND user_id = ?')
+        .get(id, req.user!.id) as IncomeRow | undefined;
+      if (!existing) {
+        res.status(404).json({ error: 'Income not found' });
+        return;
+      }
+      const change = db
+        .prepare('SELECT * FROM income_changes WHERE id = ? AND income_id = ?')
+        .get(changeId, id) as IncomeChangeRow | undefined;
+      if (!change) {
+        res.status(404).json({ error: 'Change not found' });
+        return;
+      }
+      db.prepare('DELETE FROM income_changes WHERE id = ?').run(changeId);
+      res.json({ message: 'Change deleted' });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  });
+
   router.get('/:id/changes', (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id, 10);

@@ -19,15 +19,19 @@ import { Line } from 'react-chartjs-2'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-]
+function getMonthName(year: number, month: number, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(year, month - 1, 1))
+}
 
-const DOW_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+function getDowLabels(locale: string): string[] {
+  const base = new Date(2024, 0, 1) // Monday Jan 1 2024
+  return Array.from({ length: 7 }, (_, i) =>
+    new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(new Date(base.getTime() + i * 86400000))
+  )
+}
 
 export function CashflowPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
 
@@ -36,15 +40,21 @@ export function CashflowPage() {
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [days, setDays] = useState<CashflowDay[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+
+  const locale = i18n.language === 'de' ? 'de-DE' : 'en-GB'
+  const monthLabel = getMonthName(year, month, locale)
+  const dowLabels = getDowLabels(locale)
 
   const currency = user?.currency || 'EUR'
   const fmt = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency })
 
   const load = useCallback(() => {
     setLoading(true)
+    setLoadError(false)
     getCashflow(year, month)
-      .then(setDays)
-      .catch(() => showToast(t('common.error'), 'error'))
+      .then(data => { setDays(data); setLoadError(false) })
+      .catch(() => { showToast(t('common.error'), 'error'); setLoadError(true) })
       .finally(() => setLoading(false))
   }, [year, month])
 
@@ -137,21 +147,25 @@ export function CashflowPage() {
         <h1 className="page-title">{t('cashflow.title')}</h1>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <button className="btn btn-secondary btn-sm" onClick={prevMonth}>‹</button>
-          <span style={{ fontWeight: 600, minWidth: '160px', textAlign: 'center' }}>
-            {MONTH_NAMES[month - 1]} {year}
+          <span style={{ fontWeight: 600, minWidth: '160px', textAlign: 'center', textTransform: 'capitalize' }}>
+            {monthLabel}
           </span>
           <button className="btn btn-secondary btn-sm" onClick={nextMonth}>›</button>
-          <button className="btn btn-ghost btn-sm" onClick={goToday}>Today</button>
+          <button className="btn btn-ghost btn-sm" onClick={goToday}>{t('cashflow.today')}</button>
         </div>
       </div>
 
       {loading ? (
-        <p className="text-muted">{t('common.loading')}</p>
+        <div className="empty-state"><p className="text-muted">{t('common.loading')}</p></div>
+      ) : loadError ? (
+        <div className="empty-state"><p className="text-danger">{t('common.error')}</p></div>
+      ) : days.length === 0 ? (
+        <div className="empty-state"><p className="text-muted">{t('cashflow.noData')}</p></div>
       ) : (
         <>
           <div className="card">
             <div className="calendar-grid">
-              {DOW_LABELS.map(d => (
+              {dowLabels.map(d => (
                 <div key={d} className="calendar-header-cell">{d}</div>
               ))}
               {calendarCells.map((day, idx) => {

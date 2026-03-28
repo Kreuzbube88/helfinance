@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getSavingsGoals, createSavingsGoal, updateSavingsGoal, deleteSavingsGoal, getDashboard } from '../api'
 import type { SavingsGoal } from '../types'
 import { Modal } from '../components/Modal'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 const PRESET_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
@@ -35,6 +36,7 @@ export function SavingsPage() {
   const [dynamicResult, setDynamicResult] = useState<number | null>(null)
   const [recalcLoading, setRecalcLoading] = useState(false)
   const [totalMonthlyIncome, setTotalMonthlyIncome] = useState(0)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const currency = user?.currency || 'EUR'
   const fmt = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency })
@@ -104,7 +106,6 @@ export function SavingsPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm(t('common.confirm'))) return
     try {
       await deleteSavingsGoal(id)
       setGoals(prev => prev.filter(g => g.id !== id))
@@ -200,7 +201,7 @@ export function SavingsPage() {
                       <button className="btn btn-secondary btn-sm" onClick={() => openEdit(goal)}>
                         {t('common.edit')}
                       </button>
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(goal.id)}>
+                      <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(goal.id)}>
                         {t('common.delete')}
                       </button>
                     </div>
@@ -348,6 +349,13 @@ export function SavingsPage() {
             </div>
           </form>
         </Modal>
+      )}
+
+      {deleteId !== null && (
+        <ConfirmModal
+          onConfirm={() => handleDelete(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
       )}
     </div>
   )

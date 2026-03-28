@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { updateProfile, changePassword, getHousehold, cancelHousehold } from '../api'
 import type { HouseholdLink } from '../types'
 import i18n from '../i18n/index'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 export function ProfilePage() {
   const { t } = useTranslation()
@@ -20,6 +21,7 @@ export function ProfilePage() {
   const [confirmPass, setConfirmPass] = useState('')
   const [changingPw, setChangingPw] = useState(false)
   const [household, setHousehold] = useState<HouseholdLink | null>(null)
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
 
   useEffect(() => {
     getHousehold().then(setHousehold).catch(() => {})
@@ -56,7 +58,7 @@ export function ProfilePage() {
   }
 
   const disconnectHousehold = async () => {
-    if (!household || !confirm(t('common.confirm') + '?')) return
+    if (!household) return
     try {
       await cancelHousehold(household.id)
       setHousehold(null)
@@ -132,8 +134,15 @@ export function ProfilePage() {
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
             Verbunden mit: <strong>{household.partner_username}</strong>
           </p>
-          <button className="btn btn-danger" onClick={disconnectHousehold}>{t('profile.disconnectHousehold')}</button>
+          <button className="btn btn-danger" onClick={() => setShowDisconnectConfirm(true)}>{t('profile.disconnectHousehold')}</button>
         </div>
+      )}
+
+      {showDisconnectConfirm && (
+        <ConfirmModal
+          onConfirm={disconnectHousehold}
+          onClose={() => setShowDisconnectConfirm(false)}
+        />
       )}
     </div>
   )

@@ -47,7 +47,16 @@
     "amount": "Betrag",
     "interval": "Intervall (Monate)",
     "category": "Kategorie",
-    "bookingDay": "Buchungstag"
+    "bookingDay": "Buchungstag",
+    "effectiveFrom": "Gültig ab",
+    "effectiveTo": "Gültig bis",
+    "scheduleChange": "Änderung planen",
+    "monthly": "Monatlich",
+    "quarterly": "Vierteljährlich",
+    "semiannual": "Halbjährlich",
+    "yearly": "Jährlich",
+    "monthlyEquiv": "Monatlich",
+    "newAmount": "Neuer Betrag"
   },
   "loans": {
     "title": "Kredite",
@@ -77,7 +86,9 @@
   },
   "cashflow": {
     "title": "Cashflow Kalender",
-    "projectedBalance": "Projizierter Kontostand"
+    "projectedBalance": "Projizierter Kontostand",
+    "today": "Heute",
+    "noData": "Keine Buchungen in diesem Monat"
   },
   "reports": {
     "title": "Berichte",
@@ -129,7 +140,8 @@
     "username": "Benutzername",
     "email": "E-Mail",
     "password": "Passwort",
-    "loginWith": "Anmelden mit"
+    "loginWith": "Anmelden mit",
+    "subtitle": "Persönliches Finanz-Dashboard"
   },
   "onboarding": {
     "title": "Willkommen bei HELFINANCE",
@@ -154,7 +166,12 @@
     "noData": "Keine Daten vorhanden",
     "confirm": "Bestätigen",
     "month": "Monat",
-    "year": "Jahr"
+    "year": "Jahr",
+    "details": "Details",
+    "scheduledChanges": "Geplante Änderungen",
+    "noChanges": "Keine geplanten Änderungen",
+    "confirmDeleteTitle": "Eintrag löschen",
+    "confirmDeleteMsg": "Möchten Sie diesen Eintrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
   },
   "categories": {
     "Housing": "Wohnen",
