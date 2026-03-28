@@ -148,7 +148,8 @@ export function ExpensesPage() {
         booking_day: parseInt(form.booking_day),
         category: form.category,
         effective_from: form.effective_from,
-        effective_to: form.effective_to || null
+        effective_to: form.effective_to || null,
+        is_active: 1
       }
       if (editing) {
         const updated = await updateExpense(editing.id, payload)

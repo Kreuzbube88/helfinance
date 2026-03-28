@@ -91,7 +91,9 @@ export function IncomePage() {
         interval: form.interval,
         booking_day: parseInt(form.booking_day),
         effective_from: form.effective_from,
-        effective_to: form.effective_to || null
+        effective_to: form.effective_to || null,
+        category_id: null,
+        is_active: 1
       }
       if (editing) {
         const updated = await updateIncome(editing.id, payload)
