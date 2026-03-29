@@ -92,14 +92,15 @@ export function createIncomeRouter(db: Database.Database): Router {
         effective_to?: string;
         category_id?: number | null;
       };
+      // Bug 28: effective_from, effective_to use direct assignment; category_id already direct
       db.prepare(
         `UPDATE income SET
           name = COALESCE(?, name),
           amount = COALESCE(?, amount),
           interval = COALESCE(?, interval),
           booking_day = COALESCE(?, booking_day),
-          effective_from = COALESCE(?, effective_from),
-          effective_to = COALESCE(?, effective_to),
+          effective_from = ?,
+          effective_to = ?,
           category_id = ?
         WHERE id = ?`
       ).run(
@@ -107,11 +108,16 @@ export function createIncomeRouter(db: Database.Database): Router {
         amount ?? null,
         interval ?? null,
         booking_day ?? null,
-        effective_from ?? null,
-        effective_to ?? null,
+        effective_from !== undefined ? (effective_from ?? null) : existing.effective_from,
+        effective_to !== undefined ? (effective_to ?? null) : existing.effective_to,
         category_id !== undefined ? (category_id ?? null) : existing.category_id,
         id
       );
+
+      // Bug 10: delete future auto-transactions so they get regenerated
+      db.prepare('DELETE FROM transactions WHERE income_id = ? AND date >= ? AND is_auto = 1')
+        .run(id, new Date().toISOString().slice(0, 10));
+
       const updated = db.prepare('SELECT * FROM income WHERE id = ?').get(id) as IncomeRow;
       res.json(updated);
     } catch (e) {
@@ -129,6 +135,8 @@ export function createIncomeRouter(db: Database.Database): Router {
         res.status(404).json({ error: 'Income not found' });
         return;
       }
+      // Bug 11: remove all auto-generated transactions before deleting
+      db.prepare('DELETE FROM transactions WHERE income_id = ? AND is_auto = 1').run(id);
       db.prepare('DELETE FROM income WHERE id = ?').run(id);
       res.json({ message: 'Income deleted' });
     } catch (e) {

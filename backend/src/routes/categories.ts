@@ -11,6 +11,7 @@ interface CategoryRow {
   is_default: number;
   sort_order: number;
   budget_limit: number | null;
+  type: string;
 }
 
 export function createCategoriesRouter(db: Database.Database): Router {
@@ -20,9 +21,15 @@ export function createCategoriesRouter(db: Database.Database): Router {
 
   router.get('/', (req: Request, res: Response) => {
     try {
-      const categories = db
-        .prepare('SELECT * FROM categories WHERE user_id = ? ORDER BY sort_order ASC, id ASC')
-        .all(req.user!.id) as CategoryRow[];
+      const type = req.query.type as string | undefined;
+      let query = 'SELECT * FROM categories WHERE user_id = ?';
+      const params: (string | number)[] = [req.user!.id];
+      if (type) {
+        query += " AND (type = ? OR type = 'both')";
+        params.push(type);
+      }
+      query += ' ORDER BY sort_order ASC, id ASC';
+      const categories = db.prepare(query).all(...params) as CategoryRow[];
       res.json(categories);
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });

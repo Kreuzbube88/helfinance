@@ -48,7 +48,7 @@ export function AdminPage() {
   const handleTestEmail = async () => {
     if (!testEmail) { showToast(t('admin.enterEmail'), 'error'); return }
     try {
-      await sendTestEmail()
+      await sendTestEmail(testEmail)
       showToast(t('admin.testEmailSent'), 'success')
     } catch (e) {
       showToast((e as Error).message, 'error')

@@ -22,6 +22,7 @@ interface ExpenseChangeRow {
   effective_from: string;
 }
 
+// Bug 12: include category_id in mapRow
 function mapRow(row: ExpenseRow) {
   return {
     id: row.id,
@@ -30,6 +31,7 @@ function mapRow(row: ExpenseRow) {
     amount: row.amount,
     interval_months: row.interval_months,
     category: row.category ?? '',
+    category_id: row.category_id ?? null,
     booking_day: row.booking_day,
     effective_from: row.effective_from ?? '',
     effective_to: row.effective_to ?? null,
@@ -54,12 +56,13 @@ export function createExpensesRouter(db: Database.Database): Router {
 
   router.post('/', (req: Request, res: Response) => {
     try {
-      const { name, amount, interval_months, category, booking_day, effective_from, effective_to } =
+      const { name, amount, interval_months, category, category_id, booking_day, effective_from, effective_to } =
         req.body as {
           name: string;
           amount: number;
           interval_months?: number;
           category?: string;
+          category_id?: number | null;
           booking_day?: number;
           effective_from?: string;
           effective_to?: string;
@@ -70,7 +73,7 @@ export function createExpensesRouter(db: Database.Database): Router {
       }
       const result = db
         .prepare(
-          'INSERT INTO expenses (user_id, name, amount, interval_months, category, booking_day, effective_from, effective_to) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          'INSERT INTO expenses (user_id, name, amount, interval_months, category, category_id, booking_day, effective_from, effective_to) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )
         .run(
           req.user!.id,
@@ -78,6 +81,7 @@ export function createExpensesRouter(db: Database.Database): Router {
           amount,
           interval_months ?? 1,
           category ?? null,
+          category_id ?? null,
           booking_day ?? 1,
           effective_from ?? null,
           effective_to ?? null
@@ -99,36 +103,46 @@ export function createExpensesRouter(db: Database.Database): Router {
         res.status(404).json({ error: 'Expense not found' });
         return;
       }
-      const { name, amount, interval_months, category, booking_day, effective_from, effective_to } =
+      const { name, amount, interval_months, category, category_id, booking_day, effective_from, effective_to } =
         req.body as {
           name?: string;
           amount?: number;
           interval_months?: number;
           category?: string;
+          category_id?: number | null;
           booking_day?: number;
-          effective_from?: string;
-          effective_to?: string;
+          effective_from?: string | null;
+          effective_to?: string | null;
         };
+
+      // Bug 28: nullable date fields and category_id use direct assignment; only COALESCE non-nullable fields
       db.prepare(
         `UPDATE expenses SET
           name = COALESCE(?, name),
           amount = COALESCE(?, amount),
           interval_months = COALESCE(?, interval_months),
           category = COALESCE(?, category),
+          category_id = ?,
           booking_day = COALESCE(?, booking_day),
-          effective_from = COALESCE(?, effective_from),
-          effective_to = COALESCE(?, effective_to)
+          effective_from = ?,
+          effective_to = ?
         WHERE id = ?`
       ).run(
         name ?? null,
         amount ?? null,
         interval_months ?? null,
         category ?? null,
+        category_id !== undefined ? (category_id ?? null) : existing.category_id,
         booking_day ?? null,
-        effective_from ?? null,
-        effective_to ?? null,
+        effective_from !== undefined ? (effective_from ?? null) : existing.effective_from,
+        effective_to !== undefined ? (effective_to ?? null) : existing.effective_to,
         id
       );
+
+      // Bug 10: delete future auto-transactions so they get regenerated
+      db.prepare('DELETE FROM transactions WHERE expense_id = ? AND date >= ? AND is_auto = 1')
+        .run(id, new Date().toISOString().slice(0, 10));
+
       const updated = db.prepare('SELECT * FROM expenses WHERE id = ?').get(id) as ExpenseRow;
       res.json(mapRow(updated));
     } catch (e) {
@@ -146,6 +160,8 @@ export function createExpensesRouter(db: Database.Database): Router {
         res.status(404).json({ error: 'Expense not found' });
         return;
       }
+      // Bug 11: remove all auto-generated transactions before deleting
+      db.prepare('DELETE FROM transactions WHERE expense_id = ? AND is_auto = 1').run(id);
       db.prepare('DELETE FROM expenses WHERE id = ?').run(id);
       res.json({ message: 'Expense deleted' });
     } catch (e) {

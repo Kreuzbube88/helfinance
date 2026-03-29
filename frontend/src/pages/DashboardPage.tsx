@@ -50,51 +50,6 @@ function TrafficLight({ status }: { status: 'green' | 'yellow' | 'red' }) {
   )
 }
 
-interface QuickCalcProps {
-  freeMoney: number
-  onClose: () => void
-}
-
-function QuickCalcModal({ freeMoney, onClose }: QuickCalcProps) {
-  const { t } = useTranslation()
-  const [item, setItem] = useState('')
-  const [price, setPrice] = useState('')
-  const [result, setResult] = useState<{ months: number; impact: number } | null>(null)
-
-  const calculate = () => {
-    const p = parseFloat(price)
-    if (!p || freeMoney <= 0) return
-    const months = Math.ceil(p / freeMoney)
-    setResult({ months, impact: freeMoney })
-  }
-
-  return (
-    <Modal title={t('calculator.title')} onClose={onClose} size="sm">
-      <div className="form-group">
-        <label className="form-label">{t('calculator.want')}</label>
-        <input className="form-input" value={item} onChange={e => setItem(e.target.value)} placeholder="MacBook Pro" />
-      </div>
-      <div className="form-group">
-        <label className="form-label">{t('calculator.price')}</label>
-        <input className="form-input" type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="2000" />
-      </div>
-      <button className="btn btn-primary" onClick={calculate}>{t('calculator.calculate')}</button>
-      {result && (
-        <div className="calc-result">
-          <div className="calc-result-item">
-            <span>{t('calculator.monthsToSave')}</span>
-            <strong>{result.months}</strong>
-          </div>
-          <div className="calc-result-item">
-            <span>{t('calculator.monthlyImpact')}</span>
-            <strong>{result.impact.toFixed(2)} €</strong>
-          </div>
-        </div>
-      )}
-    </Modal>
-  )
-}
-
 export function DashboardPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
@@ -102,7 +57,6 @@ export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [liquidityDismissed, setLiquidityDismissed] = useState(false)
-  const [showCalc, setShowCalc] = useState(false)
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
   const [widgets, setWidgets] = useState<Record<WidgetKey, boolean>>({
@@ -259,11 +213,7 @@ export function DashboardPage() {
 
       {/* FABs */}
       <button className="fab" onClick={() => setShowQuickAdd(true)} title={t('quickAdd.title')}>+</button>
-      <button className="fab fab-calc" onClick={() => setShowCalc(true)} title={t('calculator.title')}>⊕</button>
 
-      {showCalc && (
-        <QuickCalcModal freeMoney={data.free_money} onClose={() => setShowCalc(false)} />
-      )}
       {showQuickAdd && (
         <QuickAddModal onClose={() => setShowQuickAdd(false)} />
       )}

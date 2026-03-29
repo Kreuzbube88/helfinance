@@ -39,6 +39,7 @@ export interface Expense {
   interval_months: number
   booking_day: number
   category: string
+  category_id: number | null
   effective_from: string
   effective_to: string | null
   is_active: number
@@ -128,6 +129,7 @@ export interface Category {
   icon: string
   color: string
   budget_limit: number | null
+  type: 'income' | 'expense' | 'both'
 }
 
 export interface Transaction {
@@ -220,7 +222,7 @@ export interface CashflowDay {
 export interface MonthlyReport {
   year: number
   month: number
-  income_breakdown: { name: string; amount: number; interval: string }[]
+  income_breakdown: { name: string; amount: number; interval: string; monthly_amount: number }[]
   expense_breakdown: { category: string; items: { name: string; amount: number }[]; total: number }[]
   total_income: number
   total_expenses: number

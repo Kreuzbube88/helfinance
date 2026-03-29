@@ -88,8 +88,8 @@ export function TransactionsPage() {
     }
     try {
       if (editing) {
-        // For auto-transactions with permanent change: schedule a change on the source
         if (changeMode === 'permanent' && editing.is_auto === 1) {
+          // Bug 9: for permanent changes on auto-transactions, only schedule change — don't update the transaction record
           if (editing.income_id != null) {
             await scheduleIncomeChange(editing.income_id, {
               new_amount: parseFloat(form.amount),
@@ -101,9 +101,13 @@ export function TransactionsPage() {
               effective_from: form.date
             })
           }
+          // Don't call updateTransaction — let income_change/expense_change drive regeneration
+        } else {
+          // Once mode: update transaction and upsert booking_override via backend
+          const body: Partial<Transaction> & { changeMode: string } = { ...payload, changeMode: 'once' }
+          const updated = await updateTransaction(editing.id, body as Partial<Transaction>)
+          setItems(prev => prev.map(i => i.id === editing.id ? updated : i))
         }
-        const updated = await updateTransaction(editing.id, payload)
-        setItems(prev => prev.map(i => i.id === editing.id ? updated : i))
       } else {
         const created = await createTransaction(payload)
         setItems(prev => [created, ...prev])
@@ -261,7 +265,7 @@ export function TransactionsPage() {
                 <label className="form-label">{t('transactions.category')}</label>
                 <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
                   <option value="">—</option>
-                  {categories.map(cat => (
+                  {categories.filter(cat => cat.type === form.type || cat.type === 'both').map(cat => (
                     <option key={cat.id} value={cat.id}>
                       {t(`categories.${cat.name}`, { defaultValue: cat.name })}
                     </option>

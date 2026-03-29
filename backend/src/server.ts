@@ -20,6 +20,8 @@ import { createSetupRouter } from './routes/setup';
 import { createTransactionsRouter } from './routes/transactions';
 import { createWidgetsRouter } from './routes/widgets';
 import { createOverridesRouter } from './routes/overrides';
+import { generateAutoTransactions } from './routes/transactions';
+import { checkAndCreateNotifications } from './services/notificationService';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -37,6 +39,32 @@ app.use(express.json());
 
 // Connect DB and run migrations
 const db = getDb();
+
+// Bug 15: generate auto-transactions for all users on startup
+(function startupAutoTransactions() {
+  try {
+    const users = db.prepare('SELECT id FROM users').all() as { id: number }[];
+    for (const { id } of users) {
+      generateAutoTransactions(db, id);
+    }
+  } catch (e) {
+    console.error('Startup auto-transactions failed:', e);
+  }
+})();
+
+// Bug 21: run daily notification checks
+async function runDailyChecks(): Promise<void> {
+  try {
+    const users = db.prepare('SELECT id FROM users').all() as { id: number }[];
+    for (const { id } of users) {
+      await checkAndCreateNotifications(db, id);
+    }
+  } catch (e) {
+    console.error('Daily checks failed:', e);
+  }
+}
+void runDailyChecks();
+setInterval(() => { void runDailyChecks(); }, 24 * 60 * 60 * 1000);
 
 // Health check
 app.get('/api/health', (_req, res) => {

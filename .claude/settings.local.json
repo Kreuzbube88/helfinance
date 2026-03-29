@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(git init:*)",
+      "Bash(git checkout:*)",
+      "Bash(gh repo:*)",
+      "Bash(winpty gh:*)",
+      "Bash(cmd.exe /c \"gh --version\")",
+      "mcp__github__create_repository",
+      "Bash(git remote:*)",
+      "Bash(python3:*)",
+      "Bash(grep -v \"^total\\\\|^d.*\\\\.$\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cd:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(npx tsc:*)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(find /c/Users/hendr/helfinance -name tsc -not -path */.*)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|css\\)$\")",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(grep -n \"@media\" /c/Users/hendr/helfinance/frontend/src/styles/*.css)",
+      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")",
+      "Bash(xargs grep:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(done)",
+      "Bash(npm run:*)"
+    ]
+  },
+  "disabledMcpjsonServers": [
+    "claude-flow"
+  ]
+}

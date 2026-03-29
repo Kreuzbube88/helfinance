@@ -116,7 +116,7 @@ function computeBookingDates(
  * Auto-generates transaction records for all past income/expense booking days.
  * Idempotent: skips dates that already have a transaction with the same income_id/expense_id.
  */
-function generateAutoTransactions(db: Database.Database, userId: number): void {
+export function generateAutoTransactions(db: Database.Database, userId: number): void {
   const incomes = db
     .prepare('SELECT id, name, amount, interval, booking_day, effective_from, effective_to, category_id FROM income WHERE user_id = ?')
     .all(userId) as IncomeRow[];
@@ -206,13 +206,28 @@ export function createTransactionsRouter(db: Database.Database): Router {
 
   router.put('/:id', (req: Request, res: Response) => {
     try {
+      const userId = req.user!.id;
       const id = parseInt(req.params.id, 10);
-      const existing = db.prepare('SELECT * FROM transactions WHERE id = ? AND user_id = ?').get(id, req.user!.id) as TransactionRow | undefined;
+      const existing = db.prepare('SELECT * FROM transactions WHERE id = ? AND user_id = ?').get(id, userId) as TransactionRow | undefined;
       if (!existing) { res.status(404).json({ error: 'Not found' }); return; }
-      const { name, amount, type, category_id, date, note } = req.body as Partial<TransactionRow>;
+      const body = req.body as Partial<TransactionRow> & { changeMode?: string };
+      const { name, amount, type, category_id, date, note } = body;
       db.prepare(
         'UPDATE transactions SET name=COALESCE(?,name), amount=COALESCE(?,amount), type=COALESCE(?,type), category_id=?, date=COALESCE(?,date), note=? WHERE id=?'
       ).run(name ?? null, amount ?? null, type ?? null, category_id ?? null, date ?? null, note ?? null, id);
+
+      // Bug 9: for auto-transactions with 'once' change mode, upsert a booking_override
+      if (existing.is_auto === 1 && body.changeMode === 'once' && amount != null && date != null) {
+        const bookingType: 'income' | 'expense' = existing.income_id != null ? 'income' : 'expense';
+        const bookingId = (existing.income_id ?? existing.expense_id) as number;
+        const month = (date as string).slice(0, 7);
+        db.prepare(
+          `INSERT INTO booking_overrides (user_id, booking_type, booking_id, month, override_amount)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(booking_type, booking_id, month) DO UPDATE SET override_amount = excluded.override_amount`
+        ).run(userId, bookingType, bookingId, month, amount);
+      }
+
       res.json(db.prepare('SELECT * FROM transactions WHERE id = ?').get(id));
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });

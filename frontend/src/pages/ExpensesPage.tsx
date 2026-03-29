@@ -19,7 +19,7 @@ const EMPTY_FORM = {
   amount: '',
   interval_months: '1',
   booking_day: '1',
-  category: 'Housing',
+  category_id: '',
   effective_from: new Date().toISOString().slice(0, 10),
   effective_to: ''
 }
@@ -76,7 +76,7 @@ export function ExpensesPage() {
 
   const load = () => {
     setLoading(true)
-    Promise.all([getExpenses(), getCategories(), getLoans(), getTransactions()])
+    Promise.all([getExpenses(), getCategories('expense'), getLoans(), getTransactions()])
       .then(([exps, cats, ls, txs]) => { setItems(exps); setCategories(cats); setLoans(ls); setTransactions(txs) })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
@@ -103,8 +103,19 @@ export function ExpensesPage() {
 
   useEffect(() => { load() }, [])
 
-  const grouped = CATEGORIES.reduce<Record<string, Expense[]>>((acc, cat) => {
-    acc[cat] = items.filter(i => (i.category || 'Miscellaneous') === cat)
+  // Group by category_id → canonical name, fall back to legacy text, then 'Uncategorized'
+  const getCategoryName = (item: Expense) => {
+    if (item.category_id) {
+      const cat = categories.find(c => c.id === item.category_id)
+      if (cat) return cat.name
+    }
+    return item.category || 'Uncategorized'
+  }
+  const categoryNames = categories.length > 0
+    ? [...new Set(items.map(getCategoryName))]
+    : CATEGORIES
+  const grouped = categoryNames.reduce<Record<string, Expense[]>>((acc, cat) => {
+    acc[cat] = items.filter(i => getCategoryName(i) === cat)
     return acc
   }, {})
 
@@ -132,7 +143,7 @@ export function ExpensesPage() {
       amount: String(item.amount),
       interval_months: String(item.interval_months),
       booking_day: String(item.booking_day),
-      category: item.category,
+      category_id: item.category_id ? String(item.category_id) : '',
       effective_from: item.effective_from,
       effective_to: item.effective_to || ''
     })
@@ -148,7 +159,7 @@ export function ExpensesPage() {
         amount: parseFloat(form.amount),
         interval_months: parseInt(form.interval_months),
         booking_day: parseInt(form.booking_day),
-        category: form.category,
+        category_id: form.category_id ? parseInt(form.category_id) : null,
         effective_from: form.effective_from,
         effective_to: form.effective_to || null,
         is_active: 1
@@ -189,7 +200,7 @@ export function ExpensesPage() {
       amount: String(item.amount),
       interval_months: String(item.interval_months),
       booking_day: String(item.booking_day),
-      category: item.category,
+      category_id: item.category_id ? String(item.category_id) : '',
       effective_from: item.effective_from,
       effective_to: item.effective_to || ''
     })
@@ -214,7 +225,7 @@ export function ExpensesPage() {
         amount: parseFloat(detailForm.amount),
         interval_months: parseInt(detailForm.interval_months),
         booking_day: parseInt(detailForm.booking_day),
-        category: detailForm.category,
+        category_id: detailForm.category_id ? parseInt(detailForm.category_id) : null,
         effective_from: detailForm.effective_from,
         effective_to: detailForm.effective_to || null
       }
@@ -276,9 +287,9 @@ export function ExpensesPage() {
         <p className="text-muted">{t('common.loading')}</p>
       ) : (
         <div className="category-groups">
-          {CATEGORIES.map(cat => {
+          {categoryNames.map(cat => {
             const catItems = grouped[cat]
-            if (catItems.length === 0) return null
+            if (!catItems || catItems.length === 0) return null
             const catTotal = catItems.reduce((s, i) => s + monthlyEquivalent(i), 0)
             const isOpen = expanded.has(cat)
             const catDef = categories.find(c => c.name === cat)
@@ -290,7 +301,7 @@ export function ExpensesPage() {
                 <div className="category-header" onClick={() => toggleCategory(cat)}>
                   <div className="category-header-left">
                     <span className="category-chevron">{isOpen ? '▾' : '▸'}</span>
-                    <span className="category-name">{t(`categories.${cat}`)}</span>
+                    <span className="category-name">{t(`categories.${cat}`, { defaultValue: cat })}</span>
                     <span className="badge badge-secondary">{catItems.length}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -448,9 +459,10 @@ export function ExpensesPage() {
             </div>
             <div className="form-group">
               <label className="form-label">{t('expenses.category')}</label>
-              <select className="form-select" value={form.category} onChange={e => f('category', e.target.value)}>
-                {CATEGORIES.map(c => (
-                  <option key={c} value={c}>{t(`categories.${c}`)}</option>
+              <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
+                <option value="">—</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
                 ))}
               </select>
             </div>
@@ -501,9 +513,10 @@ export function ExpensesPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">{t('expenses.category')}</label>
-                <select className="form-select" value={detailForm.category} onChange={e => fd('category', e.target.value)}>
-                  {CATEGORIES.map(c => (
-                    <option key={c} value={c}>{t(`categories.${c}`)}</option>
+                <select className="form-select" value={detailForm.category_id} onChange={e => fd('category_id', e.target.value)}>
+                  <option value="">—</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
                   ))}
                 </select>
               </div>

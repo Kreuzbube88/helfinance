@@ -58,7 +58,7 @@ export function IncomePage() {
 
   const load = () => {
     setLoading(true)
-    Promise.all([getIncome(), getCategories(), getTransactions()])
+    Promise.all([getIncome(), getCategories('income'), getTransactions()])
       .then(([inc, cats, txs]) => { setItems(inc); setCategories(cats); setTransactions(txs) })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))

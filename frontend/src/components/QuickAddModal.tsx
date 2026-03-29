@@ -20,7 +20,7 @@ export function QuickAddModal({ onClose, onAdded }: Props) {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    getCategories().then(setCategories).catch(() => {})
+    getCategories('expense').then(setCategories).catch(() => {})
   }, [])
 
   const handleSave = async (e: React.FormEvent) => {

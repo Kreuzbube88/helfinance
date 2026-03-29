@@ -25,6 +25,7 @@ interface SavingsGoalRow {
 interface IncomeRow {
   amount: number;
   interval: string;
+  effective_from: string | null;
 }
 
 interface NotificationCheckRow {
@@ -33,6 +34,10 @@ interface NotificationCheckRow {
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function currentMonthStr(): string {
+  return new Date().toISOString().slice(0, 7);
 }
 
 function createNotification(
@@ -79,14 +84,14 @@ export async function checkAndCreateNotifications(
   const today = now.getDate();
   const sevenDaysLater = today + 7;
 
-  // 1. Upcoming expenses >= 100 booking within 7 days
-  const expenses = db
+  // 1. Upcoming expenses >= 100 booking within 7 days (filter here, not in query)
+  const upcomingExpenses = db
     .prepare(
       'SELECT id, name, amount, booking_day, interval_months FROM expenses WHERE user_id = ? AND amount >= 100'
     )
     .all(userId) as ExpenseRow[];
 
-  for (const exp of expenses) {
+  for (const exp of upcomingExpenses) {
     if (exp.booking_day >= today && exp.booking_day <= sevenDaysLater) {
       if (!alreadyNotifiedToday(db, userId, 'upcoming_expense', exp.id)) {
         const daysUntil = exp.booking_day - today;
@@ -97,18 +102,26 @@ export async function checkAndCreateNotifications(
     }
   }
 
-  // 2. Liquidity warning: check if daily balance goes negative this month
+  // 2. Liquidity warning: Bug 7 — fetch ALL expenses (no amount filter) for liquidity calc
+  const allExpenses = db
+    .prepare('SELECT id, name, amount, booking_day, interval_months FROM expenses WHERE user_id = ?')
+    .all(userId) as ExpenseRow[];
+
   const incomes = db
-    .prepare('SELECT amount, interval FROM income WHERE user_id = ?')
+    .prepare('SELECT amount, interval, effective_from FROM income WHERE user_id = ?')
     .all(userId) as IncomeRow[];
+
+  const monthStr = currentMonthStr();
 
   const monthlyIncome = incomes.reduce((sum, inc) => {
     if (inc.interval === 'monthly') return sum + inc.amount;
     if (inc.interval === 'yearly') return sum + inc.amount / 12;
+    // Bug 8: handle 'once' interval
+    if (inc.interval === 'once' && inc.effective_from?.startsWith(monthStr)) return sum + inc.amount;
     return sum;
   }, 0);
 
-  const monthlyExpenses = expenses.reduce((sum, exp) => {
+  const monthlyExpenses = allExpenses.reduce((sum, exp) => {
     return sum + exp.amount / exp.interval_months;
   }, 0);
 

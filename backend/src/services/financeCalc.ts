@@ -13,6 +13,7 @@ export interface ProjectionMonth {
   expenses: number;
   savings: number;
   required_savings: number;
+  loan_payments: number;
   effective_net: number;
 }
 
@@ -77,8 +78,25 @@ export interface SpecialPayment {
   date: string; // YYYY-MM
 }
 
+export interface MonthlyTotalsResult {
+  totalIncome: number;
+  totalExpenses: number;
+  totalLoanPayments: number;
+  savingsGoalContributions: number;
+  freeMoney: number;
+  requiredSavings: number;
+  effectiveNet: number;
+}
+
 export function normalizeToMonthly(amount: number, intervalMonths: number): number {
   return amount / intervalMonths;
+}
+
+/** Convert income interval string to number of months between occurrences. */
+export function incomeIntervalToMonths(interval: string): number {
+  if (interval === 'yearly') return 12;
+  if (interval === 'once') return 0;
+  return 1;
 }
 
 export function calcProvisionBuffer(
@@ -114,6 +132,20 @@ export function resolveAmount(
     (o) => o.booking_type === bookingType && o.booking_id === bookingId && o.month === month
   );
   return ov ? ov.override_amount : baseAmount;
+}
+
+/** Resolve effective base amount applying most recent change effective on or before dateStr. */
+function resolveBaseAmount(
+  baseAmount: number,
+  id: number,
+  idField: 'income_id' | 'expense_id',
+  changes: ChangeRecord[],
+  dateStr: string
+): number {
+  const applicable = changes
+    .filter((c) => c[idField] === id && c.effective_from <= dateStr)
+    .sort((a, b) => b.effective_from.localeCompare(a.effective_from));
+  return applicable.length > 0 ? applicable[0].new_amount : baseAmount;
 }
 
 export function calcDynamicSavings(
@@ -180,6 +212,117 @@ export function generateAmortization(
   return schedule;
 }
 
+/** Single source of truth for all monthly financial totals. */
+export function calcMonthlyTotals(params: {
+  incomes: IncomeRecord[];
+  expenses: ExpenseRecord[];
+  incomeChanges: ChangeRecord[];
+  expenseChanges: ChangeRecord[];
+  overrides: OverrideRecord[];
+  loans: Array<{ monthly_rate: number | null; start_date: string; term_months: number }>;
+  savingsGoals: Array<{ contribution_mode: string; fixed_amount: number | null }>;
+  manualTransactions: Array<{ type: 'income' | 'expense'; amount: number }>;
+  year: number;
+  month: number;
+}): MonthlyTotalsResult {
+  const { incomes, expenses, incomeChanges, expenseChanges, overrides, loans, savingsGoals, manualTransactions, year, month } = params;
+  const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+  const dateStr = `${monthStr}-01`;
+
+  let totalIncome = 0;
+  for (const inc of incomes) {
+    if (inc.effective_from && inc.effective_from > dateStr) continue;
+    if (inc.effective_to && inc.effective_to < dateStr) continue;
+
+    const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
+    const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
+
+    if (inc.interval === 'monthly') {
+      totalIncome += amount;
+    } else if (inc.interval === 'yearly') {
+      totalIncome += amount / 12;
+    } else if (inc.interval === 'once') {
+      if (inc.effective_from && inc.effective_from.startsWith(monthStr)) {
+        totalIncome += amount;
+      }
+    }
+  }
+  // Add truly manual income (no income_id linkage)
+  for (const tx of manualTransactions) {
+    if (tx.type === 'income') totalIncome += tx.amount;
+  }
+
+  let totalExpenses = 0;
+  for (const exp of expenses) {
+    if (exp.effective_from && exp.effective_from > dateStr) continue;
+    if (exp.effective_to && exp.effective_to < dateStr) continue;
+
+    const baseAmount = resolveBaseAmount(exp.amount, exp.id, 'expense_id', expenseChanges, dateStr);
+    const amount = resolveAmount('expense', exp.id, baseAmount, monthStr, overrides);
+
+    if (exp.interval_months === 1) {
+      totalExpenses += amount;
+    } else {
+      const startDate = exp.effective_from ?? `${year}-01-01`;
+      const fromDate = new Date(startDate);
+      const monthsElapsed = (year - fromDate.getFullYear()) * 12 + (month - (fromDate.getMonth() + 1));
+      if (monthsElapsed >= 0 && monthsElapsed % exp.interval_months === 0) {
+        totalExpenses += amount;
+      }
+    }
+  }
+  // Add truly manual expense transactions
+  for (const tx of manualTransactions) {
+    if (tx.type === 'expense') totalExpenses += tx.amount;
+  }
+
+  // Active loans only
+  const currentDate = new Date(year, month - 1, 1);
+  const totalLoanPayments = loans.reduce((sum, l) => {
+    const end = new Date(l.start_date);
+    end.setMonth(end.getMonth() + l.term_months);
+    if (currentDate < end) {
+      return sum + (l.monthly_rate ?? 0);
+    }
+    return sum;
+  }, 0);
+
+  // Savings goal fixed contributions
+  const savingsGoalContributions = savingsGoals
+    .filter((g) => g.contribution_mode === 'fixed' || g.contribution_mode === 'both')
+    .reduce((sum, g) => sum + (g.fixed_amount ?? 0), 0);
+
+  const freeMoney = totalIncome - totalExpenses - totalLoanPayments - savingsGoalContributions;
+
+  const requiredSavings = calcRequiredReserveMonthly(
+    expenses
+      .filter((e) => {
+        if (e.effective_from && e.effective_from > dateStr) return false;
+        if (e.effective_to && e.effective_to < dateStr) return false;
+        return true;
+      })
+      .map((e) => ({
+        id: e.id,
+        amount: resolveBaseAmount(e.amount, e.id, 'expense_id', expenseChanges, dateStr),
+        interval_months: e.interval_months,
+      })),
+    overrides,
+    monthStr
+  );
+
+  const effectiveNet = totalIncome - totalExpenses - requiredSavings - totalLoanPayments - savingsGoalContributions;
+
+  return {
+    totalIncome: Math.round(totalIncome * 100) / 100,
+    totalExpenses: Math.round(totalExpenses * 100) / 100,
+    totalLoanPayments: Math.round(totalLoanPayments * 100) / 100,
+    savingsGoalContributions: Math.round(savingsGoalContributions * 100) / 100,
+    freeMoney: Math.round(freeMoney * 100) / 100,
+    requiredSavings: Math.round(requiredSavings * 100) / 100,
+    effectiveNet: Math.round(effectiveNet * 100) / 100,
+  };
+}
+
 export function calcYearlyProjection(
   year: number,
   incomes: IncomeRecord[],
@@ -187,7 +330,7 @@ export function calcYearlyProjection(
   incomeChanges: ChangeRecord[],
   expenseChanges: ChangeRecord[],
   overrides: OverrideRecord[] = [],
-  loanMonthlyTotal = 0
+  loans: Array<{ monthly_rate: number | null; start_date: string; term_months: number }> = []
 ): ProjectionMonth[] {
   const result: ProjectionMonth[] = [];
 
@@ -200,12 +343,7 @@ export function calcYearlyProjection(
       if (inc.effective_from && inc.effective_from > dateStr) continue;
       if (inc.effective_to && inc.effective_to < dateStr) continue;
 
-      // Apply most recent change effective before/on this month
-      const applicableChanges = incomeChanges
-        .filter((c) => c.income_id === inc.id && c.effective_from <= dateStr)
-        .sort((a, b) => b.effective_from.localeCompare(a.effective_from));
-
-      const baseAmount = applicableChanges.length > 0 ? applicableChanges[0].new_amount : inc.amount;
+      const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
       const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
 
       if (inc.interval === 'monthly') {
@@ -224,31 +362,47 @@ export function calcYearlyProjection(
       if (exp.effective_from && exp.effective_from > dateStr) continue;
       if (exp.effective_to && exp.effective_to < dateStr) continue;
 
-      const applicableChanges = expenseChanges
-        .filter((c) => c.expense_id === exp.id && c.effective_from <= dateStr)
-        .sort((a, b) => b.effective_from.localeCompare(a.effective_from));
-
-      const baseAmount = applicableChanges.length > 0 ? applicableChanges[0].new_amount : exp.amount;
+      const baseAmount = resolveBaseAmount(exp.amount, exp.id, 'expense_id', expenseChanges, dateStr);
       const amount = resolveAmount('expense', exp.id, baseAmount, monthStr, overrides);
-
-      const startDate = exp.effective_from || `${year}-01-01`;
-      const startMonth = new Date(startDate).getMonth() + 1;
-      const monthsElapsed = (year - new Date(startDate).getFullYear()) * 12 + month - startMonth;
 
       if (exp.interval_months === 1) {
         totalExpenses += amount;
-      } else if (monthsElapsed >= 0 && monthsElapsed % exp.interval_months === 0) {
-        totalExpenses += amount;
+      } else {
+        const startDate = exp.effective_from ?? `${year}-01-01`;
+        const fromDate = new Date(startDate);
+        const monthsElapsed = (year - fromDate.getFullYear()) * 12 + (month - (fromDate.getMonth() + 1));
+        if (monthsElapsed >= 0 && monthsElapsed % exp.interval_months === 0) {
+          totalExpenses += amount;
+        }
       }
     }
 
+    // Active loans for this month
+    const currentDate = new Date(year, month - 1, 1);
+    const activeLoanTotal = loans.reduce((sum, l) => {
+      const end = new Date(l.start_date);
+      end.setMonth(end.getMonth() + l.term_months);
+      if (currentDate < end) return sum + (l.monthly_rate ?? 0);
+      return sum;
+    }, 0);
+
     const normalizedNet = totalIncome - totalExpenses;
     const requiredSavings = calcRequiredReserveMonthly(
-      expenses.map((e) => ({ id: e.id, amount: e.amount, interval_months: e.interval_months })),
+      expenses
+        .filter((e) => {
+          if (e.effective_from && e.effective_from > dateStr) return false;
+          if (e.effective_to && e.effective_to < dateStr) return false;
+          return true;
+        })
+        .map((e) => ({
+          id: e.id,
+          amount: resolveBaseAmount(e.amount, e.id, 'expense_id', expenseChanges, dateStr),
+          interval_months: e.interval_months,
+        })),
       overrides,
       monthStr
     );
-    const effectiveNet = normalizedNet - requiredSavings - loanMonthlyTotal;
+    const effectiveNet = normalizedNet - requiredSavings - activeLoanTotal;
 
     result.push({
       month,
@@ -256,6 +410,7 @@ export function calcYearlyProjection(
       expenses: Math.round(totalExpenses * 100) / 100,
       savings: Math.round(normalizedNet * 100) / 100,
       required_savings: Math.round(requiredSavings * 100) / 100,
+      loan_payments: Math.round(activeLoanTotal * 100) / 100,
       effective_net: Math.round(effectiveNet * 100) / 100,
     });
   }
@@ -267,13 +422,21 @@ export function calcDailyCashflow(
   incomes: IncomeRecord[],
   expenses: ExpenseRecord[],
   year: number,
-  month: number
+  month: number,
+  options: {
+    overrides?: OverrideRecord[];
+    incomeChanges?: ChangeRecord[];
+    expenseChanges?: ChangeRecord[];
+    startingBalance?: number;
+  } = {}
 ): DailyCashflowRow[] {
+  const { overrides = [], incomeChanges = [], expenseChanges = [], startingBalance = 0 } = options;
   const daysInMonth = new Date(year, month, 0).getDate();
   const result: DailyCashflowRow[] = [];
-  let runningBalance = 0;
+  let runningBalance = startingBalance;
 
   const dateStr = `${year}-${String(month).padStart(2, '0')}-01`;
+  const monthStr = dateStr.slice(0, 7);
 
   for (let day = 1; day <= daysInMonth; day++) {
     const bookings: DailyBooking[] = [];
@@ -281,9 +444,28 @@ export function calcDailyCashflow(
     for (const inc of incomes) {
       if (inc.effective_from && inc.effective_from > dateStr) continue;
       if (inc.effective_to && inc.effective_to < dateStr) continue;
-      if (inc.booking_day === day && inc.interval === 'monthly') {
-        bookings.push({ id: inc.id, name: inc.name, amount: inc.amount, type: 'income' });
-        runningBalance += inc.amount;
+
+      if (inc.interval === 'monthly' && inc.booking_day === day) {
+        const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
+        const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
+        bookings.push({ id: inc.id, name: inc.name, amount, type: 'income' });
+        runningBalance += amount;
+      } else if (inc.interval === 'yearly' && inc.booking_day === day) {
+        // Book in the month matching effective_from month, or January if not set
+        const bookMonth = inc.effective_from ? new Date(inc.effective_from).getMonth() + 1 : 1;
+        if (month === bookMonth) {
+          const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
+          const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
+          bookings.push({ id: inc.id, name: inc.name, amount, type: 'income' });
+          runningBalance += amount;
+        }
+      } else if (inc.interval === 'once' && inc.booking_day === day) {
+        if (inc.effective_from && inc.effective_from.startsWith(monthStr)) {
+          const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
+          const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
+          bookings.push({ id: inc.id, name: inc.name, amount, type: 'income' });
+          runningBalance += amount;
+        }
       }
     }
 
@@ -291,13 +473,14 @@ export function calcDailyCashflow(
       if (exp.effective_from && exp.effective_from > dateStr) continue;
       if (exp.effective_to && exp.effective_to < dateStr) continue;
       if (exp.booking_day === day) {
-        const startDate = exp.effective_from || `${year}-01-01`;
-        const startMonth = new Date(startDate).getMonth() + 1;
-        const monthsElapsed = (year - new Date(startDate).getFullYear()) * 12 + month - startMonth;
+        const fromDate = new Date(exp.effective_from ?? `${year}-01-01`);
+        const monthsElapsed = (year - fromDate.getFullYear()) * 12 + (month - (fromDate.getMonth() + 1));
 
         if (exp.interval_months === 1 || (monthsElapsed >= 0 && monthsElapsed % exp.interval_months === 0)) {
-          bookings.push({ id: exp.id, name: exp.name, amount: exp.amount, type: 'expense' });
-          runningBalance -= exp.amount;
+          const baseAmount = resolveBaseAmount(exp.amount, exp.id, 'expense_id', expenseChanges, dateStr);
+          const amount = resolveAmount('expense', exp.id, baseAmount, monthStr, overrides);
+          bookings.push({ id: exp.id, name: exp.name, amount, type: 'expense' });
+          runningBalance -= amount;
         }
       }
     }
@@ -335,10 +518,8 @@ export function calcHouseholdBalance(
     const bShare = totalAmount * se.split_ratio_b;
 
     if (se.paid_by_user_id === se.user_a_id) {
-      // A paid, B owes A their share
       userBOwes += bShare;
     } else {
-      // B paid, A owes B their share
       userAOwes += aShare;
     }
   }

@@ -5,9 +5,11 @@ import {
   calcHealthScore,
   calcDailyCashflow,
   calcRequiredReserveMonthly,
+  calcMonthlyTotals,
   IncomeRecord,
   ExpenseRecord,
   OverrideRecord,
+  ChangeRecord,
 } from '../services/financeCalc';
 
 interface IncomeRow {
@@ -36,10 +38,17 @@ interface SavingsGoalRow {
   target_amount: number;
   current_amount: number;
   color: string;
+  contribution_mode: string;
+  fixed_amount: number | null;
 }
 
 interface LoanRow {
+  id: number;
+  name: string;
   monthly_rate: number | null;
+  start_date: string;
+  term_months: number;
+  booking_day: number | null;
 }
 
 interface OverrideRow {
@@ -51,6 +60,23 @@ interface OverrideRow {
 
 interface SavingsAccountRow {
   initial_balance: number;
+}
+
+interface IncomeChangeRow {
+  income_id: number;
+  new_amount: number;
+  effective_from: string;
+}
+
+interface ExpenseChangeRow {
+  expense_id: number;
+  new_amount: number;
+  effective_from: string;
+}
+
+interface ManualTxRow {
+  type: 'income' | 'expense';
+  total: number;
 }
 
 export function createDashboardRouter(db: Database.Database): Router {
@@ -65,6 +91,8 @@ export function createDashboardRouter(db: Database.Database): Router {
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
       const today = now.getDate();
+      const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+      const dateStr = `${monthStr}-01`;
 
       const incomes = db
         .prepare('SELECT * FROM income WHERE user_id = ?')
@@ -75,7 +103,7 @@ export function createDashboardRouter(db: Database.Database): Router {
         .all(userId) as ExpenseRow[];
 
       const loans = db
-        .prepare('SELECT monthly_rate FROM loans WHERE user_id = ?')
+        .prepare('SELECT id, name, monthly_rate, start_date, term_months, booking_day FROM loans WHERE user_id = ?')
         .all(userId) as LoanRow[];
 
       const savingsGoals = db
@@ -92,6 +120,41 @@ export function createDashboardRouter(db: Database.Database): Router {
         override_amount: o.override_amount,
       }));
 
+      const incomeChangeRows = db
+        .prepare('SELECT ic.* FROM income_changes ic JOIN income i ON ic.income_id = i.id WHERE i.user_id = ?')
+        .all(userId) as IncomeChangeRow[];
+      const incomeChanges: ChangeRecord[] = incomeChangeRows.map((c) => ({
+        income_id: c.income_id,
+        new_amount: c.new_amount,
+        effective_from: c.effective_from,
+      }));
+
+      const expenseChangeRows = db
+        .prepare('SELECT ec.* FROM expense_changes ec JOIN expenses e ON ec.expense_id = e.id WHERE e.user_id = ?')
+        .all(userId) as ExpenseChangeRow[];
+      const expenseChanges: ChangeRecord[] = expenseChangeRows.map((c) => ({
+        expense_id: c.expense_id,
+        new_amount: c.new_amount,
+        effective_from: c.effective_from,
+      }));
+
+      // Manual transactions only (no source linkage)
+      const monthStart = dateStr;
+      const monthEnd = `${monthStr}-31`;
+      const manualTxRows = db
+        .prepare(
+          `SELECT type, COALESCE(SUM(amount), 0) as total
+           FROM transactions
+           WHERE user_id = ? AND is_auto = 0 AND income_id IS NULL AND expense_id IS NULL
+             AND date >= ? AND date <= ?
+           GROUP BY type`
+        )
+        .all(userId, monthStart, monthEnd) as ManualTxRow[];
+      const manualTransactions: Array<{ type: 'income' | 'expense'; amount: number }> = manualTxRows.map((r) => ({
+        type: r.type,
+        amount: r.total,
+      }));
+
       const savingsAccount = db
         .prepare('SELECT initial_balance FROM savings_accounts WHERE user_id = ?')
         .get(userId) as SavingsAccountRow | undefined;
@@ -101,81 +164,6 @@ export function createDashboardRouter(db: Database.Database): Router {
       ).total;
       const currentSavingsBalance = (savingsAccount?.initial_balance ?? 0) + savingsTxSum;
 
-      // Monthly income (monthly interval only for simple calc)
-      const recurringIncome = incomes.reduce((sum, inc) => {
-        if (inc.interval === 'monthly') return sum + inc.amount;
-        if (inc.interval === 'yearly') return sum + inc.amount / 12;
-        return sum;
-      }, 0);
-
-      // Monthly expenses (normalized)
-      const recurringExpenses = expenses.reduce((sum, exp) => {
-        return sum + exp.amount / exp.interval_months;
-      }, 0);
-
-      // Manual (non-auto) transactions for the current month
-      const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
-      const monthEnd = `${year}-${String(month).padStart(2, '0')}-31`;
-      const manualTotals = db
-        .prepare(
-          `SELECT type, COALESCE(SUM(amount), 0) as total
-           FROM transactions
-           WHERE user_id = ? AND is_auto = 0 AND date >= ? AND date <= ?
-           GROUP BY type`
-        )
-        .all(userId, monthStart, monthEnd) as { type: 'income' | 'expense'; total: number }[];
-      const manualIncome = manualTotals.find(r => r.type === 'income')?.total ?? 0;
-      const manualExpenses = manualTotals.find(r => r.type === 'expense')?.total ?? 0;
-
-      const monthlyIncome = recurringIncome + manualIncome;
-      const monthlyExpenses = recurringExpenses + manualExpenses;
-
-      // Total loan payments
-      const totalLoanPayments = loans.reduce((sum, l) => sum + (l.monthly_rate ?? 0), 0);
-
-      const freeMoney = monthlyIncome - monthlyExpenses - totalLoanPayments;
-
-      // Savings rate %
-      const savingsRate = monthlyIncome > 0 ? (freeMoney / monthlyIncome) * 100 : 0;
-
-      // Emergency reserve: rough estimate — free money * 3 months / monthly expenses
-      const emergencyReserveMonths = monthlyExpenses > 0 ? (freeMoney * 3) / monthlyExpenses : 0;
-
-      // Debt-to-income ratio
-      const debtToIncome = monthlyIncome > 0 ? totalLoanPayments / monthlyIncome : 0;
-
-      const healthScore = calcHealthScore(savingsRate, emergencyReserveMonths, debtToIncome);
-
-      // Next 3 upcoming bookings by booking_day >= today
-      interface Booking {
-        name: string;
-        amount: number;
-        type: 'income' | 'expense';
-        booking_day: number;
-      }
-
-      const allBookings: Booking[] = [
-        ...incomes
-          .filter((i) => i.interval === 'monthly' && i.booking_day >= today)
-          .map((i) => ({ name: i.name, amount: i.amount, type: 'income' as const, booking_day: i.booking_day })),
-        ...expenses
-          .filter((e) => e.booking_day >= today)
-          .map((e) => ({ name: e.name, amount: e.amount, type: 'expense' as const, booking_day: e.booking_day })),
-      ];
-      allBookings.sort((a, b) => a.booking_day - b.booking_day);
-      const nextBookings = allBookings.slice(0, 3);
-
-      // Savings goals progress
-      const goalsProgress = savingsGoals.map((g) => ({
-        id: g.id,
-        name: g.name,
-        target_amount: g.target_amount,
-        current_amount: g.current_amount,
-        progress_pct: g.target_amount > 0 ? Math.round((g.current_amount / g.target_amount) * 100) : 0,
-        color: g.color,
-      }));
-
-      // Liquidity warning: check if daily balance goes negative this month
       const incomeRecords: IncomeRecord[] = incomes.map((i) => ({
         id: i.id,
         name: i.name,
@@ -196,15 +184,124 @@ export function createDashboardRouter(db: Database.Database): Router {
         effective_to: e.effective_to,
       }));
 
-      const dailyCashflow = calcDailyCashflow(incomeRecords, expenseRecords, year, month);
+      const loanRecords = loans.map((l) => ({
+        monthly_rate: l.monthly_rate,
+        start_date: l.start_date,
+        term_months: l.term_months,
+      }));
+
+      // Use calcMonthlyTotals as single source of truth
+      const totals = calcMonthlyTotals({
+        incomes: incomeRecords,
+        expenses: expenseRecords,
+        incomeChanges,
+        expenseChanges,
+        overrides,
+        loans: loanRecords,
+        savingsGoals: savingsGoals.map((g) => ({
+          contribution_mode: g.contribution_mode,
+          fixed_amount: g.fixed_amount,
+        })),
+        manualTransactions,
+        year,
+        month,
+      });
+
+      const { totalIncome: monthlyIncome, totalExpenses: monthlyExpenses, totalLoanPayments, freeMoney } = totals;
+
+      // Savings rate %
+      const savingsRate = monthlyIncome > 0 ? (freeMoney / monthlyIncome) * 100 : 0;
+
+      // Bug 22: emergency reserve = actual savings balance / monthly expenses
+      const emergencyReserveMonths = monthlyExpenses > 0 ? currentSavingsBalance / monthlyExpenses : 0;
+
+      // Debt-to-income ratio
+      const debtToIncome = monthlyIncome > 0 ? totalLoanPayments / monthlyIncome : 0;
+
+      const healthScore = calcHealthScore(savingsRate, emergencyReserveMonths, debtToIncome);
+
+      // Upcoming bookings — include monthly income, all active expenses, active loan payments, non-monthly expenses due this month
+      interface Booking {
+        name: string;
+        amount: number;
+        type: 'income' | 'expense';
+        booking_day: number;
+      }
+
+      const allBookings: Booking[] = [];
+
+      // Monthly income due today or later
+      for (const inc of incomes) {
+        if (inc.interval !== 'monthly') continue;
+        if (inc.effective_from && inc.effective_from > dateStr) continue;
+        if (inc.effective_to && inc.effective_to < dateStr) continue;
+        if (inc.booking_day >= today) {
+          allBookings.push({ name: inc.name, amount: inc.amount, type: 'income', booking_day: inc.booking_day });
+        }
+      }
+
+      // All active expenses due today or later
+      for (const exp of expenses) {
+        if (exp.effective_from && exp.effective_from > dateStr) continue;
+        if (exp.effective_to && exp.effective_to < dateStr) continue;
+        if (exp.booking_day < today) continue;
+
+        if (exp.interval_months === 1) {
+          allBookings.push({ name: exp.name, amount: exp.amount, type: 'expense', booking_day: exp.booking_day });
+        } else {
+          // Non-monthly: check if this month is a due month
+          const fromDate = new Date(exp.effective_from ?? `${year}-01-01`);
+          const monthsElapsed = (year - fromDate.getFullYear()) * 12 + (month - (fromDate.getMonth() + 1));
+          if (monthsElapsed >= 0 && monthsElapsed % exp.interval_months === 0) {
+            allBookings.push({ name: exp.name, amount: exp.amount, type: 'expense', booking_day: exp.booking_day });
+          }
+        }
+      }
+
+      // Active loans
+      for (const loan of loans) {
+        const end = new Date(loan.start_date);
+        end.setMonth(end.getMonth() + loan.term_months);
+        if (now < end) {
+          const bookDay = loan.booking_day ?? 1;
+          if (bookDay >= today) {
+            allBookings.push({
+              name: loan.name,
+              amount: loan.monthly_rate ?? 0,
+              type: 'expense',
+              booking_day: bookDay,
+            });
+          }
+        }
+      }
+
+      allBookings.sort((a, b) => a.booking_day - b.booking_day);
+      const nextBookings = allBookings.slice(0, 3);
+
+      // Savings goals — use actual savings balance for progress
+      const goalsProgress = savingsGoals.map((g) => ({
+        id: g.id,
+        name: g.name,
+        target_amount: g.target_amount,
+        current_amount: currentSavingsBalance,
+        progress_pct: g.target_amount > 0 ? Math.min(100, Math.round((currentSavingsBalance / g.target_amount) * 100)) : 0,
+        color: g.color,
+      }));
+
+      // Liquidity warning
+      const dailyCashflow = calcDailyCashflow(incomeRecords, expenseRecords, year, month, {
+        overrides,
+        incomeChanges,
+        expenseChanges,
+        startingBalance: currentSavingsBalance,
+      });
       const liquidityWarning = dailyCashflow.some((d) => d.balance < 0);
 
-      // Reserve warning: current savings balance below 3× required monthly reserve
-      const currentMonthStr = `${year}-${String(month).padStart(2, '0')}`;
+      // Reserve warning
       const requiredReserve = calcRequiredReserveMonthly(
         expenses.map((e) => ({ id: e.id, amount: e.amount, interval_months: e.interval_months })),
         overrides,
-        currentMonthStr
+        monthStr
       );
       const reserveWarning = currentSavingsBalance < requiredReserve * 3;
 
@@ -213,7 +310,7 @@ export function createDashboardRouter(db: Database.Database): Router {
         total_income: Math.round(monthlyIncome * 100) / 100,
         total_expenses: Math.round(monthlyExpenses * 100) / 100,
         free_money: Math.round(freeMoney * 100) / 100,
-        upcoming_bookings: nextBookings.map(b => ({
+        upcoming_bookings: nextBookings.map((b) => ({
           ...b,
           date: new Date(year, month - 1, b.booking_day).toISOString().slice(0, 10),
         })),

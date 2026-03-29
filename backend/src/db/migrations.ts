@@ -239,31 +239,38 @@ export function runMigrations(db: Database.Database): void {
 
   // V9: Loans get final_payment (Schlussrate / balloon payment)
   try { db.exec('ALTER TABLE loans ADD COLUMN final_payment REAL DEFAULT NULL'); } catch {}
+
+  // V10: Category type (income/expense/both)
+  try { db.exec("ALTER TABLE categories ADD COLUMN type TEXT DEFAULT 'expense' CHECK(type IN ('income','expense','both'))"); } catch {}
 }
 
 interface DefaultCategory {
   name: string;
   icon: string;
   color: string;
+  type: 'income' | 'expense';
 }
 
 const DEFAULT_CATEGORIES: DefaultCategory[] = [
-  { name: 'Housing', icon: '\u{1F3E0}', color: '#6366f1' },
-  { name: 'Mobility', icon: '\u{1F697}', color: '#f59e0b' },
-  { name: 'Food & Groceries', icon: '\u{1F6D2}', color: '#10b981' },
-  { name: 'Insurance', icon: '\u{1F6E1}\uFE0F', color: '#3b82f6' },
-  { name: 'Entertainment', icon: '\u{1F3AC}', color: '#8b5cf6' },
-  { name: 'Health', icon: '\u2764\uFE0F', color: '#ef4444' },
-  { name: 'Loans', icon: '\u{1F4B3}', color: '#f97316' },
-  { name: 'Savings', icon: '\u{1F437}', color: '#06b6d4' },
-  { name: 'Miscellaneous', icon: '\u{1F4E6}', color: '#6b7280' },
+  { name: 'Housing', icon: '\u{1F3E0}', color: '#6366f1', type: 'expense' },
+  { name: 'Mobility', icon: '\u{1F697}', color: '#f59e0b', type: 'expense' },
+  { name: 'Food & Groceries', icon: '\u{1F6D2}', color: '#10b981', type: 'expense' },
+  { name: 'Insurance', icon: '\u{1F6E1}\uFE0F', color: '#3b82f6', type: 'expense' },
+  { name: 'Entertainment', icon: '\u{1F3AC}', color: '#8b5cf6', type: 'expense' },
+  { name: 'Health', icon: '\u2764\uFE0F', color: '#ef4444', type: 'expense' },
+  { name: 'Loans', icon: '\u{1F4B3}', color: '#f97316', type: 'expense' },
+  { name: 'Savings', icon: '\u{1F437}', color: '#06b6d4', type: 'expense' },
+  { name: 'Miscellaneous', icon: '\u{1F4E6}', color: '#6b7280', type: 'expense' },
+  { name: 'Salary / Wages', icon: '\u{1F4BC}', color: '#10b981', type: 'income' },
+  { name: 'Rental Income', icon: '\u{1F3E0}', color: '#6366f1', type: 'income' },
+  { name: 'Other Income', icon: '\u{1F4B0}', color: '#f59e0b', type: 'income' },
 ];
 
 export function seedDefaultCategories(db: Database.Database, userId: number): void {
   const insert = db.prepare(
-    'INSERT INTO categories (user_id, name, icon, color, is_default, sort_order) VALUES (?, ?, ?, ?, 1, ?)'
+    'INSERT INTO categories (user_id, name, icon, color, is_default, sort_order, type) VALUES (?, ?, ?, ?, 1, ?, ?)'
   );
   DEFAULT_CATEGORIES.forEach((cat, idx) => {
-    insert.run(userId, cat.name, cat.icon, cat.color, idx);
+    insert.run(userId, cat.name, cat.icon, cat.color, idx, cat.type);
   });
 }

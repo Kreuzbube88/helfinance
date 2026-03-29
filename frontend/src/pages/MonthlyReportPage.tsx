@@ -189,6 +189,7 @@ export function MonthlyReportPage() {
                       <th>{t('income.name')}</th>
                       <th>{t('income.amount')}</th>
                       <th>{t('income.interval')}</th>
+                      <th>{t('reports.monthly')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -197,6 +198,7 @@ export function MonthlyReportPage() {
                         <td>{item.name}</td>
                         <td className="text-success">{fmt(item.amount)}</td>
                         <td><span className="badge badge-info">{item.interval}</span></td>
+                        <td className="text-success">{fmt(item.monthly_amount)}</td>
                       </tr>
                     ))}
                   </tbody>

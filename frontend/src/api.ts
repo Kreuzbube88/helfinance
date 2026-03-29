@@ -311,13 +311,13 @@ export function updateAdminSettings(data: Record<string, string>): Promise<void>
   return put<void>('/admin/settings', data)
 }
 
-export function sendTestEmail(): Promise<void> {
-  return post<void>('/admin/settings/test-email', {})
+export function sendTestEmail(to: string): Promise<void> {
+  return post<void>('/admin/settings/test-email', { to })
 }
 
 // Categories
-export function getCategories(): Promise<Category[]> {
-  return get<Category[]>('/categories')
+export function getCategories(type?: 'income' | 'expense'): Promise<Category[]> {
+  return get<Category[]>(type ? `/categories?type=${type}` : '/categories')
 }
 
 export function updateCategory(id: number, data: Partial<Category>): Promise<Category> {
