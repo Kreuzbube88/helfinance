@@ -242,6 +242,9 @@ export function runMigrations(db: Database.Database): void {
 
   // V10: Category type (income/expense/both)
   try { db.exec("ALTER TABLE categories ADD COLUMN type TEXT DEFAULT 'expense' CHECK(type IN ('income','expense','both'))"); } catch {}
+
+  // V11: Loans get booking_day
+  try { db.exec('ALTER TABLE loans ADD COLUMN booking_day INTEGER DEFAULT 1'); } catch {}
 }
 
 interface DefaultCategory {

@@ -337,7 +337,7 @@ export function ExpensesPage() {
                           <div className="item-card-main">
                             <span className="item-card-name">{item.name}</span>
                             <span className="item-card-meta">
-                              {intervalLabel(item.interval_months)} · {item.booking_day}. · {t(`categories.${item.category}`)}
+                              {intervalLabel(item.interval_months)} · {item.booking_day}. · {t(`categories.${getCategoryName(item)}`, { defaultValue: getCategoryName(item) })}
                             </span>
                           </div>
                           <div className="item-card-right">
@@ -558,7 +558,7 @@ export function ExpensesPage() {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">{t('expenses.category')}</span>
-                  <span className="detail-value">{t(`categories.${detailItem.category}`)}</span>
+                  <span className="detail-value">{t(`categories.${getCategoryName(detailItem)}`, { defaultValue: getCategoryName(detailItem) })}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">{t('expenses.effectiveFrom')}</span>

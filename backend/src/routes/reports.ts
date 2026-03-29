@@ -186,10 +186,22 @@ export function createReportsRouter(db: Database.Database): Router {
           const catExpenses = activeExpenses.filter(
             (e) => (e.cat_name ?? e.category ?? 'Uncategorized') === catName
           );
-          const items = catExpenses.map((e) => ({
-            name: e.name,
-            amount: Math.round(normalizeToMonthly(e.amount, e.interval_months) * 100) / 100,
-          }));
+          const items = catExpenses.map((e) => {
+            // Apply most recent expense_change
+            const applicable = expenseChanges
+              .filter((c) => c.expense_id === e.id && c.effective_from <= dateStr)
+              .sort((a, b) => b.effective_from.localeCompare(a.effective_from));
+            const baseAmount = applicable.length > 0 ? applicable[0].new_amount : e.amount;
+            // Apply override
+            const ov = overrides.find(
+              (o) => o.booking_type === 'expense' && o.booking_id === e.id && o.month === datePrefix
+            );
+            const effectiveAmount = ov ? ov.override_amount : baseAmount;
+            return {
+              name: e.name,
+              amount: Math.round(normalizeToMonthly(effectiveAmount, e.interval_months) * 100) / 100,
+            };
+          });
           const total = items.reduce((s, i) => s + i.amount, 0);
           return { category: catName, items, total: Math.round(total * 100) / 100 };
         })

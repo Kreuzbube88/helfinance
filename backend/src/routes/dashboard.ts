@@ -103,7 +103,7 @@ export function createDashboardRouter(db: Database.Database): Router {
         .all(userId) as ExpenseRow[];
 
       const loans = db
-        .prepare('SELECT id, name, monthly_rate, start_date, term_months, booking_day FROM loans WHERE user_id = ?')
+        .prepare('SELECT id, name, monthly_rate, start_date, term_months, COALESCE(booking_day, 1) as booking_day FROM loans WHERE user_id = ?')
         .all(userId) as LoanRow[];
 
       const savingsGoals = db
