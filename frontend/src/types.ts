@@ -93,7 +93,7 @@ export interface SavingsGoal {
   contribution_mode: 'fixed' | 'dynamic' | 'both'
   fixed_amount: number | null
   buffer_amount: number | null
-  color: string
+  color?: string
   target_date: string | null
   priority: number
   required_monthly_saving: number | null
