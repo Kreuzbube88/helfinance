@@ -358,8 +358,9 @@ export function createReportsRouter(db: Database.Database): Router {
           provisions: acc.provisions + m.provisions,
           loans: acc.loans + m.loans,
           net_savings: acc.net_savings + m.net_savings,
+          effective_net: acc.effective_net + m.effective_net,
         }),
-        { income: 0, fixed_expenses: 0, provisions: 0, loans: 0, net_savings: 0 }
+        { income: 0, fixed_expenses: 0, provisions: 0, loans: 0, net_savings: 0, effective_net: 0 }
       );
 
       res.json({ year, months, totals });

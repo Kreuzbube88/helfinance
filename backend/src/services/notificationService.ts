@@ -82,19 +82,35 @@ export async function checkAndCreateNotifications(
 
   const now = new Date();
   const today = now.getDate();
-  const sevenDaysLater = today + 7;
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
 
-  // 1. Upcoming expenses >= 100 booking within 7 days (filter here, not in query)
+  // 1. Upcoming expenses >= 100 booking within 7 days
   const upcomingExpenses = db
     .prepare(
-      'SELECT id, name, amount, booking_day, interval_months FROM expenses WHERE user_id = ? AND amount >= 100'
+      'SELECT id, name, amount, booking_day, interval_months, effective_from, effective_to FROM expenses WHERE user_id = ? AND amount >= 100'
     )
-    .all(userId) as ExpenseRow[];
+    .all(userId) as (ExpenseRow & { effective_from: string | null; effective_to: string | null })[];
 
   for (const exp of upcomingExpenses) {
-    if (exp.booking_day >= today && exp.booking_day <= sevenDaysLater) {
+    // Check if expense is due this month (interval filter)
+    if (exp.interval_months > 1) {
+      const fromDate = new Date(exp.effective_from ?? `${currentYear}-01-01`);
+      const monthsElapsed = (currentYear - fromDate.getFullYear()) * 12 + (currentMonth - (fromDate.getMonth() + 1));
+      if (monthsElapsed < 0 || monthsElapsed % exp.interval_months !== 0) continue;
+    }
+
+    // Calculate days until booking, handling cross-month boundaries
+    const bookingDate = new Date(currentYear, currentMonth - 1, exp.booking_day);
+    // If booking day already passed this month, check next month
+    if (exp.booking_day < today) {
+      bookingDate.setMonth(bookingDate.getMonth() + 1);
+    }
+    const diffMs = bookingDate.getTime() - now.getTime();
+    const daysUntil = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (daysUntil >= 0 && daysUntil <= 7) {
       if (!alreadyNotifiedToday(db, userId, 'upcoming_expense', exp.id)) {
-        const daysUntil = exp.booking_day - today;
         const msg = `${exp.name} of ${exp.amount.toFixed(2)} EUR is due in ${daysUntil} day(s) (day ${exp.booking_day}). [ref:upcoming_expense_${exp.id}]`;
         createNotification(db, userId, 'upcoming_expense', 'Upcoming Expense', msg);
         await sendEmail(db, user.email, 'Upcoming Expense Reminder', `<p>${msg}</p>`);
@@ -141,13 +157,22 @@ export async function checkAndCreateNotifications(
     }
   }
 
-  // 3. Savings goals at 100%
+  // 3. Savings goals at 100% — use actual savings balance, not stale current_amount column
   const savingsGoals = db
     .prepare('SELECT id, name, target_amount, current_amount FROM savings_goals WHERE user_id = ?')
     .all(userId) as SavingsGoalRow[];
 
+  const savingsAccount = db
+    .prepare('SELECT initial_balance FROM savings_accounts WHERE user_id = ?')
+    .get(userId) as { initial_balance: number } | undefined;
+  const savingsTxSum = (
+    db.prepare('SELECT COALESCE(SUM(amount), 0) as total FROM savings_transactions WHERE user_id = ?')
+      .get(userId) as { total: number }
+  ).total;
+  const currentSavingsBalance = (savingsAccount?.initial_balance ?? 0) + savingsTxSum;
+
   for (const goal of savingsGoals) {
-    if (goal.target_amount > 0 && goal.current_amount >= goal.target_amount) {
+    if (goal.target_amount > 0 && currentSavingsBalance >= goal.target_amount) {
       if (!alreadyNotifiedToday(db, userId, 'goal_reached', goal.id)) {
         const msg = `Congratulations! You have reached your savings goal "${goal.name}" of ${goal.target_amount.toFixed(2)} EUR. [ref:goal_reached_${goal.id}]`;
         createNotification(db, userId, 'goal_reached', 'Savings Goal Reached', msg);

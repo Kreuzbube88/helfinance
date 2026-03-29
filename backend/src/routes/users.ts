@@ -29,7 +29,7 @@ export function createUsersRouter(db: Database.Database): Router {
         res.status(404).json({ error: 'User not found' });
         return;
       }
-      res.json(user);
+      res.json({ ...user, is_admin: user.is_admin === 1, onboarding_done: user.onboarding_done === 1 });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
@@ -56,7 +56,7 @@ export function createUsersRouter(db: Database.Database): Router {
       const user = db
         .prepare('SELECT id, username, email, is_admin, language, currency, onboarding_done, created_at FROM users WHERE id = ?')
         .get(req.user!.id) as UserRow;
-      res.json(user);
+      res.json({ ...user, is_admin: user.is_admin === 1, onboarding_done: user.onboarding_done === 1 });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
