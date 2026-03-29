@@ -8,13 +8,13 @@ import { Layout } from './components/Layout'
 import { SetupPage } from './pages/SetupPage'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { BookingsPage } from './pages/BookingsPage'
+import { ReportsPage } from './pages/ReportsPage'
 import { IncomePage } from './pages/IncomePage'
 import { ExpensesPage } from './pages/ExpensesPage'
 import { LoansPage } from './pages/LoansPage'
 import { SavingsPage } from './pages/SavingsPage'
 import { CashflowPage } from './pages/CashflowPage'
-import { MonthlyReportPage } from './pages/MonthlyReportPage'
-import { YearlyReportPage } from './pages/YearlyReportPage'
 import { HouseholdPage } from './pages/HouseholdPage'
 import { AdminPage } from './pages/AdminPage'
 import { ProfilePage } from './pages/ProfilePage'
@@ -86,29 +86,24 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/income"
+        path="/bookings"
         element={
           <ProtectedRoute>
-            <IncomePage />
+            <BookingsPage />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/expenses"
-        element={
-          <ProtectedRoute>
-            <ExpensesPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/transactions"
+        path="/history"
         element={
           <ProtectedRoute>
             <TransactionsPage />
           </ProtectedRoute>
         }
       />
+      <Route path="/income"       element={<Navigate to="/bookings?tab=income"   replace />} />
+      <Route path="/expenses"     element={<Navigate to="/bookings?tab=expenses" replace />} />
+      <Route path="/transactions" element={<Navigate to="/history"               replace />} />
       <Route
         path="/loans"
         element={
@@ -134,21 +129,15 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/reports/monthly"
+        path="/reports"
         element={
           <ProtectedRoute>
-            <MonthlyReportPage />
+            <ReportsPage />
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/reports/yearly"
-        element={
-          <ProtectedRoute>
-            <YearlyReportPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/reports/monthly" element={<Navigate to="/reports?tab=monthly" replace />} />
+      <Route path="/reports/yearly"  element={<Navigate to="/reports?tab=yearly"  replace />} />
       <Route
         path="/household"
         element={

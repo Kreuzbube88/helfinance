@@ -27,7 +27,11 @@ const EMPTY_FORM = {
 
 type ExpenseChange = { id: number; expense_id: number; new_amount: number; effective_from: string }
 
-export function ExpensesPage() {
+interface ExpensesPageProps {
+  embedded?: boolean
+}
+
+export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -289,11 +293,18 @@ export function ExpensesPage() {
   const fd = (field: keyof typeof EMPTY_FORM, val: string) => setDetailForm(prev => ({ ...prev, [field]: val }))
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">{t('expenses.title')}</h1>
-        <button className="btn btn-primary" onClick={openAdd}>+ {t('expenses.add')}</button>
-      </div>
+    <div className={embedded ? '' : 'page'}>
+      {!embedded && (
+        <div className="page-header">
+          <h1 className="page-title">{t('expenses.title')}</h1>
+          <button className="btn btn-primary" onClick={openAdd}>+ {t('expenses.add')}</button>
+        </div>
+      )}
+      {embedded && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+          <button className="btn btn-primary" onClick={openAdd}>+ {t('expenses.add')}</button>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-muted">{t('common.loading')}</p>

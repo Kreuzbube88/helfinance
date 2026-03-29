@@ -26,7 +26,11 @@ function getMonthName(monthIndex: number, lang: string): string {
   return new Intl.DateTimeFormat(lang, { month: 'long' }).format(new Date(2000, monthIndex, 1))
 }
 
-export function MonthlyReportPage() {
+interface MonthlyReportPageProps {
+  embedded?: boolean
+}
+
+export function MonthlyReportPage({ embedded = false }: MonthlyReportPageProps) {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -98,45 +102,53 @@ export function MonthlyReportPage() {
     }
   }
 
+  const controls = (
+    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+      <select
+        className="form-select"
+        value={month}
+        onChange={e => setMonth(Number(e.target.value))}
+        style={{ width: 'auto' }}
+      >
+        {Array.from({ length: 12 }, (_, i) => (
+          <option key={i} value={i + 1}>{getMonthName(i, i18n.language)}</option>
+        ))}
+      </select>
+      <select
+        className="form-select"
+        value={year}
+        onChange={e => setYear(Number(e.target.value))}
+        style={{ width: 'auto' }}
+      >
+        {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map(y => (
+          <option key={y} value={y}>{y}</option>
+        ))}
+      </select>
+      <button
+        className="btn btn-secondary btn-sm"
+        onClick={() => triggerDownload(`/api/v1/export/pdf?year=${year}&month=${month}`)}
+      >
+        {t('reports.exportPdf')}
+      </button>
+      <button
+        className="btn btn-secondary btn-sm"
+        onClick={() => triggerDownload(`/api/v1/export/csv?year=${year}&month=${month}`)}
+      >
+        {t('reports.exportCsv')}
+      </button>
+    </div>
+  )
+
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">{t('reports.title')} — {t('reports.monthly')}</h1>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <select
-            className="form-select"
-            value={month}
-            onChange={e => setMonth(Number(e.target.value))}
-            style={{ width: 'auto' }}
-          >
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i} value={i + 1}>{getMonthName(i, i18n.language)}</option>
-            ))}
-          </select>
-          <select
-            className="form-select"
-            value={year}
-            onChange={e => setYear(Number(e.target.value))}
-            style={{ width: 'auto' }}
-          >
-            {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => triggerDownload(`/api/v1/export/pdf?year=${year}&month=${month}`)}
-          >
-            {t('reports.exportPdf')}
-          </button>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => triggerDownload(`/api/v1/export/csv?year=${year}&month=${month}`)}
-          >
-            {t('reports.exportCsv')}
-          </button>
+    <div className={embedded ? '' : 'page'}>
+      {!embedded ? (
+        <div className="page-header">
+          <h1 className="page-title">{t('reports.title')} — {t('reports.monthly')}</h1>
+          {controls}
         </div>
-      </div>
+      ) : (
+        <div style={{ marginBottom: '1rem' }}>{controls}</div>
+      )}
 
       {loading ? (
         <p className="text-muted">{t('common.loading')}</p>

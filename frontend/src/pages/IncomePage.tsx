@@ -22,7 +22,11 @@ const EMPTY_FORM = {
   category_id: ''
 }
 
-export function IncomePage() {
+interface IncomePageProps {
+  embedded?: boolean
+}
+
+export function IncomePage({ embedded = false }: IncomePageProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -232,11 +236,18 @@ export function IncomePage() {
   }
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">{t('income.title')}</h1>
-        <button className="btn btn-primary" onClick={openAdd}>+ {t('income.add')}</button>
-      </div>
+    <div className={embedded ? '' : 'page'}>
+      {!embedded && (
+        <div className="page-header">
+          <h1 className="page-title">{t('income.title')}</h1>
+          <button className="btn btn-primary" onClick={openAdd}>+ {t('income.add')}</button>
+        </div>
+      )}
+      {embedded && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+          <button className="btn btn-primary" onClick={openAdd}>+ {t('income.add')}</button>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-muted">{t('common.loading')}</p>

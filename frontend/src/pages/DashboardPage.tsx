@@ -63,7 +63,8 @@ export function DashboardPage() {
     healthScore: true, budget: true, freeMoney: true, upcomingBookings: true, savingsProgress: true
   })
 
-  useEffect(() => {
+  const loadDashboard = () => {
+    setLoading(true)
     Promise.all([getDashboard(), getWidgetPrefs()])
       .then(([d, prefs]) => {
         setData(d)
@@ -71,7 +72,9 @@ export function DashboardPage() {
       })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { loadDashboard() }, [])
 
   const toggleWidget = async (key: WidgetKey) => {
     const next = !widgets[key]
@@ -215,7 +218,7 @@ export function DashboardPage() {
       <button className="fab" onClick={() => setShowQuickAdd(true)} title={t('quickAdd.title')}>+</button>
 
       {showQuickAdd && (
-        <QuickAddModal onClose={() => setShowQuickAdd(false)} />
+        <QuickAddModal onClose={() => setShowQuickAdd(false)} onAdded={loadDashboard} />
       )}
 
       {showCustomize && (

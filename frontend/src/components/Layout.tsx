@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { NotificationPanel } from './NotificationPanel'
@@ -13,6 +13,7 @@ export function Layout({ children }: LayoutProps) {
   const { t } = useTranslation()
   const { user, logout, isAdmin } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() =>
     localStorage.getItem('helfinance_sidebar') === 'collapsed'
@@ -54,14 +55,13 @@ export function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { path: '/dashboard', label: t('nav.dashboard'), icon: '⊞' },
-    { path: '/income', label: t('nav.income'), icon: '↑' },
-    { path: '/expenses', label: t('nav.expenses'), icon: '↓' },
-    { path: '/transactions', label: t('nav.transactions'), icon: '⇄' },
-    { path: '/loans', label: t('nav.loans'), icon: '⊙' },
-    { path: '/savings', label: t('nav.savings'), icon: '◈' },
-    { path: '/cashflow', label: t('nav.cashflow'), icon: '≈' },
-    { path: '/reports/monthly', label: t('nav.reports'), icon: '▦' },
-    { path: '/household', label: t('nav.household'), icon: '⌂' },
+    { path: '/bookings',  label: t('nav.bookings'),  icon: '📋' },
+    { path: '/history',   label: t('nav.history'),   icon: '⇄'  },
+    { path: '/loans',     label: t('nav.loans'),     icon: '⊙'  },
+    { path: '/savings',   label: t('nav.savings'),   icon: '◈'  },
+    { path: '/cashflow',  label: t('nav.cashflow'),  icon: '≈'  },
+    { path: '/reports',   label: t('nav.reports'),   icon: '▦'  },
+    { path: '/household', label: t('nav.household'), icon: '⌂'  },
   ]
 
   if (isAdmin) {
@@ -90,7 +90,7 @@ export function Layout({ children }: LayoutProps) {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `nav-item ${isActive ? 'nav-item-active' : ''}`
+                `nav-item ${isActive || location.pathname === item.path ? 'nav-item-active' : ''}`
               }
               onClick={() => setSidebarOpen(false)}
               title={sidebarCollapsed ? item.label : undefined}

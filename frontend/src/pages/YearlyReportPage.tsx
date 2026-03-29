@@ -9,7 +9,11 @@ function getMonthShort(monthIndex: number, lang: string): string {
   return new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(2000, monthIndex, 1))
 }
 
-export function YearlyReportPage() {
+interface YearlyReportPageProps {
+  embedded?: boolean
+}
+
+export function YearlyReportPage({ embedded = false }: YearlyReportPageProps) {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -64,35 +68,43 @@ export function YearlyReportPage() {
     { labelKey: 'reports.net',           key: 'net_savings',     isNet: true  }
   ]
 
+  const controls = (
+    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+      <select
+        className="form-select"
+        value={year}
+        onChange={e => setYear(Number(e.target.value))}
+        style={{ width: 'auto' }}
+      >
+        {yearOptions.map(y => (
+          <option key={y} value={y}>{y}</option>
+        ))}
+      </select>
+      <button
+        className="btn btn-secondary btn-sm"
+        onClick={() => triggerDownload(`/api/v1/export/pdf?year=${year}`)}
+      >
+        {t('reports.exportPdf')}
+      </button>
+      <button
+        className="btn btn-secondary btn-sm"
+        onClick={() => triggerDownload(`/api/v1/export/csv?year=${year}`)}
+      >
+        {t('reports.exportCsv')}
+      </button>
+    </div>
+  )
+
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">{t('reports.title')} — {t('reports.yearly')}</h1>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <select
-            className="form-select"
-            value={year}
-            onChange={e => setYear(Number(e.target.value))}
-            style={{ width: 'auto' }}
-          >
-            {yearOptions.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => triggerDownload(`/api/v1/export/pdf?year=${year}`)}
-          >
-            {t('reports.exportPdf')}
-          </button>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => triggerDownload(`/api/v1/export/csv?year=${year}`)}
-          >
-            {t('reports.exportCsv')}
-          </button>
+    <div className={embedded ? '' : 'page'}>
+      {!embedded ? (
+        <div className="page-header">
+          <h1 className="page-title">{t('reports.title')} — {t('reports.yearly')}</h1>
+          {controls}
         </div>
-      </div>
+      ) : (
+        <div style={{ marginBottom: '1rem' }}>{controls}</div>
+      )}
 
       {loading ? (
         <p className="text-muted">{t('common.loading')}</p>
