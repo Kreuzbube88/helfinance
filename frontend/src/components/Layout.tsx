@@ -56,7 +56,6 @@ export function Layout({ children }: LayoutProps) {
   const navItems = [
     { path: '/dashboard', label: t('nav.dashboard'), icon: '⊞' },
     { path: '/bookings',  label: t('nav.bookings'),  icon: '📋' },
-    { path: '/history',   label: t('nav.history'),   icon: '⇄'  },
     { path: '/loans',     label: t('nav.loans'),     icon: '⊙'  },
     { path: '/savings',   label: t('nav.savings'),   icon: '◈'  },
     { path: '/cashflow',  label: t('nav.cashflow'),  icon: '≈'  },

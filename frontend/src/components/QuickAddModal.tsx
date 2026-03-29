@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal } from './Modal'
 import { useToast } from '../contexts/ToastContext'
-import { getCategories, createTransaction } from '../api'
+import { getCategories, createExpense } from '../api'
 import type { Category } from '../types'
 
 interface Props {
@@ -28,13 +28,14 @@ export function QuickAddModal({ onClose, onAdded }: Props) {
     if (!name || !amount) return
     setSaving(true)
     try {
-      await createTransaction({
+      await createExpense({
         name,
         amount: parseFloat(amount),
-        type: 'expense',
+        interval_months: 1,
+        booking_day: new Date().getDate(),
         category_id: categoryId ? parseInt(categoryId) : null,
-        date: new Date().toISOString().slice(0, 10),
-        note: null
+        effective_from: new Date().toISOString().slice(0, 10),
+        effective_to: new Date().toISOString().slice(0, 10),
       })
       showToast(t('common.success'), 'success')
       onAdded?.()

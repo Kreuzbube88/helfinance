@@ -171,6 +171,7 @@ export interface SharedExpense {
 export interface Notification {
   id: number
   user_id: number
+  title: string
   message: string
   type: 'info' | 'warning' | 'error' | 'success'
   read: boolean

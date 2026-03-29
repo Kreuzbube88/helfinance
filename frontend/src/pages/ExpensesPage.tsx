@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import {
   getExpenses, createExpense, updateExpense, deleteExpense,
   scheduleExpenseChange, getExpenseChanges, deleteExpenseChange,
-  getCategories, updateCategory, getLoans, getTransactions,
+  getCategories, updateCategory, getLoans,
   upsertOverride, getOverrides, deleteOverride
 } from '../api'
-import type { Expense, Category, Loan, Transaction, BookingOverride } from '../types'
+import type { Expense, Category, Loan, BookingOverride } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 
@@ -35,11 +36,11 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
+  const navigate = useNavigate()
 
   const [items, setItems] = useState<Expense[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loans, setLoans] = useState<Loan[]>([])
-  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(CATEGORIES))
   const [budgetTarget, setBudgetTarget] = useState<string | null>(null)
@@ -92,8 +93,8 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
 
   const load = () => {
     setLoading(true)
-    Promise.all([getExpenses(), getCategories('expense'), getLoans(), getTransactions()])
-      .then(([exps, cats, ls, txs]) => { setItems(exps); setCategories(cats); setLoans(ls); setTransactions(txs) })
+    Promise.all([getExpenses(), getCategories('expense'), getLoans()])
+      .then(([exps, cats, ls]) => { setItems(exps); setCategories(cats); setLoans(ls) })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
   }
@@ -403,68 +404,77 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
         </div>
       )}
 
-      {/* Loans Section */}
-      {loans.length > 0 && (
-        <div className="card" style={{ marginTop: '1.5rem' }}>
-          <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>{t('nav.loans')}</h2>
-          <div className="item-list">
-            {loans.map(loan => (
-              <div key={loan.id} className="item-card">
-                <div className="item-card-left">
-                  <span className="item-card-name">{loan.name}</span>
-                  <span className="text-muted text-sm">{t('loans.monthlyRate')}</span>
-                </div>
-                <div className="item-card-right">
-                  <span className="item-card-amount text-danger">{fmt(loan.monthly_rate ?? 0)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Loans Section — read-only, edit on LoansPage */}
+      {loans.length > 0 && (() => {
+        const now = new Date()
+        const currentYear = now.getFullYear()
+        const currentMonth = now.getMonth() + 1
 
-      {/* Bookings Section (issues 2+7) */}
-      {(() => {
-        const expenseTxs = transactions.filter(tx => tx.type === 'expense')
-        const autoTxs = expenseTxs.filter(tx => tx.is_auto === 1)
-        const manualTxs = expenseTxs.filter(tx => tx.is_auto === 0)
-        if (expenseTxs.length === 0) return null
-        const grouped2 = expenseTxs.reduce<Record<string, Transaction[]>>((acc, tx) => {
-          const key = tx.date.slice(0, 7)
-          if (!acc[key]) acc[key] = []
-          acc[key].push(tx)
-          return acc
-        }, {})
         return (
-          <div className="card" style={{ marginTop: '1.5rem' }}>
-            <h2 className="card-title" style={{ marginBottom: '0.25rem' }}>{t('transactions.title')}</h2>
-            <p className="text-muted text-sm" style={{ marginBottom: '0.75rem' }}>
-              {t('expenses.autoBookings', { auto: autoTxs.length, manual: manualTxs.length })}
-            </p>
-            <div className="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>{t('common.date')}</th>
-                    <th>{t('expenses.name')}</th>
-                    <th style={{ textAlign: 'right' }}>{t('expenses.amount')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(grouped2).sort((a, b) => b[0].localeCompare(a[0])).flatMap(([, txs]) =>
-                    txs.map(tx => (
-                      <tr key={tx.id}>
-                        <td className="text-muted">{new Date(tx.date + 'T00:00:00').toLocaleDateString('de-DE')}</td>
-                        <td>
-                          {tx.name}
-                          {tx.is_auto ? <span className="badge badge-neutral" style={{ marginLeft: '0.4rem', fontSize: '0.7rem' }}>auto</span> : null}
-                        </td>
-                        <td style={{ textAlign: 'right' }} className="text-danger">{fmt(tx.amount)}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+          <div className="category-group" style={{ marginTop: '1.5rem' }}>
+            <div className="category-header" style={{ cursor: 'default' }}>
+              <div className="category-header-left">
+                <span className="category-name">{t('nav.loans')}</span>
+                <span className="badge badge-secondary">{loans.length}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span className="category-total text-danger">
+                  {fmt(loans.reduce((sum, l) => {
+                    const end = new Date(l.start_date)
+                    end.setMonth(end.getMonth() + l.term_months)
+                    const current = new Date(currentYear, currentMonth - 1, 1)
+                    return current < end ? sum + (l.monthly_rate ?? 0) : sum
+                  }, 0))}/Mo
+                </span>
+                <button
+                  className="btn btn-ghost btn-xs"
+                  title={t('loans.editOnLoansPage')}
+                  onClick={() => navigate('/loans')}
+                >✎</button>
+              </div>
+            </div>
+            <div className="category-items">
+              <div className="item-card-list">
+                {loans.map(loan => {
+                  const end = new Date(loan.start_date)
+                  end.setMonth(end.getMonth() + loan.term_months)
+                  const current = new Date(currentYear, currentMonth - 1, 1)
+                  const isActive = current < end
+                  const startDate = new Date(loan.start_date)
+                  const monthsElapsed = (currentYear - startDate.getFullYear()) * 12 +
+                    (currentMonth - (startDate.getMonth() + 1))
+                  const monthsRemaining = Math.max(0, loan.term_months - monthsElapsed)
+
+                  return (
+                    <div key={loan.id} className={`item-card ${!isActive ? 'opacity-50' : ''}`}>
+                      <div className="item-card-main">
+                        <span className="item-card-name">{loan.name}</span>
+                        <span className="item-card-meta">
+                          {isActive
+                            ? t('loans.monthsRemaining', { count: monthsRemaining })
+                            : t('loans.paidOff')}
+                          {' · '}{t('loans.editOnLoansPage')}
+                        </span>
+                      </div>
+                      <div className="item-card-right">
+                        <div>
+                          <span className={`item-card-amount ${isActive ? 'text-danger' : 'text-muted'}`}>
+                            {fmt(loan.monthly_rate ?? 0)}
+                          </span>
+                          <span className="item-card-equiv text-muted">/Mo</span>
+                        </div>
+                        <div className="item-card-actions">
+                          <button
+                            className="btn btn-ghost btn-xs"
+                            title={t('loans.editOnLoansPage')}
+                            onClick={() => navigate('/loans')}
+                          >✎</button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         )

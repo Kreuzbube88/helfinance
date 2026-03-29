@@ -109,7 +109,10 @@
     "modeInterest": "Enter interest rate → compute monthly rate",
     "modeMonthly": "Enter monthly rate → compute interest rate",
     "monthlyRateInput": "Monthly Rate",
-    "finalPayment": "Final Payment / Balloon (optional)"
+    "finalPayment": "Final Payment / Balloon (optional)",
+    "monthsRemaining": "{{count}} months remaining",
+    "paidOff": "Paid off",
+    "editOnLoansPage": "Edit on Loans page"
   },
   "savings": {
     "title": "Savings Goals",
@@ -302,6 +305,8 @@
     "day": "Day",
     "or": "or",
     "markAsRead": "Mark as read",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications",
     "total": "Total",
     "date": "Date",
     "type": "Type",

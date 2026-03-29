@@ -5,10 +5,10 @@ import { useAuth } from '../contexts/AuthContext'
 import {
   getIncome, createIncome, updateIncome, deleteIncome,
   scheduleIncomeChange, getIncomeChanges, deleteIncomeChange,
-  getCategories, getTransactions,
+  getCategories,
   upsertOverride, getOverrides, deleteOverride
 } from '../api'
-import type { Income, IncomeChange, Category, Transaction, BookingOverride } from '../types'
+import type { Income, IncomeChange, Category, BookingOverride } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 
@@ -33,7 +33,6 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
 
   const [items, setItems] = useState<Income[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
 
   // Add/edit modal
@@ -74,8 +73,8 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
 
   const load = () => {
     setLoading(true)
-    Promise.all([getIncome(), getCategories('income'), getTransactions()])
-      .then(([inc, cats, txs]) => { setItems(inc); setCategories(cats); setTransactions(txs) })
+    Promise.all([getIncome(), getCategories('income')])
+      .then(([inc, cats]) => { setItems(inc); setCategories(cats) })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
   }
@@ -295,52 +294,6 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
         </div>
       )}
 
-      {/* Bookings Section (issues 2+7) */}
-      {(() => {
-        const incomeTxs = transactions.filter(tx => tx.type === 'income')
-        const autoTxs = incomeTxs.filter(tx => tx.is_auto === 1)
-        const manualTxs = incomeTxs.filter(tx => tx.is_auto === 0)
-        if (incomeTxs.length === 0) return null
-        const grouped2 = incomeTxs.reduce<Record<string, Transaction[]>>((acc, tx) => {
-          const key = tx.date.slice(0, 7)
-          if (!acc[key]) acc[key] = []
-          acc[key].push(tx)
-          return acc
-        }, {})
-        return (
-          <div className="card" style={{ marginTop: '1.5rem' }}>
-            <h2 className="card-title" style={{ marginBottom: '0.25rem' }}>{t('transactions.title')}</h2>
-            <p className="text-muted text-sm" style={{ marginBottom: '0.75rem' }}>
-              {t('income.autoBookings', { auto: autoTxs.length, manual: manualTxs.length })}
-            </p>
-            <div className="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>{t('common.date')}</th>
-                    <th>{t('income.name')}</th>
-                    <th style={{ textAlign: 'right' }}>{t('income.amount')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(grouped2).sort((a, b) => b[0].localeCompare(a[0])).flatMap(([, txs]) =>
-                    txs.map(tx => (
-                      <tr key={tx.id}>
-                        <td className="text-muted">{new Date(tx.date + 'T00:00:00').toLocaleDateString('de-DE')}</td>
-                        <td>
-                          {tx.name}
-                          {tx.is_auto ? <span className="badge badge-neutral" style={{ marginLeft: '0.4rem', fontSize: '0.7rem' }}>auto</span> : null}
-                        </td>
-                        <td style={{ textAlign: 'right' }} className="text-success">{fmt(tx.amount)}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )
-      })()}
 
       {/* Add / Edit Modal */}
       {showModal && (

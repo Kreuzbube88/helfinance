@@ -277,6 +277,10 @@ export function deleteNotification(id: number): Promise<void> {
   return del(`/notifications/${id}`)
 }
 
+export function markAllNotificationsRead(): Promise<void> {
+  return put<void>('/notifications/read-all', {})
+}
+
 // Profile
 export function getProfile(): Promise<User> {
   return get<User>('/users/profile')

@@ -109,7 +109,10 @@
     "modeInterest": "Zinssatz eingeben → Monatsrate berechnen",
     "modeMonthly": "Monatsrate eingeben → Zinssatz berechnen",
     "monthlyRateInput": "Monatliche Rate",
-    "finalPayment": "Schlussrate (optional)"
+    "finalPayment": "Schlussrate (optional)",
+    "monthsRemaining": "{{count}} Monate verbleibend",
+    "paidOff": "Abgezahlt",
+    "editOnLoansPage": "Bearbeiten auf Kredite-Seite"
   },
   "savings": {
     "title": "Sparziele",
@@ -302,6 +305,8 @@
     "day": "Tag",
     "or": "oder",
     "markAsRead": "Als gelesen markieren",
+    "markAllRead": "Alle als gelesen markieren",
+    "noNotifications": "Keine Benachrichtigungen",
     "total": "Gesamt",
     "date": "Datum",
     "type": "Typ",

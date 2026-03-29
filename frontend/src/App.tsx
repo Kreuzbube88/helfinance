@@ -19,7 +19,6 @@ import { HouseholdPage } from './pages/HouseholdPage'
 import { AdminPage } from './pages/AdminPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { AboutPage } from './pages/AboutPage'
-import { TransactionsPage } from './pages/TransactionsPage'
 
 function LoadingScreen() {
   return (
@@ -93,17 +92,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/history"
-        element={
-          <ProtectedRoute>
-            <TransactionsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/income"       element={<Navigate to="/bookings?tab=income"   replace />} />
-      <Route path="/expenses"     element={<Navigate to="/bookings?tab=expenses" replace />} />
-      <Route path="/transactions" element={<Navigate to="/history"               replace />} />
+      <Route path="/income"   element={<Navigate to="/bookings?tab=income"   replace />} />
+      <Route path="/expenses" element={<Navigate to="/bookings?tab=expenses" replace />} />
       <Route
         path="/loans"
         element={
