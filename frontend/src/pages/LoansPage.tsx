@@ -95,6 +95,7 @@ export function LoansPage() {
       showToast(t('common.success'), 'success')
       setShowModal(false)
       setForm(EMPTY_FORM)
+      setRateInputMode('interest')
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('common.error'), 'error')
     } finally {
@@ -178,7 +179,7 @@ export function LoansPage() {
     <div className="page">
       <div className="page-header">
         <h1 className="page-title">{t('loans.title')}</h1>
-        <button className="btn btn-primary" onClick={() => { setForm(EMPTY_FORM); setShowModal(true) }}>
+        <button className="btn btn-primary" onClick={() => { setForm(EMPTY_FORM); setRateInputMode('interest'); setShowModal(true) }}>
           + {t('loans.add')}
         </button>
       </div>
@@ -188,7 +189,7 @@ export function LoansPage() {
       ) : loans.length === 0 ? (
         <div className="empty-state">
           <p>{t('common.noData')}</p>
-          <button className="btn btn-primary" onClick={() => { setForm(EMPTY_FORM); setShowModal(true) }}>
+          <button className="btn btn-primary" onClick={() => { setForm(EMPTY_FORM); setRateInputMode('interest'); setShowModal(true) }}>
             {t('loans.add')}
           </button>
         </div>
@@ -253,7 +254,7 @@ export function LoansPage() {
       )}
 
       {showModal && (
-        <Modal title={t('loans.add')} onClose={() => setShowModal(false)}>
+        <Modal title={t('loans.add')} onClose={() => { setShowModal(false); setRateInputMode('interest') }}>
           <form onSubmit={handleSave}>
             <div className="form-group">
               <label className="form-label">{t('loans.name')}</label>

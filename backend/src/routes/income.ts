@@ -11,6 +11,7 @@ interface IncomeRow {
   booking_day: number;
   effective_from: string | null;
   effective_to: string | null;
+  category_id: number | null;
 }
 
 interface IncomeChangeRow {
@@ -38,13 +39,14 @@ export function createIncomeRouter(db: Database.Database): Router {
 
   router.post('/', (req: Request, res: Response) => {
     try {
-      const { name, amount, interval, booking_day, effective_from, effective_to } = req.body as {
+      const { name, amount, interval, booking_day, effective_from, effective_to, category_id } = req.body as {
         name: string;
         amount: number;
         interval?: string;
         booking_day?: number;
         effective_from?: string;
         effective_to?: string;
+        category_id?: number | null;
       };
       if (!name || amount == null) {
         res.status(400).json({ error: 'name and amount are required' });
@@ -52,7 +54,7 @@ export function createIncomeRouter(db: Database.Database): Router {
       }
       const result = db
         .prepare(
-          'INSERT INTO income (user_id, name, amount, interval, booking_day, effective_from, effective_to) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          'INSERT INTO income (user_id, name, amount, interval, booking_day, effective_from, effective_to, category_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         )
         .run(
           req.user!.id,
@@ -61,7 +63,8 @@ export function createIncomeRouter(db: Database.Database): Router {
           interval ?? 'monthly',
           booking_day ?? 1,
           effective_from ?? null,
-          effective_to ?? null
+          effective_to ?? null,
+          category_id ?? null
         );
       const row = db.prepare('SELECT * FROM income WHERE id = ?').get(result.lastInsertRowid) as IncomeRow;
       res.status(201).json(row);
@@ -80,13 +83,14 @@ export function createIncomeRouter(db: Database.Database): Router {
         res.status(404).json({ error: 'Income not found' });
         return;
       }
-      const { name, amount, interval, booking_day, effective_from, effective_to } = req.body as {
+      const { name, amount, interval, booking_day, effective_from, effective_to, category_id } = req.body as {
         name?: string;
         amount?: number;
         interval?: string;
         booking_day?: number;
         effective_from?: string;
         effective_to?: string;
+        category_id?: number | null;
       };
       db.prepare(
         `UPDATE income SET
@@ -95,7 +99,8 @@ export function createIncomeRouter(db: Database.Database): Router {
           interval = COALESCE(?, interval),
           booking_day = COALESCE(?, booking_day),
           effective_from = COALESCE(?, effective_from),
-          effective_to = COALESCE(?, effective_to)
+          effective_to = COALESCE(?, effective_to),
+          category_id = ?
         WHERE id = ?`
       ).run(
         name ?? null,
@@ -104,6 +109,7 @@ export function createIncomeRouter(db: Database.Database): Router {
         booking_day ?? null,
         effective_from ?? null,
         effective_to ?? null,
+        category_id !== undefined ? (category_id ?? null) : existing.category_id,
         id
       );
       const updated = db.prepare('SELECT * FROM income WHERE id = ?').get(id) as IncomeRow;
