@@ -38,7 +38,7 @@ export interface Expense {
   amount: number
   interval_months: number
   booking_day: number
-  category: string
+  category?: string
   category_id: number | null
   effective_from: string
   effective_to: string | null
