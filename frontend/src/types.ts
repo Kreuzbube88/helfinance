@@ -19,7 +19,7 @@ export interface Income {
   effective_from: string
   effective_to: string | null
   category_id: number | null
-  is_active: number
+  is_active?: number
   created_at: string
 }
 
@@ -42,7 +42,7 @@ export interface Expense {
   category_id: number | null
   effective_from: string
   effective_to: string | null
-  is_active: number
+  is_active?: number
   created_at: string
 }
 
