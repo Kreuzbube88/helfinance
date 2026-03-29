@@ -5,9 +5,9 @@ import { useAuth } from '../contexts/AuthContext'
 import {
   getExpenses, createExpense, updateExpense, deleteExpense,
   scheduleExpenseChange, getExpenseChanges, deleteExpenseChange,
-  getCategories, updateCategory
+  getCategories, updateCategory, getLoans, getTransactions
 } from '../api'
-import type { Expense, Category } from '../types'
+import type { Expense, Category, Loan, Transaction } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 
@@ -33,6 +33,8 @@ export function ExpensesPage() {
 
   const [items, setItems] = useState<Expense[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [loans, setLoans] = useState<Loan[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(CATEGORIES))
   const [budgetTarget, setBudgetTarget] = useState<string | null>(null)
@@ -74,8 +76,8 @@ export function ExpensesPage() {
 
   const load = () => {
     setLoading(true)
-    Promise.all([getExpenses(), getCategories()])
-      .then(([exps, cats]) => { setItems(exps); setCategories(cats) })
+    Promise.all([getExpenses(), getCategories(), getLoans(), getTransactions()])
+      .then(([exps, cats, ls, txs]) => { setItems(exps); setCategories(cats); setLoans(ls); setTransactions(txs) })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
   }
@@ -350,6 +352,73 @@ export function ExpensesPage() {
           })}
         </div>
       )}
+
+      {/* Loans Section */}
+      {loans.length > 0 && (
+        <div className="card" style={{ marginTop: '1.5rem' }}>
+          <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>{t('nav.loans')}</h2>
+          <div className="item-list">
+            {loans.map(loan => (
+              <div key={loan.id} className="item-card">
+                <div className="item-card-left">
+                  <span className="item-card-name">{loan.name}</span>
+                  <span className="text-muted text-sm">{t('loans.monthlyRate')}</span>
+                </div>
+                <div className="item-card-right">
+                  <span className="item-card-amount text-danger">{fmt(loan.monthly_rate ?? 0)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bookings Section (issues 2+7) */}
+      {(() => {
+        const expenseTxs = transactions.filter(tx => tx.type === 'expense')
+        const autoTxs = expenseTxs.filter(tx => tx.is_auto === 1)
+        const manualTxs = expenseTxs.filter(tx => tx.is_auto === 0)
+        if (expenseTxs.length === 0) return null
+        const grouped2 = expenseTxs.reduce<Record<string, Transaction[]>>((acc, tx) => {
+          const key = tx.date.slice(0, 7)
+          if (!acc[key]) acc[key] = []
+          acc[key].push(tx)
+          return acc
+        }, {})
+        return (
+          <div className="card" style={{ marginTop: '1.5rem' }}>
+            <h2 className="card-title" style={{ marginBottom: '0.25rem' }}>{t('transactions.title')}</h2>
+            <p className="text-muted text-sm" style={{ marginBottom: '0.75rem' }}>
+              {t('expenses.autoBookings', { auto: autoTxs.length, manual: manualTxs.length })}
+            </p>
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{t('common.date')}</th>
+                    <th>{t('expenses.name')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('expenses.amount')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(grouped2).sort((a, b) => b[0].localeCompare(a[0])).flatMap(([, txs]) =>
+                    txs.map(tx => (
+                      <tr key={tx.id}>
+                        <td className="text-muted">{new Date(tx.date + 'T00:00:00').toLocaleDateString('de-DE')}</td>
+                        <td>
+                          {tx.name}
+                          {tx.is_auto ? <span className="badge badge-neutral" style={{ marginLeft: '0.4rem', fontSize: '0.7rem' }}>auto</span> : null}
+                        </td>
+                        <td style={{ textAlign: 'right' }} className="text-danger">{fmt(tx.amount)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Add / Edit Modal */}
       {showModal && (

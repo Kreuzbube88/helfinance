@@ -15,6 +15,42 @@ interface LoanRow {
   category_id: number | null;
   loan_type: 'annuity' | 'real_estate';
   interest_rate_dynamic: number;
+  final_payment: number | null;
+}
+
+/**
+ * Reverse-calculates annual interest rate (%) from known monthly_rate, principal, and term.
+ * Uses bisection. Returns null if no solution found.
+ */
+function calcInterestRateFromMonthlyRate(principal: number, monthly_rate: number, term_months: number, final_payment: number | null = null): number | null {
+  // For balloon loans: monthly_rate = principal * r / (1 - (1+r)^-n) - final_payment * r / ((1+r)^n - 1)...
+  // Simplification: use standard annuity formula for bisection target
+  const target = (r: number) => {
+    if (r === 0) {
+      // zero-interest: payment = (principal - (final_payment ?? 0)) / term_months
+      return (principal - (final_payment ?? 0)) / term_months;
+    }
+    const fp = final_payment ?? 0;
+    // annuity with balloon: M = (P - FP*(1+r)^-n) * r / (1 - (1+r)^-n)
+    const pow = Math.pow(1 + r, term_months);
+    return (principal - fp / pow) * r / (1 - 1 / pow);
+  };
+
+  let lo = 0.000001;
+  let hi = 1.0; // 100% monthly = absurd, but safe upper bound
+  if (target(hi) < monthly_rate) return null;
+
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    const val = target(mid);
+    if (Math.abs(val - monthly_rate) < 0.000001) {
+      return Math.round(mid * 12 * 100 * 10000) / 10000; // annual %
+    }
+    if (val < monthly_rate) lo = mid;
+    else hi = mid;
+  }
+  const mid = (lo + hi) / 2;
+  return Math.round(mid * 12 * 100 * 10000) / 10000;
 }
 
 interface SpecialPaymentRow {
@@ -42,11 +78,13 @@ export function createLoansRouter(db: Database.Database): Router {
 
   router.post('/', (req: Request, res: Response) => {
     try {
-      const { name, principal, interest_rate_pct, start_date, term_months, category_id, loan_type, interest_rate_dynamic } =
+      const { name, principal, interest_rate_pct, monthly_rate_input, final_payment, start_date, term_months, category_id, loan_type, interest_rate_dynamic } =
         req.body as {
           name: string;
           principal: number;
-          interest_rate_pct: number;
+          interest_rate_pct?: number;
+          monthly_rate_input?: number;
+          final_payment?: number;
           start_date: string;
           term_months: number;
           category_id?: number;
@@ -54,28 +92,46 @@ export function createLoansRouter(db: Database.Database): Router {
           interest_rate_dynamic?: boolean;
         };
 
-      if (!name || principal == null || interest_rate_pct == null || !start_date || !term_months) {
-        res.status(400).json({ error: 'name, principal, interest_rate_pct, start_date, term_months are required' });
+      if (!name || principal == null || !start_date || !term_months) {
+        res.status(400).json({ error: 'name, principal, start_date, term_months are required' });
+        return;
+      }
+      if (interest_rate_pct == null && monthly_rate_input == null) {
+        res.status(400).json({ error: 'Either interest_rate_pct or monthly_rate_input is required' });
         return;
       }
 
-      const monthly_rate = calcLoanMonthlyRate(principal, interest_rate_pct, term_months);
+      let resolvedRate = interest_rate_pct ?? 0;
+      let resolvedMonthlyRate: number;
+
+      if (monthly_rate_input != null) {
+        const computed = calcInterestRateFromMonthlyRate(principal, monthly_rate_input, term_months, final_payment ?? null);
+        if (computed === null) {
+          res.status(400).json({ error: 'Could not compute interest rate from provided monthly rate' });
+          return;
+        }
+        resolvedRate = computed;
+        resolvedMonthlyRate = monthly_rate_input;
+      } else {
+        resolvedMonthlyRate = calcLoanMonthlyRate(principal, resolvedRate, term_months);
+      }
 
       const result = db
         .prepare(
-          'INSERT INTO loans (user_id, name, principal, interest_rate_pct, start_date, term_months, monthly_rate, category_id, loan_type, interest_rate_dynamic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          'INSERT INTO loans (user_id, name, principal, interest_rate_pct, start_date, term_months, monthly_rate, category_id, loan_type, interest_rate_dynamic, final_payment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )
         .run(
           req.user!.id,
           name,
           principal,
-          interest_rate_pct,
+          resolvedRate,
           start_date,
           term_months,
-          monthly_rate,
+          resolvedMonthlyRate,
           category_id ?? null,
           loan_type ?? 'annuity',
-          interest_rate_dynamic ? 1 : 0
+          interest_rate_dynamic ? 1 : 0,
+          final_payment ?? null
         );
       const row = db.prepare('SELECT * FROM loans WHERE id = ?').get(result.lastInsertRowid) as LoanRow;
       res.status(201).json(row);
@@ -95,11 +151,13 @@ export function createLoansRouter(db: Database.Database): Router {
         return;
       }
 
-      const { name, principal, interest_rate_pct, start_date, term_months, category_id, loan_type, interest_rate_dynamic } =
+      const { name, principal, interest_rate_pct, monthly_rate_input, final_payment, start_date, term_months, category_id, loan_type, interest_rate_dynamic } =
         req.body as {
           name?: string;
           principal?: number;
           interest_rate_pct?: number;
+          monthly_rate_input?: number;
+          final_payment?: number | null;
           start_date?: string;
           term_months?: number;
           category_id?: number;
@@ -108,9 +166,24 @@ export function createLoansRouter(db: Database.Database): Router {
         };
 
       const newPrincipal = principal ?? existing.principal;
-      const newRate = interest_rate_pct ?? existing.interest_rate_pct;
       const newTerm = term_months ?? existing.term_months;
-      const monthly_rate = calcLoanMonthlyRate(newPrincipal, newRate, newTerm);
+      const newFinalPayment = final_payment !== undefined ? final_payment : existing.final_payment;
+
+      let newRate: number;
+      let newMonthlyRate: number;
+
+      if (monthly_rate_input != null) {
+        const computed = calcInterestRateFromMonthlyRate(newPrincipal, monthly_rate_input, newTerm, newFinalPayment);
+        if (computed === null) {
+          res.status(400).json({ error: 'Could not compute interest rate from provided monthly rate' });
+          return;
+        }
+        newRate = computed;
+        newMonthlyRate = monthly_rate_input;
+      } else {
+        newRate = interest_rate_pct ?? existing.interest_rate_pct;
+        newMonthlyRate = calcLoanMonthlyRate(newPrincipal, newRate, newTerm);
+      }
 
       db.prepare(
         `UPDATE loans SET
@@ -122,7 +195,8 @@ export function createLoansRouter(db: Database.Database): Router {
           monthly_rate = ?,
           category_id = COALESCE(?, category_id),
           loan_type = COALESCE(?, loan_type),
-          interest_rate_dynamic = COALESCE(?, interest_rate_dynamic)
+          interest_rate_dynamic = COALESCE(?, interest_rate_dynamic),
+          final_payment = ?
         WHERE id = ?`
       ).run(
         name ?? null,
@@ -130,10 +204,11 @@ export function createLoansRouter(db: Database.Database): Router {
         newRate,
         start_date ?? null,
         newTerm,
-        monthly_rate,
+        newMonthlyRate,
         category_id ?? null,
         loan_type ?? null,
         interest_rate_dynamic != null ? (interest_rate_dynamic ? 1 : 0) : null,
+        newFinalPayment,
         id
       );
 

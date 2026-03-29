@@ -102,16 +102,33 @@ export function createDashboardRouter(db: Database.Database): Router {
       const currentSavingsBalance = (savingsAccount?.initial_balance ?? 0) + savingsTxSum;
 
       // Monthly income (monthly interval only for simple calc)
-      const monthlyIncome = incomes.reduce((sum, inc) => {
+      const recurringIncome = incomes.reduce((sum, inc) => {
         if (inc.interval === 'monthly') return sum + inc.amount;
         if (inc.interval === 'yearly') return sum + inc.amount / 12;
         return sum;
       }, 0);
 
       // Monthly expenses (normalized)
-      const monthlyExpenses = expenses.reduce((sum, exp) => {
+      const recurringExpenses = expenses.reduce((sum, exp) => {
         return sum + exp.amount / exp.interval_months;
       }, 0);
+
+      // Manual (non-auto) transactions for the current month
+      const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
+      const monthEnd = `${year}-${String(month).padStart(2, '0')}-31`;
+      const manualTotals = db
+        .prepare(
+          `SELECT type, COALESCE(SUM(amount), 0) as total
+           FROM transactions
+           WHERE user_id = ? AND is_auto = 0 AND date >= ? AND date <= ?
+           GROUP BY type`
+        )
+        .all(userId, monthStart, monthEnd) as { type: 'income' | 'expense'; total: number }[];
+      const manualIncome = manualTotals.find(r => r.type === 'income')?.total ?? 0;
+      const manualExpenses = manualTotals.find(r => r.type === 'expense')?.total ?? 0;
+
+      const monthlyIncome = recurringIncome + manualIncome;
+      const monthlyExpenses = recurringExpenses + manualExpenses;
 
       // Total loan payments
       const totalLoanPayments = loans.reduce((sum, l) => sum + (l.monthly_rate ?? 0), 0);

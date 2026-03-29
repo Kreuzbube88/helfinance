@@ -4,7 +4,8 @@ import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import {
   getTransactions, createTransaction, updateTransaction, deleteTransaction,
-  getCategories, importTransactionsCsv
+  getCategories, importTransactionsCsv,
+  scheduleIncomeChange, scheduleExpenseChange
 } from '../api'
 import type { Transaction, Category } from '../types'
 import { Modal } from '../components/Modal'
@@ -32,6 +33,7 @@ export function TransactionsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [changeMode, setChangeMode] = useState<'once' | 'permanent'>('once')
   const [showImport, setShowImport] = useState(false)
   const [csvText, setCsvText] = useState('')
   const [importing, setImporting] = useState(false)
@@ -54,6 +56,7 @@ export function TransactionsPage() {
 
   const openEdit = (tx: Transaction) => {
     setEditing(tx)
+    setChangeMode('once')
     setForm({
       name: tx.name,
       amount: String(tx.amount),
@@ -69,6 +72,7 @@ export function TransactionsPage() {
     setShowModal(false)
     setEditing(null)
     setForm(EMPTY_FORM)
+    setChangeMode('once')
   }
 
   const handleSave = async (e: React.FormEvent) => {
@@ -84,6 +88,20 @@ export function TransactionsPage() {
     }
     try {
       if (editing) {
+        // For auto-transactions with permanent change: schedule a change on the source
+        if (changeMode === 'permanent' && editing.is_auto === 1) {
+          if (editing.income_id != null) {
+            await scheduleIncomeChange(editing.income_id, {
+              new_amount: parseFloat(form.amount),
+              effective_from: form.date
+            })
+          } else if (editing.expense_id != null) {
+            await scheduleExpenseChange(editing.expense_id, {
+              new_amount: parseFloat(form.amount),
+              effective_from: form.date
+            })
+          }
+        }
         const updated = await updateTransaction(editing.id, payload)
         setItems(prev => prev.map(i => i.id === editing.id ? updated : i))
       } else {
@@ -255,6 +273,21 @@ export function TransactionsPage() {
               <label className="form-label">{t('transactions.note')}</label>
               <input className="form-input" value={form.note} onChange={e => f('note', e.target.value)} />
             </div>
+            {editing && editing.is_auto === 1 && (editing.income_id != null || editing.expense_id != null) && (
+              <div className="form-group" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '0.75rem' }}>
+                <label className="form-label">{t('transactions.changeMode')}</label>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <label style={{ cursor: 'pointer' }}>
+                    <input type="radio" value="once" checked={changeMode === 'once'} onChange={() => setChangeMode('once')} style={{ marginRight: '0.4rem' }} />
+                    {t('transactions.changeModeOnce')}
+                  </label>
+                  <label style={{ cursor: 'pointer' }}>
+                    <input type="radio" value="permanent" checked={changeMode === 'permanent'} onChange={() => setChangeMode('permanent')} style={{ marginRight: '0.4rem' }} />
+                    {t('transactions.changeModePermanent')}
+                  </label>
+                </div>
+              </div>
+            )}
             <div className="modal-actions">
               <button type="button" className="btn btn-secondary" onClick={closeModal}>{t('common.cancel')}</button>
               <button type="submit" className="btn btn-primary" disabled={saving}>

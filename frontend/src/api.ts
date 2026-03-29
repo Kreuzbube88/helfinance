@@ -176,7 +176,15 @@ export function getLoans(): Promise<Loan[]> {
   return get<Loan[]>('/loans')
 }
 
-export function createLoan(data: Omit<Loan, 'id' | 'user_id' | 'created_at' | 'monthly_rate' | 'interest_rate_dynamic'>): Promise<Loan> {
+type CreateLoanPayload = Partial<Omit<Loan, 'id' | 'user_id' | 'created_at' | 'monthly_rate' | 'interest_rate_dynamic'>> & {
+  name: string
+  principal: number
+  term_months: number
+  start_date: string
+  monthly_rate_input?: number
+}
+
+export function createLoan(data: CreateLoanPayload): Promise<Loan> {
   return post<Loan>('/loans', data)
 }
 

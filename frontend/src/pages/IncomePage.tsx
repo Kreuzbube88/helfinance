@@ -4,9 +4,10 @@ import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import {
   getIncome, createIncome, updateIncome, deleteIncome,
-  scheduleIncomeChange, getIncomeChanges, deleteIncomeChange
+  scheduleIncomeChange, getIncomeChanges, deleteIncomeChange,
+  getCategories, getTransactions
 } from '../api'
-import type { Income, IncomeChange } from '../types'
+import type { Income, IncomeChange, Category, Transaction } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 
@@ -16,7 +17,8 @@ const EMPTY_FORM = {
   interval: 'monthly' as Income['interval'],
   booking_day: '1',
   effective_from: new Date().toISOString().slice(0, 10),
-  effective_to: ''
+  effective_to: '',
+  category_id: ''
 }
 
 export function IncomePage() {
@@ -25,6 +27,8 @@ export function IncomePage() {
   const { showToast } = useToast()
 
   const [items, setItems] = useState<Income[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
 
   // Add/edit modal
@@ -54,8 +58,8 @@ export function IncomePage() {
 
   const load = () => {
     setLoading(true)
-    getIncome()
-      .then(setItems)
+    Promise.all([getIncome(), getCategories(), getTransactions()])
+      .then(([inc, cats, txs]) => { setItems(inc); setCategories(cats); setTransactions(txs) })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
   }
@@ -76,7 +80,8 @@ export function IncomePage() {
       interval: item.interval,
       booking_day: String(item.booking_day),
       effective_from: item.effective_from,
-      effective_to: item.effective_to || ''
+      effective_to: item.effective_to || '',
+      category_id: item.category_id ? String(item.category_id) : ''
     })
     setShowModal(true)
   }
@@ -92,7 +97,7 @@ export function IncomePage() {
         booking_day: parseInt(form.booking_day),
         effective_from: form.effective_from,
         effective_to: form.effective_to || null,
-        category_id: null,
+        category_id: form.category_id ? parseInt(form.category_id) : null,
         is_active: 1
       }
       if (editing) {
@@ -132,7 +137,8 @@ export function IncomePage() {
       interval: item.interval,
       booking_day: String(item.booking_day),
       effective_from: item.effective_from,
-      effective_to: item.effective_to || ''
+      effective_to: item.effective_to || '',
+      category_id: item.category_id ? String(item.category_id) : ''
     })
     setDetailLoading(true)
     try {
@@ -156,7 +162,8 @@ export function IncomePage() {
         interval: detailForm.interval,
         booking_day: parseInt(detailForm.booking_day),
         effective_from: detailForm.effective_from,
-        effective_to: detailForm.effective_to || null
+        effective_to: detailForm.effective_to || null,
+        category_id: detailForm.category_id ? parseInt(detailForm.category_id) : null
       }
       const updated = await updateIncome(detailItem.id, payload)
       setItems(prev => prev.map(i => i.id === updated.id ? updated : i))
@@ -249,6 +256,53 @@ export function IncomePage() {
         </div>
       )}
 
+      {/* Bookings Section (issues 2+7) */}
+      {(() => {
+        const incomeTxs = transactions.filter(tx => tx.type === 'income')
+        const autoTxs = incomeTxs.filter(tx => tx.is_auto === 1)
+        const manualTxs = incomeTxs.filter(tx => tx.is_auto === 0)
+        if (incomeTxs.length === 0) return null
+        const grouped2 = incomeTxs.reduce<Record<string, Transaction[]>>((acc, tx) => {
+          const key = tx.date.slice(0, 7)
+          if (!acc[key]) acc[key] = []
+          acc[key].push(tx)
+          return acc
+        }, {})
+        return (
+          <div className="card" style={{ marginTop: '1.5rem' }}>
+            <h2 className="card-title" style={{ marginBottom: '0.25rem' }}>{t('transactions.title')}</h2>
+            <p className="text-muted text-sm" style={{ marginBottom: '0.75rem' }}>
+              {t('income.autoBookings', { auto: autoTxs.length, manual: manualTxs.length })}
+            </p>
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{t('common.date')}</th>
+                    <th>{t('income.name')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('income.amount')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(grouped2).sort((a, b) => b[0].localeCompare(a[0])).flatMap(([, txs]) =>
+                    txs.map(tx => (
+                      <tr key={tx.id}>
+                        <td className="text-muted">{new Date(tx.date + 'T00:00:00').toLocaleDateString('de-DE')}</td>
+                        <td>
+                          {tx.name}
+                          {tx.is_auto ? <span className="badge badge-neutral" style={{ marginLeft: '0.4rem', fontSize: '0.7rem' }}>auto</span> : null}
+                        </td>
+                        <td style={{ textAlign: 'right' }} className="text-success">{fmt(tx.amount)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Add / Edit Modal */}
       {showModal && (
         <Modal
@@ -275,6 +329,15 @@ export function IncomePage() {
             <div className="form-group">
               <label className="form-label">{t('income.bookingDay')}</label>
               <input className="form-input" type="number" min="1" max="31" value={form.booking_day} onChange={e => f('booking_day', e.target.value)} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('expenses.category')}</label>
+              <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
+                <option value="">—</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
+                ))}
+              </select>
             </div>
             <div className="form-row">
               <div className="form-group">
@@ -318,6 +381,15 @@ export function IncomePage() {
               <div className="form-group">
                 <label className="form-label">{t('income.bookingDay')}</label>
                 <input className="form-input" type="number" min="1" max="31" value={detailForm.booking_day} onChange={e => fd('booking_day', e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('expenses.category')}</label>
+                <select className="form-select" value={detailForm.category_id} onChange={e => fd('category_id', e.target.value)}>
+                  <option value="">—</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
+                  ))}
+                </select>
               </div>
               <div className="form-row">
                 <div className="form-group">

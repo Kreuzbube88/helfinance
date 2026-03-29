@@ -236,6 +236,9 @@ export function runMigrations(db: Database.Database): void {
 
   // V8: Expenses get is_active
   try { db.exec('ALTER TABLE expenses ADD COLUMN is_active INTEGER DEFAULT 1'); } catch {}
+
+  // V9: Loans get final_payment (Schlussrate / balloon payment)
+  try { db.exec('ALTER TABLE loans ADD COLUMN final_payment REAL DEFAULT NULL'); } catch {}
 }
 
 interface DefaultCategory {

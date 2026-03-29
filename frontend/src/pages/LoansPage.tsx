@@ -17,6 +17,8 @@ const EMPTY_FORM = {
   name: '',
   principal: '',
   interest_rate_pct: '',
+  monthly_rate_input: '',
+  final_payment: '',
   term_months: '',
   start_date: new Date().toISOString().slice(0, 10),
   loan_type: 'annuity' as Loan['loan_type']
@@ -43,6 +45,8 @@ export function LoansPage() {
   const [amortLoading, setAmortLoading] = useState(false)
   const [amortPage, setAmortPage] = useState(0)
 
+  const [rateInputMode, setRateInputMode] = useState<'interest' | 'monthly'>('interest')
+
   const [spLoan, setSpLoan] = useState<Loan | null>(null)
   const [specialPayments, setSpecialPayments] = useState<LoanSpecialPayment[]>([])
   const [spForm, setSpForm] = useState(EMPTY_SP_FORM)
@@ -62,11 +66,13 @@ export function LoansPage() {
 
   useEffect(() => { load() }, [])
 
-  const liveMonthly = calcMonthlyRate(
-    parseFloat(form.principal) || 0,
-    parseFloat(form.interest_rate_pct) || 0,
-    parseInt(form.term_months) || 0
-  )
+  const liveMonthly = rateInputMode === 'monthly'
+    ? (parseFloat(form.monthly_rate_input) || 0)
+    : calcMonthlyRate(
+        parseFloat(form.principal) || 0,
+        parseFloat(form.interest_rate_pct) || 0,
+        parseInt(form.term_months) || 0
+      )
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,10 +81,15 @@ export function LoansPage() {
       const created = await createLoan({
         name: form.name,
         principal: parseFloat(form.principal),
-        interest_rate_pct: parseFloat(form.interest_rate_pct),
         term_months: parseInt(form.term_months),
         start_date: form.start_date,
-        loan_type: form.loan_type
+        loan_type: form.loan_type,
+        ...(rateInputMode === 'monthly'
+          ? {
+              monthly_rate_input: parseFloat(form.monthly_rate_input),
+              ...(form.final_payment ? { final_payment: parseFloat(form.final_payment) } : {})
+            }
+          : { interest_rate_pct: parseFloat(form.interest_rate_pct) })
       })
       setLoans(prev => [...prev, created])
       showToast(t('common.success'), 'success')
@@ -254,27 +265,49 @@ export function LoansPage() {
                 <input className="form-input" type="number" step="0.01" min="0" value={form.principal} onChange={e => f('principal', e.target.value)} required />
               </div>
               <div className="form-group">
-                <label className="form-label">{t('loans.interestRate')}</label>
-                <input className="form-input" type="number" step="0.01" min="0" max="100" value={form.interest_rate_pct} onChange={e => f('interest_rate_pct', e.target.value)} required />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
                 <label className="form-label">{t('loans.termMonths')}</label>
                 <input className="form-input" type="number" min="1" value={form.term_months} onChange={e => f('term_months', e.target.value)} required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">{t('loans.startDate')}</label>
-                <input className="form-input" type="date" value={form.start_date} onChange={e => f('start_date', e.target.value)} required />
               </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label">{t('loans.loanType')}</label>
-              <select className="form-select" value={form.loan_type} onChange={e => f('loan_type', e.target.value as Loan['loan_type'])}>
-                <option value="annuity">{t('loans.annuity')}</option>
-                <option value="real_estate">{t('loans.realEstate')}</option>
+              <label className="form-label">{t('loans.rateInputMode')}</label>
+              <select className="form-select" value={rateInputMode} onChange={e => setRateInputMode(e.target.value as 'interest' | 'monthly')}>
+                <option value="interest">{t('loans.modeInterest')}</option>
+                <option value="monthly">{t('loans.modeMonthly')}</option>
               </select>
+            </div>
+
+            {rateInputMode === 'interest' ? (
+              <div className="form-group">
+                <label className="form-label">{t('loans.interestRate')}</label>
+                <input className="form-input" type="number" step="0.001" min="0" max="100" value={form.interest_rate_pct} onChange={e => f('interest_rate_pct', e.target.value)} required />
+              </div>
+            ) : (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">{t('loans.monthlyRateInput')}</label>
+                  <input className="form-input" type="number" step="0.01" min="0" value={form.monthly_rate_input} onChange={e => f('monthly_rate_input', e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">{t('loans.finalPayment')}</label>
+                  <input className="form-input" type="number" step="0.01" min="0" value={form.final_payment} onChange={e => f('final_payment', e.target.value)} placeholder="0" />
+                </div>
+              </div>
+            )}
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">{t('loans.startDate')}</label>
+                <input className="form-input" type="date" value={form.start_date} onChange={e => f('start_date', e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{t('loans.loanType')}</label>
+                <select className="form-select" value={form.loan_type} onChange={e => f('loan_type', e.target.value as Loan['loan_type'])}>
+                  <option value="annuity">{t('loans.annuity')}</option>
+                  <option value="real_estate">{t('loans.realEstate')}</option>
+                </select>
+              </div>
             </div>
 
             {liveMonthly > 0 && (

@@ -24,6 +24,7 @@ interface IncomeRow {
   booking_day: number;
   effective_from: string | null;
   effective_to: string | null;
+  category_id: number | null;
 }
 
 interface ExpenseRow {
@@ -117,7 +118,7 @@ function computeBookingDates(
  */
 function generateAutoTransactions(db: Database.Database, userId: number): void {
   const incomes = db
-    .prepare('SELECT id, name, amount, interval, booking_day, effective_from, effective_to FROM income WHERE user_id = ?')
+    .prepare('SELECT id, name, amount, interval, booking_day, effective_from, effective_to, category_id FROM income WHERE user_id = ?')
     .all(userId) as IncomeRow[];
 
   const expenses = db
@@ -127,7 +128,7 @@ function generateAutoTransactions(db: Database.Database, userId: number): void {
   const checkIncome = db.prepare('SELECT id FROM transactions WHERE income_id = ? AND date = ?');
   const checkExpense = db.prepare('SELECT id FROM transactions WHERE expense_id = ? AND date = ?');
   const insertTx = db.prepare(
-    'INSERT INTO transactions (user_id, name, amount, type, date, income_id, expense_id, is_auto) VALUES (?,?,?,?,?,?,?,1)'
+    'INSERT INTO transactions (user_id, name, amount, type, category_id, date, income_id, expense_id, is_auto) VALUES (?,?,?,?,?,?,?,?,1)'
   );
 
   const insertMany = db.transaction(() => {
@@ -144,7 +145,7 @@ function generateAutoTransactions(db: Database.Database, userId: number): void {
       for (const date of dates) {
         const existing = checkIncome.get(inc.id, date);
         if (!existing) {
-          insertTx.run(userId, inc.name, inc.amount, 'income', date, inc.id, null);
+          insertTx.run(userId, inc.name, inc.amount, 'income', inc.category_id ?? null, date, inc.id, null);
         }
       }
     }
@@ -154,7 +155,7 @@ function generateAutoTransactions(db: Database.Database, userId: number): void {
       for (const date of dates) {
         const existing = checkExpense.get(exp.id, date);
         if (!existing) {
-          insertTx.run(userId, exp.name, exp.amount, 'expense', date, null, exp.id);
+          insertTx.run(userId, exp.name, exp.amount, 'expense', null, date, null, exp.id);
         }
       }
     }

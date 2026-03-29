@@ -45,7 +45,8 @@
     "monthly": "Monatlich",
     "yearly": "Jährlich",
     "once": "Einmalig",
-    "scheduleChange": "Änderung planen"
+    "scheduleChange": "Änderung planen",
+    "autoBookings": "{{auto}} automatisch, {{manual}} manuell"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -63,7 +64,8 @@
     "semiannual": "Halbjährlich",
     "yearly": "Jährlich",
     "monthlyEquiv": "Monatlich",
-    "newAmount": "Neuer Betrag"
+    "newAmount": "Neuer Betrag",
+    "autoBookings": "{{auto}} automatisch, {{manual}} manuell"
   },
   "loans": {
     "title": "Kredite",
@@ -86,7 +88,12 @@
     "specialPayments": "Sondertilgungen",
     "loanType": "Kreditart",
     "annuity": "Annuität",
-    "realEstate": "Immobiliendarlehen"
+    "realEstate": "Immobiliendarlehen",
+    "rateInputMode": "Zinseingabe",
+    "modeInterest": "Zinssatz eingeben → Monatsrate berechnen",
+    "modeMonthly": "Monatsrate eingeben → Zinssatz berechnen",
+    "monthlyRateInput": "Monatliche Rate",
+    "finalPayment": "Schlussrate (optional)"
   },
   "savings": {
     "title": "Sparziele",
@@ -285,7 +292,8 @@
     "note": "Notiz",
     "import": "Importieren",
     "add": "Hinzufügen",
-    "description": "Beschreibung"
+    "description": "Beschreibung",
+    "amount": "Betrag"
   },
   "categories": {
     "Housing": "Wohnen",
@@ -325,7 +333,10 @@
     "import": "CSV importieren",
     "importDesc": "Eine Zeile pro Buchung: Datum (JJJJ-MM-TT), Betrag, Beschreibung, Typ (income/expense)",
     "importSuccess": "{{count}} Buchungen importiert",
-    "importError": "Fehler in Zeile {{line}}: {{msg}}"
+    "importError": "Fehler in Zeile {{line}}: {{msg}}",
+    "changeMode": "Änderungsart",
+    "changeModeOnce": "Nur diese Buchung",
+    "changeModePermanent": "Dauerhaft ab diesem Datum"
   },
   "budget": {
     "limit": "Budget-Limit",

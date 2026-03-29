@@ -64,6 +64,7 @@ export interface Loan {
   start_date: string
   loan_type: 'annuity' | 'real_estate'
   interest_rate_dynamic: number
+  final_payment: number | null
   created_at: string
 }
 

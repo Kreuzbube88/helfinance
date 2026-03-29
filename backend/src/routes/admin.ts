@@ -121,7 +121,25 @@ export function createAdminRouter(db: Database.Database): Router {
         res.status(400).json({ error: 'Cannot delete your own account' });
         return;
       }
-      db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+      db.transaction(() => {
+        db.prepare('DELETE FROM savings_transactions WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM savings_accounts WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM savings_goals WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM booking_overrides WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM monthly_snapshots WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM notifications WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM widget_preferences WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM transactions WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM income_changes WHERE income_id IN (SELECT id FROM income WHERE user_id = ?)').run(userId);
+        db.prepare('DELETE FROM income WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM expense_changes WHERE expense_id IN (SELECT id FROM expenses WHERE user_id = ?)').run(userId);
+        db.prepare('DELETE FROM expenses WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM loan_special_payments WHERE loan_id IN (SELECT id FROM loans WHERE user_id = ?)').run(userId);
+        db.prepare('DELETE FROM loans WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM categories WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM household_links WHERE user_a_id = ? OR user_b_id = ?').run(userId, userId);
+        db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+      })();
       res.json({ message: 'User deleted' });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
