@@ -46,7 +46,14 @@
     "yearly": "Jährlich",
     "once": "Einmalig",
     "scheduleChange": "Änderung planen",
-    "autoBookings": "{{auto}} automatisch, {{manual}} manuell"
+    "autoBookings": "{{auto}} automatisch, {{manual}} manuell",
+    "setEndDate": "Enddatum setzen",
+    "lastBookingDate": "Letzte Buchung am",
+    "endDateHint": "Ab diesem Datum wird diese Einnahme nicht mehr eingerechnet.",
+    "removeEndDate": "Enddatum entfernen",
+    "overrideMonth": "Monat überschreiben",
+    "overrideHint": "Nur für diesen Monat einen anderen Betrag verwenden.",
+    "existingOverrides": "Bestehende Überschreibungen"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -59,6 +66,13 @@
     "effectiveFrom": "Gültig ab",
     "effectiveTo": "Gültig bis",
     "scheduleChange": "Änderung planen",
+    "setEndDate": "Enddatum setzen",
+    "lastBookingDate": "Letzte Buchung am",
+    "endDateHint": "Ab diesem Datum wird diese Ausgabe nicht mehr eingerechnet.",
+    "removeEndDate": "Enddatum entfernen",
+    "overrideMonth": "Monat überschreiben",
+    "overrideHint": "Nur für diesen Monat einen anderen Betrag verwenden.",
+    "existingOverrides": "Bestehende Überschreibungen",
     "monthly": "Monatlich",
     "quarterly": "Vierteljährlich",
     "semiannual": "Halbjährlich",
@@ -336,7 +350,8 @@
     "importError": "Fehler in Zeile {{line}}: {{msg}}",
     "changeMode": "Änderungsart",
     "changeModeOnce": "Nur diese Buchung",
-    "changeModePermanent": "Dauerhaft ab diesem Datum"
+    "changeModePermanent": "Dauerhaft ab diesem Datum",
+    "changeModeEnd": "Ab diesem Datum beenden (kein weiterer Einzug)"
   },
   "budget": {
     "limit": "Budget-Limit",

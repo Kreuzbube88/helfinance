@@ -5,7 +5,8 @@ import { useAuth } from '../contexts/AuthContext'
 import {
   getTransactions, createTransaction, updateTransaction, deleteTransaction,
   getCategories, importTransactionsCsv,
-  scheduleIncomeChange, scheduleExpenseChange
+  scheduleIncomeChange, scheduleExpenseChange,
+  updateIncome, updateExpense
 } from '../api'
 import type { Transaction, Category } from '../types'
 import { Modal } from '../components/Modal'
@@ -33,7 +34,7 @@ export function TransactionsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
-  const [changeMode, setChangeMode] = useState<'once' | 'permanent'>('once')
+  const [changeMode, setChangeMode] = useState<'once' | 'permanent' | 'end'>('once')
   const [showImport, setShowImport] = useState(false)
   const [csvText, setCsvText] = useState('')
   const [importing, setImporting] = useState(false)
@@ -95,7 +96,17 @@ export function TransactionsPage() {
     }
     try {
       if (editing) {
-        if (changeMode === 'permanent' && editing.is_auto === 1) {
+        if (changeMode === 'end' && editing.is_auto === 1) {
+          if (editing.income_id != null) {
+            await updateIncome(editing.income_id, { effective_to: form.date })
+          } else if (editing.expense_id != null) {
+            await updateExpense(editing.expense_id, { effective_to: form.date })
+          }
+          showToast(t('common.success'), 'success')
+          closeModal()
+          load()
+          return
+        } else if (changeMode === 'permanent' && editing.is_auto === 1) {
           // Bug 9: for permanent changes on auto-transactions, only schedule change — don't update the transaction record
           if (editing.income_id != null) {
             await scheduleIncomeChange(editing.income_id, {
@@ -295,6 +306,10 @@ export function TransactionsPage() {
                   <label style={{ cursor: 'pointer' }}>
                     <input type="radio" value="permanent" checked={changeMode === 'permanent'} onChange={() => setChangeMode('permanent')} style={{ marginRight: '0.4rem' }} />
                     {t('transactions.changeModePermanent')}
+                  </label>
+                  <label style={{ cursor: 'pointer' }}>
+                    <input type="radio" value="end" checked={changeMode === 'end'} onChange={() => setChangeMode('end')} style={{ marginRight: '0.4rem' }} />
+                    {t('transactions.changeModeEnd')}
                   </label>
                 </div>
               </div>
