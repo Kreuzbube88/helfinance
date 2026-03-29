@@ -54,13 +54,13 @@ export function Layout({ children }: LayoutProps) {
   }
 
   const navItems = [
-    { path: '/dashboard', label: t('nav.dashboard'), icon: '⊞' },
-    { path: '/bookings',  label: t('nav.bookings'),  icon: '📋' },
-    { path: '/loans',     label: t('nav.loans'),     icon: '⊙'  },
-    { path: '/savings',   label: t('nav.savings'),   icon: '◈'  },
-    { path: '/cashflow',  label: t('nav.cashflow'),  icon: '≈'  },
-    { path: '/reports',   label: t('nav.reports'),   icon: '▦'  },
-    { path: '/household', label: t('nav.household'), icon: '⌂'  },
+    { path: '/dashboard', label: t('nav.dashboard'), icon: '▣' },
+    { path: '/bookings',  label: t('nav.bookings'),  icon: '◧' },
+    { path: '/loans',     label: t('nav.loans'),     icon: '◎' },
+    { path: '/savings',   label: t('nav.savings'),   icon: '◈' },
+    { path: '/cashflow',  label: t('nav.cashflow'),  icon: '≋' },
+    { path: '/reports',   label: t('nav.reports'),   icon: '▤' },
+    { path: '/household', label: t('nav.household'), icon: '⌂' },
   ]
 
   if (isAdmin) {

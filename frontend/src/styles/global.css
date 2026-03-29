@@ -750,6 +750,8 @@ tbody tr:hover {
 .badge-danger   { background: var(--color-danger-muted);  color: var(--color-danger);  }
 .badge-info,
 .badge-primary  { background: var(--color-accent-muted);  color: var(--color-accent);  }
+.badge-neutral,
+.badge-secondary { background: var(--color-surface-active); color: var(--color-text-muted); }
 
 /* ─── Text Utilities ──────────────────────────────────────────────────────── */
 .text-success { color: var(--color-success); }

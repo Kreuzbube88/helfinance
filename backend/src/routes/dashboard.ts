@@ -288,8 +288,27 @@ export function createDashboardRouter(db: Database.Database): Router {
         color: g.color,
       }));
 
-      // Liquidity warning
-      const dailyCashflow = calcDailyCashflow(incomeRecords, expenseRecords, year, month, {
+      // Liquidity warning — include active loans as synthetic expense records
+      const loanExpenseRecords: ExpenseRecord[] = loans
+        .filter((l) => {
+          const end = new Date(l.start_date);
+          end.setMonth(end.getMonth() + l.term_months);
+          return new Date(year, month - 1, 1) < end;
+        })
+        .map((l) => {
+          const end = new Date(l.start_date);
+          end.setMonth(end.getMonth() + l.term_months);
+          return {
+            id: -(l.id),
+            name: l.name,
+            amount: l.monthly_rate ?? 0,
+            interval_months: 1,
+            booking_day: l.booking_day ?? 1,
+            effective_from: l.start_date,
+            effective_to: end.toISOString().slice(0, 10),
+          };
+        });
+      const dailyCashflow = calcDailyCashflow(incomeRecords, [...expenseRecords, ...loanExpenseRecords], year, month, {
         overrides,
         incomeChanges,
         expenseChanges,

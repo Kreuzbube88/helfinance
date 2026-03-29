@@ -58,6 +58,15 @@ interface LoanRow {
   term_months: number;
 }
 
+interface CashflowLoanRow {
+  id: number;
+  name: string;
+  monthly_rate: number | null;
+  start_date: string;
+  term_months: number;
+  booking_day: number;
+}
+
 interface IncomeChangeRow {
   income_id: number;
   new_amount: number;
@@ -219,8 +228,8 @@ export function createReportsRouter(db: Database.Database): Router {
       ).run(
         userId, year, month,
         totals.totalIncome,
-        totals.totalExpenses,
-        Math.round((totals.totalIncome - totals.totalExpenses) * 100) / 100,
+        Math.round((totals.totalExpenses + totals.totalLoanPayments) * 100) / 100,
+        Math.round(totals.freeMoney * 100) / 100,
         JSON.stringify({ expense_breakdown: expenseBreakdown })
       );
 
@@ -392,6 +401,10 @@ export function createReportsRouter(db: Database.Database): Router {
       ).total;
       const startingBalance = (savingsAccount?.initial_balance ?? 0) + savingsTxSum;
 
+      const cashflowLoanRows = db
+        .prepare('SELECT id, name, monthly_rate, start_date, term_months, COALESCE(booking_day, 1) as booking_day FROM loans WHERE user_id = ?')
+        .all(userId) as CashflowLoanRow[];
+
       const incomeRecords: IncomeRecord[] = incomes.map((i) => ({
         id: i.id, name: i.name, amount: i.amount, interval: i.interval,
         booking_day: i.booking_day, effective_from: i.effective_from, effective_to: i.effective_to,
@@ -401,7 +414,27 @@ export function createReportsRouter(db: Database.Database): Router {
         booking_day: e.booking_day, effective_from: e.effective_from, effective_to: e.effective_to,
       }));
 
-      const cashflow = calcDailyCashflow(incomeRecords, expenseRecords, year, month, {
+      const loanExpenseRecords: ExpenseRecord[] = cashflowLoanRows
+        .filter((l) => {
+          const end = new Date(l.start_date);
+          end.setMonth(end.getMonth() + l.term_months);
+          return new Date(year, month - 1, 1) < end;
+        })
+        .map((l) => {
+          const end = new Date(l.start_date);
+          end.setMonth(end.getMonth() + l.term_months);
+          return {
+            id: -(l.id),
+            name: l.name,
+            amount: l.monthly_rate ?? 0,
+            interval_months: 1,
+            booking_day: l.booking_day,
+            effective_from: l.start_date,
+            effective_to: end.toISOString().slice(0, 10),
+          };
+        });
+
+      const cashflow = calcDailyCashflow(incomeRecords, [...expenseRecords, ...loanExpenseRecords], year, month, {
         overrides,
         incomeChanges: incomeChangeRows.map((c) => ({ income_id: c.income_id, new_amount: c.new_amount, effective_from: c.effective_from })),
         expenseChanges: expenseChangeRows.map((c) => ({ expense_id: c.expense_id, new_amount: c.new_amount, effective_from: c.effective_from })),

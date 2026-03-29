@@ -268,50 +268,52 @@ export function SavingsPage() {
                   ? Math.min(100, (account.current_balance / goal.target_amount) * 100)
                   : 0
                 return (
-                  <div key={goal.id} className="goal-card">
-                    <div className="section-header">
-                      <span style={{ fontWeight: 600, fontSize: '1rem' }}>{goal.name}</span>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        {goal.priority > 0 && (
-                          <span className="badge badge-warning">P{goal.priority}</span>
-                        )}
+                  <div key={goal.id} className="card" style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: goal.color, flexShrink: 0 }} />
+                        <span style={{ fontWeight: 600 }}>{goal.name}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
                         <span className={`badge badge-${goal.contribution_mode === 'fixed' ? 'info' : goal.contribution_mode === 'dynamic' ? 'success' : 'warning'}`}>
-                          {t(`savings.${goal.contribution_mode}`)}
+                          {goal.contribution_mode}
                         </span>
+                        {goal.priority > 0 && <span className="badge badge-neutral">P{goal.priority}</span>}
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-                      <span className="text-muted">{fmt(account.current_balance)}</span>
-                      <span className="text-muted">{pct.toFixed(0)}%</span>
-                      <span className="text-muted">{fmt(goal.target_amount)}</span>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span className="text-muted text-sm">{fmt(account.current_balance)}</span>
+                        <span style={{ fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+                        <span className="text-muted text-sm">{fmt(goal.target_amount)}</span>
+                      </div>
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${pct}%`, background: goal.color }} />
+                      </div>
                     </div>
 
-                    <div className="progress-bar" style={{ marginBottom: '0.75rem' }}>
-                      <div className="progress-fill" style={{ width: `${pct}%` }} />
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                      {goal.target_date && (
+                        <span className="text-muted text-sm">
+                          🎯 {new Date(goal.target_date + '-01').toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+                        </span>
+                      )}
+                      {goal.required_monthly_saving != null && (
+                        <span className="text-muted text-sm">
+                          {fmt(goal.required_monthly_saving)}/Mo {t('savings.required')}
+                        </span>
+                      )}
+                      {(goal.contribution_mode === 'fixed' || goal.contribution_mode === 'both') && goal.fixed_amount != null && goal.fixed_amount > 0 && (
+                        <span className="text-muted text-sm">
+                          {fmt(goal.fixed_amount)}/Mo {t('savings.planned')}
+                        </span>
+                      )}
                     </div>
 
-                    {goal.target_date && (
-                      <p className="text-muted text-sm">
-                        {t('savings.targetDate')}: {goal.target_date}
-                        {goal.required_monthly_saving != null && (
-                          <> · {t('savings.requiredMonthly')}: {fmt(goal.required_monthly_saving)}</>
-                        )}
-                      </p>
-                    )}
-                    {goal.fixed_amount != null && goal.fixed_amount > 0 && (
-                      <p className="text-muted text-sm">
-                        {t('savings.fixedAmount')}: {fmt(goal.fixed_amount)}/mo
-                      </p>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(goal)}>
-                        {t('common.edit')}
-                      </button>
-                      <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(goal.id)}>
-                        {t('common.delete')}
-                      </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(goal)}>{t('common.edit')}</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(goal.id)}>{t('common.delete')}</button>
                     </div>
                   </div>
                 )

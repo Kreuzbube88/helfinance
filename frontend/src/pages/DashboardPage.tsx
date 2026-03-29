@@ -164,15 +164,34 @@ export function DashboardPage() {
             {data.upcoming_bookings.length === 0 ? (
               <p className="text-muted">{t('common.noData')}</p>
             ) : (
-              <div className="booking-list">
-                {data.upcoming_bookings.slice(0, 3).map((b, i) => (
-                  <div key={i} className="booking-item">
-                    <div className="booking-info">
-                      <span className="booking-name">{b.name}</span>
-                      <span className="text-muted text-sm">{t('common.day')} {b.booking_day}</span>
+              <div>
+                {data.upcoming_bookings.slice(0, 5).map((b, i) => (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.5rem 0',
+                    borderBottom: i < Math.min(data.upcoming_bookings.length, 5) - 1 ? '1px solid var(--color-border)' : 'none',
+                  }}>
+                    <div style={{
+                      width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                      background: b.type === 'income' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.75rem', fontWeight: 700,
+                      color: b.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
+                    }}>
+                      {b.booking_day}.
                     </div>
-                    <span className={`booking-amount ${b.type === 'income' ? 'text-success' : 'text-danger'}`}>
-                      {b.type === 'income' ? '+' : '-'}{fmt(b.amount)}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 500, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {b.name}
+                      </div>
+                    </div>
+                    <span style={{
+                      fontWeight: 700, fontSize: '0.875rem',
+                      color: b.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
+                    }}>
+                      {b.type === 'income' ? '+' : '−'}{fmt(b.amount)}
                     </span>
                   </div>
                 ))}

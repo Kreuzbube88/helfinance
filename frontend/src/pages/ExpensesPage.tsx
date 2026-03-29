@@ -307,6 +307,44 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
         </div>
       )}
 
+      {!loading && items.length > 0 && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gap: '0.75rem',
+          marginBottom: '1.5rem',
+        }}>
+          <div className="card" style={{ padding: '0.875rem', textAlign: 'center' }}>
+            <div className="text-muted text-sm">{t('expenses.totalMonthly')}</div>
+            <div className="text-danger" style={{ fontWeight: 700, fontSize: '1.25rem' }}>
+              {fmt(items.reduce((s, e) => s + e.amount / e.interval_months, 0))}
+            </div>
+          </div>
+          <div className="card" style={{ padding: '0.875rem', textAlign: 'center' }}>
+            <div className="text-muted text-sm">{t('expenses.totalLoans')}</div>
+            <div className="text-danger" style={{ fontWeight: 700, fontSize: '1.25rem' }}>
+              {fmt(loans.filter(l => {
+                const end = new Date(l.start_date); end.setMonth(end.getMonth() + l.term_months)
+                return new Date() < end
+              }).reduce((s, l) => s + (l.monthly_rate ?? 0), 0))}
+            </div>
+          </div>
+          <div className="card" style={{ padding: '0.875rem', textAlign: 'center' }}>
+            <div className="text-muted text-sm">{t('expenses.categories')}</div>
+            <div style={{ fontWeight: 700, fontSize: '1.25rem' }}>{categories.length}</div>
+          </div>
+          <div className="card" style={{ padding: '0.875rem', textAlign: 'center' }}>
+            <div className="text-muted text-sm">{t('expenses.totalAll')}</div>
+            <div className="text-danger" style={{ fontWeight: 700, fontSize: '1.25rem' }}>
+              {fmt(
+                items.reduce((s, e) => s + e.amount / e.interval_months, 0) +
+                loans.filter(l => { const end = new Date(l.start_date); end.setMonth(end.getMonth() + l.term_months); return new Date() < end }).reduce((s, l) => s + (l.monthly_rate ?? 0), 0)
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-muted">{t('common.loading')}</p>
       ) : (
@@ -349,17 +387,26 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
                 {isOpen && (
                   <div className="category-items">
                     <div className="item-card-list">
-                      {catItems.map(item => (
+                      {catItems.map(item => {
+                        const isEnded = item.effective_to && new Date(item.effective_to) < new Date()
+                        return (
                         <div
                           key={item.id}
                           className="item-card"
+                          style={{
+                            opacity: isEnded ? 0.55 : 1,
+                            borderLeft: `3px solid ${isEnded ? 'var(--color-border)' : 'var(--color-danger)'}`,
+                          }}
                           onClick={() => openDetail(item)}
                           role="button"
                           tabIndex={0}
                           onKeyDown={e => e.key === 'Enter' && openDetail(item)}
                         >
                           <div className="item-card-main">
-                            <span className="item-card-name">{item.name}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <span className="item-card-name">{item.name}</span>
+                              {isEnded && <span className="badge badge-neutral">{t('expenses.ended')}</span>}
+                            </div>
                             <span className="item-card-meta">
                               {intervalLabel(item.interval_months)} · {item.booking_day}. · {t(`categories.${getCategoryName(item)}`, { defaultValue: getCategoryName(item) })}
                             </span>
@@ -394,7 +441,8 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
                             </div>
                           </div>
                         </div>
-                      ))}
+                      )
+                      })}
                     </div>
                   </div>
                 )}

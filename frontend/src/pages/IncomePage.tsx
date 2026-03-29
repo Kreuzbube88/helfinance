@@ -250,48 +250,117 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
 
       {loading ? (
         <p className="text-muted">{t('common.loading')}</p>
-      ) : items.length === 0 ? (
-        <div className="empty-state">
-          <p>{t('common.noData')}</p>
-          <button className="btn btn-primary" onClick={openAdd}>{t('income.add')}</button>
-        </div>
       ) : (
-        <div className="item-card-list">
-          {items.map(item => (
-            <div key={item.id} className="item-card" onClick={() => openDetail(item)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && openDetail(item)}>
-              <div className="item-card-main">
-                <span className="item-card-name">{item.name}</span>
-                <span className="item-card-meta">
-                  {intervalLabel(item.interval)} · {item.booking_day}. {t('common.month').toLowerCase()}
-                </span>
+        <>
+          {items.length > 0 && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: '0.75rem',
+              marginBottom: '1.5rem',
+            }}>
+              <div className="card" style={{ padding: '0.875rem', textAlign: 'center' }}>
+                <div className="text-muted text-sm">{t('income.totalMonthly')}</div>
+                <div className="text-success" style={{ fontWeight: 700, fontSize: '1.25rem' }}>
+                  {fmt(items.reduce((s, i) => s + (i.interval === 'yearly' ? i.amount / 12 : i.interval === 'monthly' ? i.amount : 0), 0))}
+                </div>
               </div>
-              <div className="item-card-right">
-                <span className="item-card-amount text-success">{fmt(item.amount)}</span>
-                <div className="item-card-actions" onClick={e => e.stopPropagation()}>
-                  <button className="btn btn-ghost btn-xs" title={t('income.scheduleChange')} onClick={() => { setChangeTarget(item); setChangeAmount(String(item.amount)); setChangeDate(new Date().toISOString().slice(0, 10)) }}>⏱</button>
-                  <button className="btn btn-ghost btn-xs" title={t('income.setEndDate')} onClick={() => { setEndDateTarget(item); setEndDateValue(item.effective_to || '') }}>⏹</button>
-                  <button
-                    className="btn btn-ghost btn-xs"
-                    title={t('income.overrideMonth')}
-                    onClick={async () => {
-                      setOverrideTarget(item)
-                      setOverrideAmount(String(item.amount))
-                      setOverrideMonth(new Date().toISOString().slice(0, 7))
-                      setOverridesLoading(true)
-                      try {
-                        const ovs = await getOverrides({ booking_type: 'income', booking_id: item.id })
-                        setExistingOverrides(ovs)
-                      } catch { setExistingOverrides([]) }
-                      finally { setOverridesLoading(false) }
-                    }}
-                  >◎</button>
-                  <button className="btn btn-ghost btn-xs" title={t('common.edit')} onClick={() => openEdit(item)}>✏</button>
-                  <button className="btn btn-ghost btn-xs text-danger" title={t('common.delete')} onClick={() => setDeleteId(item.id)}>🗑</button>
+              <div className="card" style={{ padding: '0.875rem', textAlign: 'center' }}>
+                <div className="text-muted text-sm">{t('income.sources')}</div>
+                <div style={{ fontWeight: 700, fontSize: '1.25rem' }}>{items.length}</div>
+              </div>
+              <div className="card" style={{ padding: '0.875rem', textAlign: 'center' }}>
+                <div className="text-muted text-sm">{t('income.activeNow')}</div>
+                <div style={{ fontWeight: 700, fontSize: '1.25rem' }}>
+                  {items.filter(i => !i.effective_to || new Date(i.effective_to) >= new Date()).length}
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          )}
+
+          {items.length === 0 ? (
+            <div className="empty-state">
+              <p>{t('common.noData')}</p>
+              <button className="btn btn-primary" onClick={openAdd}>{t('income.add')}</button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {items.map(item => {
+                const isEnded = item.effective_to && new Date(item.effective_to) < new Date()
+                const monthlyAmt = item.interval === 'yearly' ? item.amount / 12 : item.amount
+                return (
+                  <div
+                    key={item.id}
+                    className="card"
+                    style={{
+                      padding: '1rem',
+                      cursor: 'pointer',
+                      opacity: isEnded ? 0.55 : 1,
+                      borderLeft: `3px solid ${isEnded ? 'var(--color-border)' : 'var(--color-success)'}`,
+                    }}
+                    onClick={() => openDetail(item)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => e.key === 'Enter' && openDetail(item)}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>{item.name}</span>
+                          {isEnded && <span className="badge badge-neutral">{t('income.ended')}</span>}
+                          {item.interval === 'once' && <span className="badge badge-info">{t('income.once')}</span>}
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                          <span className="text-muted text-sm">
+                            {intervalLabel(item.interval)} · {t('common.day')} {item.booking_day}
+                          </span>
+                          {item.effective_from && (
+                            <span className="text-muted text-sm">
+                              {t('income.from')}: {new Date(item.effective_from).toLocaleDateString('de-DE')}
+                            </span>
+                          )}
+                          {item.effective_to && (
+                            <span className="text-muted text-sm">
+                              {t('income.to')}: {new Date(item.effective_to).toLocaleDateString('de-DE')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <div className="text-success" style={{ fontWeight: 700, fontSize: '1rem' }}>
+                            {fmt(item.amount)}
+                          </div>
+                          {item.interval !== 'monthly' && item.interval !== 'once' && (
+                            <div className="text-muted text-sm">{fmt(monthlyAmt)}/Mo</div>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.25rem' }} onClick={e => e.stopPropagation()}>
+                          <button className="btn btn-ghost btn-xs" title={t('income.scheduleChange')}
+                            onClick={() => { setChangeTarget(item); setChangeAmount(String(item.amount)); setChangeDate(new Date().toISOString().slice(0, 10)) }}>⏱</button>
+                          <button className="btn btn-ghost btn-xs" title={t('income.setEndDate')}
+                            onClick={() => { setEndDateTarget(item); setEndDateValue(item.effective_to || '') }}>⏹</button>
+                          <button
+                            className="btn btn-ghost btn-xs"
+                            title={t('income.overrideMonth')}
+                            onClick={async () => {
+                              setOverrideTarget(item); setOverrideAmount(String(item.amount))
+                              setOverrideMonth(new Date().toISOString().slice(0, 7))
+                              setOverridesLoading(true)
+                              try { const ovs = await getOverrides({ booking_type: 'income', booking_id: item.id }); setExistingOverrides(ovs) }
+                              catch { setExistingOverrides([]) } finally { setOverridesLoading(false) }
+                            }}>◎</button>
+                          <button className="btn btn-ghost btn-xs text-danger" title={t('common.delete')}
+                            onClick={() => setDeleteId(item.id)}>🗑</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>
       )}
 
 

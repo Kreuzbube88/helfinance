@@ -55,7 +55,13 @@
     "removeEndDate": "Enddatum entfernen",
     "overrideMonth": "Monat überschreiben",
     "overrideHint": "Nur für diesen Monat einen anderen Betrag verwenden.",
-    "existingOverrides": "Bestehende Überschreibungen"
+    "existingOverrides": "Bestehende Überschreibungen",
+    "totalMonthly": "Monatlich gesamt",
+    "sources": "Einnahmequellen",
+    "activeNow": "Aktuell aktiv",
+    "ended": "Beendet",
+    "from": "Ab",
+    "to": "Bis"
   },
   "expenses": {
     "title": "Ausgaben",
@@ -81,7 +87,12 @@
     "yearly": "Jährlich",
     "monthlyEquiv": "Monatlich",
     "newAmount": "Neuer Betrag",
-    "autoBookings": "{{auto}} automatisch, {{manual}} manuell"
+    "autoBookings": "{{auto}} automatisch, {{manual}} manuell",
+    "totalMonthly": "Ausgaben/Monat",
+    "totalLoans": "Kredite/Monat",
+    "categories": "Kategorien",
+    "totalAll": "Gesamt/Monat",
+    "ended": "Beendet"
   },
   "loans": {
     "title": "Kredite",
@@ -140,7 +151,9 @@
     "addTransaction": "Buchung hinzufügen",
     "targetDate": "Zieldatum",
     "requiredMonthly": "Erforderlich/Monat",
-    "priority": "Priorität"
+    "priority": "Priorität",
+    "required": "benötigt",
+    "planned": "geplant"
   },
   "cashflow": {
     "title": "Cashflow Kalender",
