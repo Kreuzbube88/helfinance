@@ -189,11 +189,20 @@ export interface MonthlySnapshot {
   created_at: string
 }
 
+export interface DashboardSavingsGoal {
+  id: number
+  name: string
+  target_amount: number
+  current_amount: number
+  progress_pct: number
+  color: string
+}
+
 export interface DashboardData {
   health_score: number
   free_money: number
   upcoming_bookings: UpcomingBooking[]
-  savings_goals: SavingsGoal[]
+  savings_goals: DashboardSavingsGoal[]
   liquidity_warning: boolean
   reserve_warning: boolean
   required_reserve_monthly: number

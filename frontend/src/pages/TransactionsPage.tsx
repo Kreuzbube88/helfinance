@@ -43,13 +43,20 @@ export function TransactionsPage() {
 
   const load = () => {
     setLoading(true)
-    Promise.all([getTransactions(), getCategories()])
-      .then(([txs, cats]) => { setItems(txs); setCategories(cats) })
+    getTransactions()
+      .then(txs => setItems(txs))
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    getCategories('expense').then(setCategories).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    getCategories(form.type === 'income' ? 'income' : 'expense').then(setCategories).catch(() => {})
+  }, [form.type])
 
   const f = (field: keyof typeof EMPTY_FORM, val: string) =>
     setForm(prev => ({ ...prev, [field]: val }))
@@ -246,7 +253,7 @@ export function TransactionsPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">{t('transactions.type')}</label>
-                <select className="form-select" value={form.type} onChange={e => f('type', e.target.value)}>
+                <select className="form-select" value={form.type} onChange={e => { f('type', e.target.value); f('category_id', '') }}>
                   <option value="expense">{t('transactions.expense')}</option>
                   <option value="income">{t('transactions.income')}</option>
                 </select>
