@@ -42,6 +42,7 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
   const [loans, setLoans] = useState<Loan[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(CATEGORIES))
+  const [sortByAmount, setSortByAmount] = useState(false)
   const [budgetTarget, setBudgetTarget] = useState<string | null>(null)
   const [budgetInput, setBudgetInput] = useState('')
   const [budgetSaving, setBudgetSaving] = useState(false)
@@ -119,11 +120,15 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
     }
     return item.category || 'Uncategorized'
   }
-  const categoryNames = categories.length > 0
+  const categoryNames = (categories.length > 0
     ? [...new Set(items.map(getCategoryName))]
     : CATEGORIES
+  ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+
   const grouped = categoryNames.reduce<Record<string, Expense[]>>((acc, cat) => {
-    acc[cat] = items.filter(i => getCategoryName(i) === cat)
+    acc[cat] = items
+      .filter(i => getCategoryName(i) === cat)
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
     return acc
   }, {})
 
@@ -289,11 +294,19 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
       {!embedded && (
         <div className="page-header">
           <h1 className="page-title">{t('expenses.title')}</h1>
-          <button className="btn btn-primary" onClick={openAdd}>+ {t('expenses.add')}</button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => setSortByAmount(v => !v)}>
+              {sortByAmount ? t('expenses.sortAlpha') : t('expenses.sortAmount')}
+            </button>
+            <button className="btn btn-primary" onClick={openAdd}>+ {t('expenses.add')}</button>
+          </div>
         </div>
       )}
       {embedded && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1rem' }}>
+          <button className="btn btn-ghost btn-sm" onClick={() => setSortByAmount(v => !v)}>
+            {sortByAmount ? t('expenses.sortAlpha') : t('expenses.sortAmount')}
+          </button>
           <button className="btn btn-primary" onClick={openAdd}>+ {t('expenses.add')}</button>
         </div>
       )}
@@ -340,7 +353,14 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
         <p className="text-muted">{t('common.loading')}</p>
       ) : (
         <div className="category-groups">
-          {categoryNames.map(cat => {
+          {(sortByAmount
+            ? [...categoryNames].sort((a, b) => {
+                const ta = (grouped[a] ?? []).reduce((s, i) => s + monthlyEquivalent(i), 0)
+                const tb = (grouped[b] ?? []).reduce((s, i) => s + monthlyEquivalent(i), 0)
+                return tb - ta
+              })
+            : categoryNames
+          ).map(cat => {
             const catItems = grouped[cat]
             if (!catItems || catItems.length === 0) return null
             const catTotal = catItems.reduce((s, i) => s + monthlyEquivalent(i), 0)
@@ -404,9 +424,13 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
                           </div>
                           <div className="item-card-right">
                             <div>
-                              <span className="item-card-amount text-danger">{fmt(item.amount)}</span>
-                              {item.interval_months !== 1 && (
-                                <span className="item-card-equiv text-muted">{fmt(monthlyEquivalent(item))}/Mo</span>
+                              {item.interval_months === 1 ? (
+                                <span className="item-card-amount text-danger">{fmt(item.amount)}</span>
+                              ) : (
+                                <>
+                                  <span className="item-card-amount text-danger">{fmt(monthlyEquivalent(item))}/Mo</span>
+                                  <span className="item-card-equiv text-muted">{fmt(item.amount)} · {intervalLabel(item.interval_months)}</span>
+                                </>
                               )}
                             </div>
                             <div className="item-card-actions" onClick={e => e.stopPropagation()}>

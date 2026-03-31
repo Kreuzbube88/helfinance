@@ -81,7 +81,9 @@
     "totalLoans": "Loans/month",
     "categories": "Categories",
     "totalAll": "Total/month",
-    "ended": "Ended"
+    "ended": "Ended",
+    "sortAmount": "Sort by amount",
+    "sortAlpha": "Sort alphabetically"
   },
   "loans": {
     "title": "Loans",

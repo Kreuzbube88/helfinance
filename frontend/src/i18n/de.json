@@ -81,7 +81,9 @@
     "totalLoans": "Kredite/Monat",
     "categories": "Kategorien",
     "totalAll": "Gesamt/Monat",
-    "ended": "Beendet"
+    "ended": "Beendet",
+    "sortAmount": "Nach Betrag sortieren",
+    "sortAlpha": "Alphabetisch sortieren"
   },
   "loans": {
     "title": "Kredite",

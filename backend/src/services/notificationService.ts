@@ -5,6 +5,7 @@ interface UserRow {
   id: number;
   email: string;
   username: string;
+  language: string;
 }
 
 interface ExpenseRow {
@@ -71,14 +72,52 @@ function alreadyNotifiedToday(
   return !!row;
 }
 
+interface Messages {
+  upcomingTitle: string;
+  upcoming: (name: string, amount: string, days: number, day: number) => string;
+  liquidityTitle: string;
+  liquidity: (deficit: string) => string;
+  goalTitle: string;
+  goal: (name: string, amount: string) => string;
+}
+
+function getMessages(lang: string): Messages {
+  if (lang === 'de') {
+    return {
+      upcomingTitle: 'Bevorstehende Ausgabe',
+      upcoming: (name, amount, days, day) =>
+        `${name} über ${amount} EUR wird in ${days} Tag(en) gebucht (Tag ${day}).`,
+      liquidityTitle: 'Liquiditätswarnung',
+      liquidity: (deficit) =>
+        `Deine geplanten Ausgaben übersteigen die Einnahmen um ${deficit} EUR diesen Monat. Möglicherweise wird dein Konto negativ.`,
+      goalTitle: 'Sparziel erreicht',
+      goal: (name, amount) =>
+        `Glückwunsch! Du hast dein Sparziel "${name}" von ${amount} EUR erreicht.`,
+    };
+  }
+  return {
+    upcomingTitle: 'Upcoming Expense',
+    upcoming: (name, amount, days, day) =>
+      `${name} of ${amount} EUR is due in ${days} day(s) (day ${day}).`,
+    liquidityTitle: 'Liquidity Warning',
+    liquidity: (deficit) =>
+      `Your projected expenses exceed income by ${deficit} EUR this month. You may run into a negative balance.`,
+    goalTitle: 'Savings Goal Reached',
+    goal: (name, amount) =>
+      `Congratulations! You have reached your savings goal "${name}" of ${amount} EUR.`,
+  };
+}
+
 export async function checkAndCreateNotifications(
   db: Database.Database,
   userId: number
 ): Promise<void> {
-  const user = db.prepare('SELECT id, email, username FROM users WHERE id = ?').get(userId) as
+  const user = db.prepare('SELECT id, email, username, language FROM users WHERE id = ?').get(userId) as
     | UserRow
     | undefined;
   if (!user) return;
+
+  const m = getMessages(user.language ?? 'de');
 
   const now = new Date();
   const today = now.getDate();
@@ -111,9 +150,9 @@ export async function checkAndCreateNotifications(
 
     if (daysUntil >= 0 && daysUntil <= 7) {
       if (!alreadyNotifiedToday(db, userId, 'upcoming_expense', exp.id)) {
-        const msg = `${exp.name} of ${exp.amount.toFixed(2)} EUR is due in ${daysUntil} day(s) (day ${exp.booking_day}). [ref:upcoming_expense_${exp.id}]`;
-        createNotification(db, userId, 'upcoming_expense', 'Upcoming Expense', msg);
-        await sendEmail(db, user.email, 'Upcoming Expense Reminder', `<p>${msg}</p>`);
+        const msg = `${m.upcoming(exp.name, exp.amount.toFixed(2), daysUntil, exp.booking_day)} [ref:upcoming_expense_${exp.id}]`;
+        createNotification(db, userId, 'upcoming_expense', m.upcomingTitle, msg);
+        await sendEmail(db, user.email, m.upcomingTitle, `<p>${msg}</p>`);
       }
     }
   }
@@ -151,9 +190,9 @@ export async function checkAndCreateNotifications(
 
     if (!existing) {
       const deficit = (monthlyExpenses - monthlyIncome).toFixed(2);
-      const msg = `Your projected expenses exceed income by ${deficit} EUR this month. You may run into a negative balance.`;
-      createNotification(db, userId, type, 'Liquidity Warning', msg);
-      await sendEmail(db, user.email, 'Liquidity Warning', `<p>${msg}</p>`);
+      const msg = m.liquidity(deficit);
+      createNotification(db, userId, type, m.liquidityTitle, msg);
+      await sendEmail(db, user.email, m.liquidityTitle, `<p>${msg}</p>`);
     }
   }
 
@@ -174,9 +213,9 @@ export async function checkAndCreateNotifications(
   for (const goal of savingsGoals) {
     if (goal.target_amount > 0 && currentSavingsBalance >= goal.target_amount) {
       if (!alreadyNotifiedToday(db, userId, 'goal_reached', goal.id)) {
-        const msg = `Congratulations! You have reached your savings goal "${goal.name}" of ${goal.target_amount.toFixed(2)} EUR. [ref:goal_reached_${goal.id}]`;
-        createNotification(db, userId, 'goal_reached', 'Savings Goal Reached', msg);
-        await sendEmail(db, user.email, 'Savings Goal Reached!', `<p>${msg}</p>`);
+        const msg = `${m.goal(goal.name, goal.target_amount.toFixed(2))} [ref:goal_reached_${goal.id}]`;
+        createNotification(db, userId, 'goal_reached', m.goalTitle, msg);
+        await sendEmail(db, user.email, m.goalTitle, `<p>${msg}</p>`);
       }
     }
   }

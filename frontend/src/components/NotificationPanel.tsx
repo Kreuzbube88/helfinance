@@ -124,7 +124,7 @@ export function NotificationPanel({ onClose, onUnreadCountChange }: Notification
                 </div>
               )}
               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', margin: 0, wordBreak: 'break-word' }}>
-                {n.message}
+                {n.message.replace(/\s*\[ref:[^\]]+\]/g, '').trim()}
               </p>
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                 {new Date(n.created_at).toLocaleString('de-DE', {
