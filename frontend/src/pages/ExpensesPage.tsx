@@ -427,10 +427,11 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
                               {item.interval_months === 1 ? (
                                 <span className="item-card-amount text-danger">{fmt(item.amount)}</span>
                               ) : (
-                                <>
-                                  <span className="item-card-amount text-danger">{fmt(monthlyEquivalent(item))}/Mo</span>
-                                  <span className="item-card-equiv text-muted">{fmt(item.amount)} · {intervalLabel(item.interval_months)}</span>
-                                </>
+                                <span className="item-card-amount" style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+                                  <span className="text-muted" style={{ fontSize: '0.75rem' }}>{intervalLabel(item.interval_months)}</span>
+                                  <span className="text-muted" style={{ fontSize: '0.85rem' }}>{fmt(item.amount)}</span>
+                                  <span className="text-danger">{fmt(monthlyEquivalent(item))}/Mo</span>
+                                </span>
                               )}
                             </div>
                             <div className="item-card-actions" onClick={e => e.stopPropagation()}>
