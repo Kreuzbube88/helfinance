@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
-import { updateProfile, changePassword, getHousehold, cancelHousehold } from '../api'
-import type { HouseholdLink } from '../types'
+import { updateProfile, changePassword } from '../api'
 import i18n from '../i18n/index'
-import { ConfirmModal } from '../components/ConfirmModal'
 
 export function ProfilePage() {
   const { t } = useTranslation()
@@ -20,12 +18,6 @@ export function ProfilePage() {
   const [newPass, setNewPass] = useState('')
   const [confirmPass, setConfirmPass] = useState('')
   const [changingPw, setChangingPw] = useState(false)
-  const [household, setHousehold] = useState<HouseholdLink | null>(null)
-  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
-
-  useEffect(() => {
-    getHousehold().then(setHousehold).catch(() => {})
-  }, [])
 
   const saveProfile = async () => {
     try {
@@ -57,17 +49,6 @@ export function ProfilePage() {
     }
   }
 
-  const disconnectHousehold = async () => {
-    if (!household) return
-    try {
-      await cancelHousehold(household.id)
-      setHousehold(null)
-      showToast(t('common.success'), 'success')
-    } catch (e) {
-      showToast((e as Error).message, 'error')
-    }
-  }
-
   return (
     <div className="page-content">
       <h1 className="page-title">{t('profile.title')}</h1>
@@ -89,17 +70,17 @@ export function ProfilePage() {
             <div className="form-group">
               <label className="form-label">{t('profile.language')}</label>
               <select className="form-control" value={lang} onChange={e => setLang(e.target.value)}>
-                <option value="de">🇩🇪 Deutsch</option>
-                <option value="en">🇬🇧 English</option>
+                <option value="de">Deutsch</option>
+                <option value="en">English</option>
               </select>
             </div>
             <div className="form-group">
               <label className="form-label">{t('profile.currency')}</label>
               <select className="form-control" value={currency} onChange={e => setCurrency(e.target.value)}>
-                <option value="EUR">EUR €</option>
-                <option value="USD">USD $</option>
-                <option value="GBP">GBP £</option>
-                <option value="CHF">CHF Fr.</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+                <option value="CHF">CHF</option>
               </select>
             </div>
           </div>
@@ -127,23 +108,6 @@ export function ProfilePage() {
           <button type="submit" className="btn btn-primary" disabled={changingPw}>{t('profile.changePassword')}</button>
         </form>
       </div>
-
-      {household && household.status === 'active' && (
-        <div className="card">
-          <div className="card-title">{t('profile.disconnectHousehold')}</div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
-            {t('profile.connectedWith')}: <strong>{household.partner_username}</strong>
-          </p>
-          <button className="btn btn-danger" onClick={() => setShowDisconnectConfirm(true)}>{t('profile.disconnectHousehold')}</button>
-        </div>
-      )}
-
-      {showDisconnectConfirm && (
-        <ConfirmModal
-          onConfirm={disconnectHousehold}
-          onClose={() => setShowDisconnectConfirm(false)}
-        />
-      )}
     </div>
   )
 }

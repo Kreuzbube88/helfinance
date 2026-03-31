@@ -5,9 +5,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { getDashboard, getWidgetPrefs, updateWidgetPref } from '../api'
 import type { DashboardData } from '../types'
 import { Modal } from '../components/Modal'
-import { QuickAddModal } from '../components/QuickAddModal'
 
-const WIDGET_KEYS = ['healthScore', 'budget', 'freeMoney', 'upcomingBookings', 'savingsProgress'] as const
+const WIDGET_KEYS = ['healthScore', 'budget', 'freeMoney', 'upcomingBookings'] as const
 type WidgetKey = typeof WIDGET_KEYS[number]
 
 function HealthGauge({ score }: { score: number }) {
@@ -57,10 +56,9 @@ export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [liquidityDismissed, setLiquidityDismissed] = useState(false)
-  const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
   const [widgets, setWidgets] = useState<Record<WidgetKey, boolean>>({
-    healthScore: true, budget: true, freeMoney: true, upcomingBookings: true, savingsProgress: true
+    healthScore: true, budget: true, freeMoney: true, upcomingBookings: true
   })
 
   const loadDashboard = () => {
@@ -199,46 +197,7 @@ export function DashboardPage() {
             )}
           </div>
         )}
-
-        {widgets.savingsProgress && (
-          <div className="card dashboard-card card-savings">
-            <h3 className="card-title">{t('dashboard.savingsProgress')}</h3>
-            {data.savings_goals.length === 0 ? (
-              <p className="text-muted">{t('common.noData')}</p>
-            ) : (
-              <div className="savings-list">
-                {data.savings_goals.map(goal => {
-                  const pct = goal.target_amount > 0
-                    ? Math.min(100, (goal.current_amount / goal.target_amount) * 100)
-                    : 0
-                  return (
-                    <div key={goal.id} className="savings-item">
-                      <div className="savings-header">
-                        <span className="savings-name">{goal.name}</span>
-                        <span className="savings-pct">{pct.toFixed(0)}%</span>
-                      </div>
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${pct}%` }} />
-                      </div>
-                      <div className="savings-amounts">
-                        <span className="text-muted text-sm">{fmt(goal.current_amount)}</span>
-                        <span className="text-muted text-sm">{fmt(goal.target_amount)}</span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )}
       </div>
-
-      {/* FABs */}
-      <button className="fab" onClick={() => setShowQuickAdd(true)} title={t('quickAdd.title')}>+</button>
-
-      {showQuickAdd && (
-        <QuickAddModal onClose={() => setShowQuickAdd(false)} onAdded={loadDashboard} />
-      )}
 
       {showCustomize && (
         <Modal title={t('dashboard.customize')} onClose={() => setShowCustomize(false)} size="sm">
@@ -250,7 +209,7 @@ export function DashboardPage() {
                   checked={widgets[key]}
                   onChange={() => toggleWidget(key)}
                 />
-                {t(`dashboard.${key === 'healthScore' ? 'healthScore' : key === 'freeMoney' ? 'freeMoney' : key === 'upcomingBookings' ? 'upcomingBookings' : key === 'savingsProgress' ? 'savingsProgress' : 'budgetTitle'}`)}
+                {t(`dashboard.${key === 'healthScore' ? 'healthScore' : key === 'freeMoney' ? 'freeMoney' : key === 'upcomingBookings' ? 'upcomingBookings' : 'budgetTitle'}`)}
               </label>
             ))}
           </div>

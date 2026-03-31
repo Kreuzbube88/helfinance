@@ -6,21 +6,15 @@ import type {
   Loan,
   LoanSpecialPayment,
   AmortizationRow,
-  SavingsGoal,
   SavingsAccount,
   SavingsTransaction,
-  BookingOverride,
   Notification,
   MonthlySnapshot,
   DashboardData,
-  CashflowDay,
   MonthlyReport,
   YearlyReport,
   LoginResponse,
-  HouseholdLink,
-  SharedExpense,
-  Category,
-  Transaction
+  Category
 } from './types'
 
 const BASE = '/api/v1'
@@ -200,28 +194,6 @@ export function getLoanAmortization(id: number): Promise<AmortizationRow[]> {
   return get<AmortizationRow[]>(`/loans/${id}/amortization`)
 }
 
-// Savings Goals
-export function getSavingsGoals(): Promise<SavingsGoal[]> {
-  return get<SavingsGoal[]>('/savings')
-}
-
-export function createSavingsGoal(data: Omit<SavingsGoal, 'id' | 'user_id' | 'created_at' | 'required_monthly_saving'>): Promise<SavingsGoal> {
-  return post<SavingsGoal>('/savings', data)
-}
-
-export function updateSavingsGoal(id: number, data: Partial<SavingsGoal>): Promise<SavingsGoal> {
-  return put<SavingsGoal>(`/savings/${id}`, data)
-}
-
-export function deleteSavingsGoal(id: number): Promise<void> {
-  return del(`/savings/${id}`)
-}
-
-// Cashflow
-export function getCashflow(year: number, month: number): Promise<CashflowDay[]> {
-  return get<CashflowDay[]>(`/reports/cashflow?year=${year}&month=${month}`)
-}
-
 // Reports
 export function getMonthlyReport(year: number, month: number): Promise<MonthlyReport> {
   return get<MonthlyReport>(`/reports/monthly?year=${year}&month=${month}`)
@@ -233,35 +205,6 @@ export function getYearlyReport(year: number): Promise<YearlyReport> {
 
 export function getSnapshots(): Promise<MonthlySnapshot[]> {
   return get<MonthlySnapshot[]>('/reports/snapshots')
-}
-
-// Household
-export function getHousehold(): Promise<HouseholdLink | null> {
-  return get<HouseholdLink | null>('/household')
-}
-
-export function inviteHousehold(usernameOrEmail: string): Promise<HouseholdLink> {
-  return post<HouseholdLink>('/household/invite', { usernameOrEmail })
-}
-
-export function acceptHousehold(id: number): Promise<HouseholdLink> {
-  return post<HouseholdLink>(`/household/confirm/${id}`, {})
-}
-
-export function cancelHousehold(_id?: number): Promise<void> {
-  return del('/household')
-}
-
-export function getHouseholdBalance(): Promise<{ userAOwes: number; userBOwes: number; net: number }> {
-  return get('/household/balance')
-}
-
-export function getSharedExpenses(): Promise<SharedExpense[]> {
-  return get<SharedExpense[]>('/household/shared-expenses')
-}
-
-export function createSharedExpense(data: Omit<SharedExpense, 'id' | 'household_id' | 'created_at'>): Promise<SharedExpense> {
-  return post<SharedExpense>('/household/shared-expenses', data)
 }
 
 // Notifications
@@ -328,27 +271,6 @@ export function updateCategory(id: number, data: Partial<Category>): Promise<Cat
   return put<Category>(`/categories/${id}`, data)
 }
 
-// Transactions (V1)
-export function getTransactions(): Promise<Transaction[]> {
-  return get<Transaction[]>('/transactions')
-}
-
-export function createTransaction(data: Omit<Transaction, 'id' | 'user_id' | 'income_id' | 'expense_id' | 'is_auto'>): Promise<Transaction> {
-  return post<Transaction>('/transactions', data)
-}
-
-export function updateTransaction(id: number, data: Partial<Transaction>): Promise<Transaction> {
-  return put<Transaction>(`/transactions/${id}`, data)
-}
-
-export function deleteTransaction(id: number): Promise<void> {
-  return del(`/transactions/${id}`)
-}
-
-export function importTransactionsCsv(csv: string): Promise<{ imported: number; errors: string[] }> {
-  return post('/transactions/import', { csv })
-}
-
 // Loan Special Payments
 export function getLoanSpecialPayments(loanId: number): Promise<LoanSpecialPayment[]> {
   return get<LoanSpecialPayment[]>(`/loans/${loanId}/special-payments`)
@@ -383,26 +305,6 @@ export function deleteSavingsTransaction(id: number): Promise<void> {
   return del(`/savings/transactions/${id}`)
 }
 
-// Booking Overrides
-export function getOverrides(params?: { booking_type?: string; booking_id?: number }): Promise<BookingOverride[]> {
-  const qs = params
-    ? '?' + new URLSearchParams(
-        Object.entries(params)
-          .filter(([, v]) => v != null)
-          .map(([k, v]) => [k, String(v)])
-      ).toString()
-    : ''
-  return get<BookingOverride[]>(`/overrides${qs}`)
-}
-
-export function upsertOverride(data: Omit<BookingOverride, 'id' | 'user_id'>): Promise<BookingOverride> {
-  return post<BookingOverride>('/overrides', data)
-}
-
-export function deleteOverride(id: number): Promise<void> {
-  return del(`/overrides/${id}`)
-}
-
 // Widget preferences (V6)
 export function getWidgetPrefs(): Promise<Record<string, boolean>> {
   return get<Record<string, boolean>>('/widgets')
@@ -425,7 +327,6 @@ export function downloadPdf(year: number, month?: number): void {
   const a = document.createElement('a')
   a.href = url
   a.setAttribute('download', '')
-  // Pass token via URL param since download links can't set headers
   a.href = `${url}&token=${token ?? ''}`
   document.body.appendChild(a)
   a.click()

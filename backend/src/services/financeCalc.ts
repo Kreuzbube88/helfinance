@@ -57,22 +57,6 @@ export interface ChangeRecord {
   effective_from: string;
 }
 
-export interface SharedExpenseRecord {
-  expense_id: number;
-  split_ratio_a: number;
-  split_ratio_b: number;
-  paid_by_user_id: number;
-  amount: number;
-  user_a_id: number;
-}
-
-export interface OverrideRecord {
-  booking_type: 'income' | 'expense';
-  booking_id: number;
-  month: string; // YYYY-MM
-  override_amount: number;
-}
-
 export interface SpecialPayment {
   amount: number;
   date: string; // YYYY-MM
@@ -82,7 +66,6 @@ export interface MonthlyTotalsResult {
   totalIncome: number;
   totalExpenses: number;
   totalLoanPayments: number;
-  savingsGoalContributions: number;
   freeMoney: number;
   requiredSavings: number;
   effectiveNet: number;
@@ -107,31 +90,13 @@ export function calcProvisionBuffer(
     .reduce((sum, e) => sum + normalizeToMonthly(e.amount, e.interval_months), 0);
 }
 
-/** Total monthly reserve required across all recurring bookings (overrides take precedence). */
+/** Monthly reserve required for non-monthly expenses (interval > 1 month). */
 export function calcRequiredReserveMonthly(
-  expenses: Array<{ id: number; amount: number; interval_months: number }>,
-  overrides: OverrideRecord[],
-  month: string
+  expenses: Array<{ id: number; amount: number; interval_months: number }>
 ): number {
-  return expenses.reduce((sum, e) => {
-    const ov = overrides.find((o) => o.booking_type === 'expense' && o.booking_id === e.id && o.month === month);
-    const base = ov ? ov.override_amount : e.amount;
-    return sum + base / e.interval_months;
-  }, 0);
-}
-
-/** Resolve effective amount for a booking in a given month (override > base). */
-export function resolveAmount(
-  bookingType: 'income' | 'expense',
-  bookingId: number,
-  baseAmount: number,
-  month: string,
-  overrides: OverrideRecord[]
-): number {
-  const ov = overrides.find(
-    (o) => o.booking_type === bookingType && o.booking_id === bookingId && o.month === month
-  );
-  return ov ? ov.override_amount : baseAmount;
+  return expenses
+    .filter((e) => e.interval_months > 1)
+    .reduce((sum, e) => sum + e.amount / e.interval_months, 0);
 }
 
 /** Resolve effective base amount applying most recent change effective on or before dateStr. */
@@ -218,14 +183,11 @@ export function calcMonthlyTotals(params: {
   expenses: ExpenseRecord[];
   incomeChanges: ChangeRecord[];
   expenseChanges: ChangeRecord[];
-  overrides: OverrideRecord[];
   loans: Array<{ monthly_rate: number | null; start_date: string; term_months: number }>;
-  savingsGoals: Array<{ contribution_mode: string; fixed_amount: number | null }>;
-  manualTransactions: Array<{ type: 'income' | 'expense'; amount: number }>;
   year: number;
   month: number;
 }): MonthlyTotalsResult {
-  const { incomes, expenses, incomeChanges, expenseChanges, overrides, loans, savingsGoals, manualTransactions, year, month } = params;
+  const { incomes, expenses, incomeChanges, expenseChanges, loans, year, month } = params;
   const monthStr = `${year}-${String(month).padStart(2, '0')}`;
   const dateStr = `${monthStr}-01`;
 
@@ -234,8 +196,7 @@ export function calcMonthlyTotals(params: {
     if (inc.effective_from && inc.effective_from > dateStr) continue;
     if (inc.effective_to && inc.effective_to < dateStr) continue;
 
-    const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
-    const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
+    const amount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
 
     if (inc.interval === 'monthly') {
       totalIncome += amount;
@@ -247,18 +208,13 @@ export function calcMonthlyTotals(params: {
       }
     }
   }
-  // Add truly manual income (no income_id linkage)
-  for (const tx of manualTransactions) {
-    if (tx.type === 'income') totalIncome += tx.amount;
-  }
 
   let totalExpenses = 0;
   for (const exp of expenses) {
     if (exp.effective_from && exp.effective_from > dateStr) continue;
     if (exp.effective_to && exp.effective_to < dateStr) continue;
 
-    const baseAmount = resolveBaseAmount(exp.amount, exp.id, 'expense_id', expenseChanges, dateStr);
-    const amount = resolveAmount('expense', exp.id, baseAmount, monthStr, overrides);
+    const amount = resolveBaseAmount(exp.amount, exp.id, 'expense_id', expenseChanges, dateStr);
 
     if (exp.interval_months === 1) {
       totalExpenses += amount;
@@ -270,10 +226,6 @@ export function calcMonthlyTotals(params: {
         totalExpenses += amount;
       }
     }
-  }
-  // Add truly manual expense transactions
-  for (const tx of manualTransactions) {
-    if (tx.type === 'expense') totalExpenses += tx.amount;
   }
 
   // Active loans only
@@ -287,12 +239,7 @@ export function calcMonthlyTotals(params: {
     return sum;
   }, 0);
 
-  // Savings goal fixed contributions
-  const savingsGoalContributions = savingsGoals
-    .filter((g) => g.contribution_mode === 'fixed' || g.contribution_mode === 'both')
-    .reduce((sum, g) => sum + (g.fixed_amount ?? 0), 0);
-
-  const freeMoney = totalIncome - totalExpenses - totalLoanPayments - savingsGoalContributions;
+  const freeMoney = totalIncome - totalExpenses - totalLoanPayments;
 
   const requiredSavings = calcRequiredReserveMonthly(
     expenses
@@ -305,18 +252,15 @@ export function calcMonthlyTotals(params: {
         id: e.id,
         amount: resolveBaseAmount(e.amount, e.id, 'expense_id', expenseChanges, dateStr),
         interval_months: e.interval_months,
-      })),
-    overrides,
-    monthStr
+      }))
   );
 
-  const effectiveNet = totalIncome - totalExpenses - requiredSavings - totalLoanPayments - savingsGoalContributions;
+  const effectiveNet = totalIncome - totalExpenses - requiredSavings - totalLoanPayments;
 
   return {
     totalIncome: Math.round(totalIncome * 100) / 100,
     totalExpenses: Math.round(totalExpenses * 100) / 100,
     totalLoanPayments: Math.round(totalLoanPayments * 100) / 100,
-    savingsGoalContributions: Math.round(savingsGoalContributions * 100) / 100,
     freeMoney: Math.round(freeMoney * 100) / 100,
     requiredSavings: Math.round(requiredSavings * 100) / 100,
     effectiveNet: Math.round(effectiveNet * 100) / 100,
@@ -329,28 +273,26 @@ export function calcYearlyProjection(
   expenses: ExpenseRecord[],
   incomeChanges: ChangeRecord[],
   expenseChanges: ChangeRecord[],
-  overrides: OverrideRecord[] = [],
   loans: Array<{ monthly_rate: number | null; start_date: string; term_months: number }> = []
 ): ProjectionMonth[] {
   const result: ProjectionMonth[] = [];
 
   for (let month = 1; month <= 12; month++) {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-01`;
-    const monthStr = dateStr.slice(0, 7);
 
     let totalIncome = 0;
     for (const inc of incomes) {
       if (inc.effective_from && inc.effective_from > dateStr) continue;
       if (inc.effective_to && inc.effective_to < dateStr) continue;
 
-      const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
-      const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
+      const amount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
 
       if (inc.interval === 'monthly') {
         totalIncome += amount;
       } else if (inc.interval === 'yearly') {
         totalIncome += amount / 12;
       } else if (inc.interval === 'once') {
+        const monthStr = dateStr.slice(0, 7);
         if (inc.effective_from && inc.effective_from.startsWith(monthStr)) {
           totalIncome += amount;
         }
@@ -362,8 +304,7 @@ export function calcYearlyProjection(
       if (exp.effective_from && exp.effective_from > dateStr) continue;
       if (exp.effective_to && exp.effective_to < dateStr) continue;
 
-      const baseAmount = resolveBaseAmount(exp.amount, exp.id, 'expense_id', expenseChanges, dateStr);
-      const amount = resolveAmount('expense', exp.id, baseAmount, monthStr, overrides);
+      const amount = resolveBaseAmount(exp.amount, exp.id, 'expense_id', expenseChanges, dateStr);
 
       if (exp.interval_months === 1) {
         totalExpenses += amount;
@@ -398,9 +339,7 @@ export function calcYearlyProjection(
           id: e.id,
           amount: resolveBaseAmount(e.amount, e.id, 'expense_id', expenseChanges, dateStr),
           interval_months: e.interval_months,
-        })),
-      overrides,
-      monthStr
+        }))
     );
     const effectiveNet = normalizedNet - requiredSavings - activeLoanTotal;
 
@@ -424,13 +363,12 @@ export function calcDailyCashflow(
   year: number,
   month: number,
   options: {
-    overrides?: OverrideRecord[];
     incomeChanges?: ChangeRecord[];
     expenseChanges?: ChangeRecord[];
     startingBalance?: number;
   } = {}
 ): DailyCashflowRow[] {
-  const { overrides = [], incomeChanges = [], expenseChanges = [], startingBalance = 0 } = options;
+  const { incomeChanges = [], expenseChanges = [], startingBalance = 0 } = options;
   const daysInMonth = new Date(year, month, 0).getDate();
   const result: DailyCashflowRow[] = [];
   let runningBalance = startingBalance;
@@ -446,23 +384,19 @@ export function calcDailyCashflow(
       if (inc.effective_to && inc.effective_to < dateStr) continue;
 
       if (inc.interval === 'monthly' && inc.booking_day === day) {
-        const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
-        const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
+        const amount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
         bookings.push({ id: inc.id, name: inc.name, amount, type: 'income' });
         runningBalance += amount;
       } else if (inc.interval === 'yearly' && inc.booking_day === day) {
-        // Book in the month matching effective_from month, or January if not set
         const bookMonth = inc.effective_from ? new Date(inc.effective_from).getMonth() + 1 : 1;
         if (month === bookMonth) {
-          const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
-          const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
+          const amount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
           bookings.push({ id: inc.id, name: inc.name, amount, type: 'income' });
           runningBalance += amount;
         }
       } else if (inc.interval === 'once' && inc.booking_day === day) {
         if (inc.effective_from && inc.effective_from.startsWith(monthStr)) {
-          const baseAmount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
-          const amount = resolveAmount('income', inc.id, baseAmount, monthStr, overrides);
+          const amount = resolveBaseAmount(inc.amount, inc.id, 'income_id', incomeChanges, dateStr);
           bookings.push({ id: inc.id, name: inc.name, amount, type: 'income' });
           runningBalance += amount;
         }
@@ -477,8 +411,7 @@ export function calcDailyCashflow(
         const monthsElapsed = (year - fromDate.getFullYear()) * 12 + (month - (fromDate.getMonth() + 1));
 
         if (exp.interval_months === 1 || (monthsElapsed >= 0 && monthsElapsed % exp.interval_months === 0)) {
-          const baseAmount = resolveBaseAmount(exp.amount, exp.id, 'expense_id', expenseChanges, dateStr);
-          const amount = resolveAmount('expense', exp.id, baseAmount, monthStr, overrides);
+          const amount = resolveBaseAmount(exp.amount, exp.id, 'expense_id', expenseChanges, dateStr);
           bookings.push({ id: exp.id, name: exp.name, amount, type: 'expense' });
           runningBalance -= amount;
         }
@@ -504,29 +437,4 @@ export function calcHealthScore(
   const emergencyScore = Math.min(emergencyReserveMonths / 6, 1) * 30;
   const debtScore = Math.max(0, Math.min(1 - debtToIncomeRatio / 0.4, 1)) * 30;
   return Math.round(savingsScore + emergencyScore + debtScore);
-}
-
-export function calcHouseholdBalance(
-  sharedExpenses: SharedExpenseRecord[]
-): { userAOwes: number; userBOwes: number; net: number } {
-  let userAOwes = 0;
-  let userBOwes = 0;
-
-  for (const se of sharedExpenses) {
-    const totalAmount = se.amount;
-    const aShare = totalAmount * se.split_ratio_a;
-    const bShare = totalAmount * se.split_ratio_b;
-
-    if (se.paid_by_user_id === se.user_a_id) {
-      userBOwes += bShare;
-    } else {
-      userAOwes += aShare;
-    }
-  }
-
-  return {
-    userAOwes: Math.round(userAOwes * 100) / 100,
-    userBOwes: Math.round(userBOwes * 100) / 100,
-    net: Math.round((userBOwes - userAOwes) * 100) / 100,
-  };
 }

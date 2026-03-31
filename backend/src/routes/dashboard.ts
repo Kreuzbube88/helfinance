@@ -8,7 +8,6 @@ import {
   calcMonthlyTotals,
   IncomeRecord,
   ExpenseRecord,
-  OverrideRecord,
   ChangeRecord,
 } from '../services/financeCalc';
 
@@ -32,16 +31,6 @@ interface ExpenseRow {
   effective_to: string | null;
 }
 
-interface SavingsGoalRow {
-  id: number;
-  name: string;
-  target_amount: number;
-  current_amount: number;
-  color: string;
-  contribution_mode: string;
-  fixed_amount: number | null;
-}
-
 interface LoanRow {
   id: number;
   name: string;
@@ -49,13 +38,6 @@ interface LoanRow {
   start_date: string;
   term_months: number;
   booking_day: number | null;
-}
-
-interface OverrideRow {
-  booking_type: 'income' | 'expense';
-  booking_id: number;
-  month: string;
-  override_amount: number;
 }
 
 interface SavingsAccountRow {
@@ -72,11 +54,6 @@ interface ExpenseChangeRow {
   expense_id: number;
   new_amount: number;
   effective_from: string;
-}
-
-interface ManualTxRow {
-  type: 'income' | 'expense';
-  total: number;
 }
 
 export function createDashboardRouter(db: Database.Database): Router {
@@ -106,20 +83,6 @@ export function createDashboardRouter(db: Database.Database): Router {
         .prepare('SELECT id, name, monthly_rate, start_date, term_months, COALESCE(booking_day, 1) as booking_day FROM loans WHERE user_id = ?')
         .all(userId) as LoanRow[];
 
-      const savingsGoals = db
-        .prepare('SELECT * FROM savings_goals WHERE user_id = ?')
-        .all(userId) as SavingsGoalRow[];
-
-      const overrideRows = db
-        .prepare('SELECT * FROM booking_overrides WHERE user_id = ?')
-        .all(userId) as OverrideRow[];
-      const overrides: OverrideRecord[] = overrideRows.map((o) => ({
-        booking_type: o.booking_type,
-        booking_id: o.booking_id,
-        month: o.month,
-        override_amount: o.override_amount,
-      }));
-
       const incomeChangeRows = db
         .prepare('SELECT ic.* FROM income_changes ic JOIN income i ON ic.income_id = i.id WHERE i.user_id = ?')
         .all(userId) as IncomeChangeRow[];
@@ -136,23 +99,6 @@ export function createDashboardRouter(db: Database.Database): Router {
         expense_id: c.expense_id,
         new_amount: c.new_amount,
         effective_from: c.effective_from,
-      }));
-
-      // Manual transactions only (no source linkage)
-      const monthStart = dateStr;
-      const monthEnd = `${monthStr}-31`;
-      const manualTxRows = db
-        .prepare(
-          `SELECT type, COALESCE(SUM(amount), 0) as total
-           FROM transactions
-           WHERE user_id = ? AND is_auto = 0 AND income_id IS NULL AND expense_id IS NULL
-             AND date >= ? AND date <= ?
-           GROUP BY type`
-        )
-        .all(userId, monthStart, monthEnd) as ManualTxRow[];
-      const manualTransactions: Array<{ type: 'income' | 'expense'; amount: number }> = manualTxRows.map((r) => ({
-        type: r.type,
-        amount: r.total,
       }));
 
       const savingsAccount = db
@@ -190,19 +136,12 @@ export function createDashboardRouter(db: Database.Database): Router {
         term_months: l.term_months,
       }));
 
-      // Use calcMonthlyTotals as single source of truth
       const totals = calcMonthlyTotals({
         incomes: incomeRecords,
         expenses: expenseRecords,
         incomeChanges,
         expenseChanges,
-        overrides,
         loans: loanRecords,
-        savingsGoals: savingsGoals.map((g) => ({
-          contribution_mode: g.contribution_mode,
-          fixed_amount: g.fixed_amount,
-        })),
-        manualTransactions,
         year,
         month,
       });
@@ -220,7 +159,7 @@ export function createDashboardRouter(db: Database.Database): Router {
 
       const healthScore = calcHealthScore(savingsRate, emergencyReserveMonths, debtToIncome);
 
-      // Upcoming bookings — include monthly income, all active expenses, active loan payments, non-monthly expenses due this month
+      // Upcoming bookings
       interface Booking {
         name: string;
         amount: number;
@@ -230,7 +169,6 @@ export function createDashboardRouter(db: Database.Database): Router {
 
       const allBookings: Booking[] = [];
 
-      // Monthly income due today or later
       for (const inc of incomes) {
         if (inc.interval !== 'monthly') continue;
         if (inc.effective_from && inc.effective_from > dateStr) continue;
@@ -240,7 +178,6 @@ export function createDashboardRouter(db: Database.Database): Router {
         }
       }
 
-      // All active expenses due today or later
       for (const exp of expenses) {
         if (exp.effective_from && exp.effective_from > dateStr) continue;
         if (exp.effective_to && exp.effective_to < dateStr) continue;
@@ -249,7 +186,6 @@ export function createDashboardRouter(db: Database.Database): Router {
         if (exp.interval_months === 1) {
           allBookings.push({ name: exp.name, amount: exp.amount, type: 'expense', booking_day: exp.booking_day });
         } else {
-          // Non-monthly: check if this month is a due month
           const fromDate = new Date(exp.effective_from ?? `${year}-01-01`);
           const monthsElapsed = (year - fromDate.getFullYear()) * 12 + (month - (fromDate.getMonth() + 1));
           if (monthsElapsed >= 0 && monthsElapsed % exp.interval_months === 0) {
@@ -258,7 +194,6 @@ export function createDashboardRouter(db: Database.Database): Router {
         }
       }
 
-      // Active loans
       for (const loan of loans) {
         const end = new Date(loan.start_date);
         end.setMonth(end.getMonth() + loan.term_months);
@@ -277,16 +212,6 @@ export function createDashboardRouter(db: Database.Database): Router {
 
       allBookings.sort((a, b) => a.booking_day - b.booking_day);
       const nextBookings = allBookings.slice(0, 3);
-
-      // Savings goals — use actual savings balance for progress
-      const goalsProgress = savingsGoals.map((g) => ({
-        id: g.id,
-        name: g.name,
-        target_amount: g.target_amount,
-        current_amount: currentSavingsBalance,
-        progress_pct: g.target_amount > 0 ? Math.min(100, Math.round((currentSavingsBalance / g.target_amount) * 100)) : 0,
-        color: g.color,
-      }));
 
       // Liquidity warning — include active loans as synthetic expense records
       const loanExpenseRecords: ExpenseRecord[] = loans
@@ -309,7 +234,6 @@ export function createDashboardRouter(db: Database.Database): Router {
           };
         });
       const dailyCashflow = calcDailyCashflow(incomeRecords, [...expenseRecords, ...loanExpenseRecords], year, month, {
-        overrides,
         incomeChanges,
         expenseChanges,
         startingBalance: currentSavingsBalance,
@@ -318,9 +242,7 @@ export function createDashboardRouter(db: Database.Database): Router {
 
       // Reserve warning
       const requiredReserve = calcRequiredReserveMonthly(
-        expenses.map((e) => ({ id: e.id, amount: e.amount, interval_months: e.interval_months })),
-        overrides,
-        monthStr
+        expenses.map((e) => ({ id: e.id, amount: e.amount, interval_months: e.interval_months }))
       );
       const reserveWarning = currentSavingsBalance < requiredReserve * 3;
 
@@ -333,7 +255,6 @@ export function createDashboardRouter(db: Database.Database): Router {
           ...b,
           date: new Date(year, month - 1, b.booking_day).toISOString().slice(0, 10),
         })),
-        savings_goals: goalsProgress,
         liquidity_warning: liquidityWarning,
         reserve_warning: reserveWarning,
         required_reserve_monthly: Math.round(requiredReserve * 100) / 100,

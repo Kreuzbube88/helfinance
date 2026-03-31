@@ -6,10 +6,9 @@ import { useAuth } from '../contexts/AuthContext'
 import {
   getExpenses, createExpense, updateExpense, deleteExpense,
   scheduleExpenseChange, getExpenseChanges, deleteExpenseChange,
-  getCategories, updateCategory, getLoans,
-  upsertOverride, getOverrides, deleteOverride
+  getCategories, updateCategory, getLoans
 } from '../api'
-import type { Expense, Category, Loan, BookingOverride } from '../types'
+import type { Expense, Category, Loan } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 
@@ -69,13 +68,6 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
   const [endDateTarget, setEndDateTarget] = useState<Expense | null>(null)
   const [endDateValue, setEndDateValue] = useState('')
 
-  // Override modal
-  const [overrideTarget, setOverrideTarget] = useState<Expense | null>(null)
-  const [overrideMonth, setOverrideMonth] = useState(new Date().toISOString().slice(0, 7))
-  const [overrideAmount, setOverrideAmount] = useState('')
-  const [existingOverrides, setExistingOverrides] = useState<BookingOverride[]>([])
-  const [overridesLoading, setOverridesLoading] = useState(false)
-
   // Confirm delete
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [deleteChangeId, setDeleteChangeId] = useState<{ expenseId: number; changeId: number } | null>(null)
@@ -120,7 +112,6 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
 
   useEffect(() => { load() }, [])
 
-  // Group by category_id → canonical name, fall back to legacy text, then 'Uncategorized'
   const getCategoryName = (item: Expense) => {
     if (item.category_id) {
       const cat = categories.find(c => c.id === item.category_id)
@@ -421,21 +412,6 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
                             <div className="item-card-actions" onClick={e => e.stopPropagation()}>
                               <button className="btn btn-ghost btn-xs" title={t('expenses.scheduleChange')} onClick={() => { setChangeTarget(item); setChangeAmount(String(item.amount)); setChangeDate(new Date().toISOString().slice(0, 10)) }}>⏱</button>
                               <button className="btn btn-ghost btn-xs" title={t('expenses.setEndDate')} onClick={() => { setEndDateTarget(item); setEndDateValue(item.effective_to || '') }}>⏹</button>
-                              <button
-                                className="btn btn-ghost btn-xs"
-                                title={t('expenses.overrideMonth')}
-                                onClick={async () => {
-                                  setOverrideTarget(item)
-                                  setOverrideAmount(String(item.amount))
-                                  setOverrideMonth(new Date().toISOString().slice(0, 7))
-                                  setOverridesLoading(true)
-                                  try {
-                                    const ovs = await getOverrides({ booking_type: 'expense', booking_id: item.id })
-                                    setExistingOverrides(ovs)
-                                  } catch { setExistingOverrides([]) }
-                                  finally { setOverridesLoading(false) }
-                                }}
-                              >◎</button>
                               <button className="btn btn-ghost btn-xs" title={t('common.edit')} onClick={() => openEdit(item)}>✏</button>
                               <button className="btn btn-ghost btn-xs text-danger" title={t('common.delete')} onClick={() => setDeleteId(item.id)}>🗑</button>
                             </div>
@@ -696,21 +672,6 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
               <div className="modal-actions">
                 <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(detailItem.id)}>{t('common.delete')}</button>
                 <button className="btn btn-ghost btn-sm" title={t('expenses.setEndDate')} onClick={() => { setEndDateTarget(detailItem); setEndDateValue(detailItem.effective_to || '') }}>⏹</button>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  title={t('expenses.overrideMonth')}
-                  onClick={async () => {
-                    setOverrideTarget(detailItem)
-                    setOverrideAmount(String(detailItem.amount))
-                    setOverrideMonth(new Date().toISOString().slice(0, 7))
-                    setOverridesLoading(true)
-                    try {
-                      const ovs = await getOverrides({ booking_type: 'expense', booking_id: detailItem.id })
-                      setExistingOverrides(ovs)
-                    } catch { setExistingOverrides([]) }
-                    finally { setOverridesLoading(false) }
-                  }}
-                >◎</button>
                 <button className="btn btn-secondary" onClick={() => setDetailItem(null)}>{t('common.close')}</button>
                 <button className="btn btn-primary" onClick={() => setDetailEditMode(true)}>{t('common.edit')}</button>
               </div>
@@ -794,75 +755,6 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
               }}
             >{t('common.save')}</button>
           </div>
-        </Modal>
-      )}
-
-      {overrideTarget && (
-        <Modal title={t('expenses.overrideMonth')} onClose={() => setOverrideTarget(null)} size="sm">
-          <p className="text-muted text-sm" style={{ marginBottom: 'var(--space-3)' }}>
-            {overrideTarget.name} — {t('expenses.overrideHint')}
-          </p>
-          <div className="form-group">
-            <label className="form-label">{t('common.month')}</label>
-            <input
-              className="form-input"
-              type="month"
-              value={overrideMonth}
-              onChange={e => setOverrideMonth(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">{t('expenses.amount')}</label>
-            <input
-              className="form-input"
-              type="number"
-              step="0.01"
-              value={overrideAmount}
-              onChange={e => setOverrideAmount(e.target.value)}
-            />
-          </div>
-          <div className="modal-actions" style={{ marginBottom: '1rem' }}>
-            <button className="btn btn-secondary" onClick={() => setOverrideTarget(null)}>{t('common.cancel')}</button>
-            <button
-              className="btn btn-primary"
-              onClick={async () => {
-                try {
-                  await upsertOverride({
-                    booking_type: 'expense',
-                    booking_id: overrideTarget.id,
-                    month: overrideMonth,
-                    override_amount: parseFloat(overrideAmount),
-                  })
-                  const ovs = await getOverrides({ booking_type: 'expense', booking_id: overrideTarget.id })
-                  setExistingOverrides(ovs)
-                  showToast(t('common.success'), 'success')
-                } catch { showToast(t('common.error'), 'error') }
-              }}
-            >{t('common.save')}</button>
-          </div>
-          {overridesLoading ? (
-            <p className="text-muted text-sm">{t('common.loading')}</p>
-          ) : existingOverrides.length > 0 && (
-            <div>
-              <p className="text-muted text-sm" style={{ marginBottom: '0.4rem' }}>{t('expenses.existingOverrides')}</p>
-              {existingOverrides.map(ov => (
-                <div key={ov.id} className="change-row">
-                  <span className="text-muted text-sm">{ov.month}</span>
-                  <span className="text-danger">{fmt(ov.override_amount)}</span>
-                  <button
-                    className="btn btn-ghost btn-xs text-danger"
-                    onClick={async () => {
-                      try {
-                        await deleteOverride(ov.id)
-                        setExistingOverrides(prev => prev.filter(o => o.id !== ov.id))
-                        showToast(t('common.success'), 'success')
-                      } catch { showToast(t('common.error'), 'error') }
-                    }}
-                  >🗑</button>
-                </div>
-              ))}
-            </div>
-          )}
         </Modal>
       )}
 

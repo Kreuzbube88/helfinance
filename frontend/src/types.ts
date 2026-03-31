@@ -84,22 +84,6 @@ export interface AmortizationRow {
   balance: number
 }
 
-export interface SavingsGoal {
-  id: number
-  user_id: number
-  name: string
-  target_amount: number
-  current_amount: number
-  contribution_mode: 'fixed' | 'dynamic' | 'both'
-  fixed_amount: number | null
-  buffer_amount: number | null
-  color?: string
-  target_date: string | null
-  priority: number
-  required_monthly_saving: number | null
-  created_at: string
-}
-
 export interface SavingsAccount {
   initial_balance: number
   current_balance: number
@@ -114,15 +98,6 @@ export interface SavingsTransaction {
   created_at: string
 }
 
-export interface BookingOverride {
-  id: number
-  user_id: number
-  booking_type: 'income' | 'expense'
-  booking_id: number
-  month: string
-  override_amount: number
-}
-
 export interface Category {
   id: number
   name: string
@@ -131,42 +106,6 @@ export interface Category {
   color: string
   budget_limit: number | null
   type: 'income' | 'expense' | 'both'
-}
-
-export interface Transaction {
-  id: number
-  user_id: number
-  name: string
-  amount: number
-  type: 'income' | 'expense'
-  category_id: number | null
-  date: string
-  note: string | null
-  income_id: number | null
-  expense_id: number | null
-  is_auto: number
-}
-
-export interface HouseholdLink {
-  id: number
-  user_a_id: number
-  user_b_id: number
-  status: 'pending' | 'active'
-  invited_by: number
-  created_at: string
-  partner_username?: string
-  partner_email?: string
-}
-
-export interface SharedExpense {
-  id: number
-  household_id: number
-  name: string
-  amount: number
-  split_pct_a: number
-  split_pct_b: number
-  paid_by: number
-  created_at: string
 }
 
 export interface Notification {
@@ -191,20 +130,10 @@ export interface MonthlySnapshot {
   created_at: string
 }
 
-export interface DashboardSavingsGoal {
-  id: number
-  name: string
-  target_amount: number
-  current_amount: number
-  progress_pct: number
-  color: string
-}
-
 export interface DashboardData {
   health_score: number
   free_money: number
   upcoming_bookings: UpcomingBooking[]
-  savings_goals: DashboardSavingsGoal[]
   liquidity_warning: boolean
   reserve_warning: boolean
   required_reserve_monthly: number
@@ -220,14 +149,6 @@ export interface UpcomingBooking {
   type: 'income' | 'expense'
   booking_day: number
   date: string
-}
-
-export interface CashflowDay {
-  date: string
-  day: number
-  income_bookings: { name: string; amount: number }[]
-  expense_bookings: { name: string; amount: number }[]
-  projected_balance: number
 }
 
 export interface MonthlyReport {

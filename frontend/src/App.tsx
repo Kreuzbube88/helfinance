@@ -14,8 +14,6 @@ import { IncomePage } from './pages/IncomePage'
 import { ExpensesPage } from './pages/ExpensesPage'
 import { LoansPage } from './pages/LoansPage'
 import { SavingsPage } from './pages/SavingsPage'
-import { CashflowPage } from './pages/CashflowPage'
-import { HouseholdPage } from './pages/HouseholdPage'
 import { AdminPage } from './pages/AdminPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { AboutPage } from './pages/AboutPage'
@@ -111,14 +109,6 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/cashflow"
-        element={
-          <ProtectedRoute>
-            <CashflowPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/reports"
         element={
           <ProtectedRoute>
@@ -128,14 +118,6 @@ function AppRoutes() {
       />
       <Route path="/reports/monthly" element={<Navigate to="/reports?tab=monthly" replace />} />
       <Route path="/reports/yearly"  element={<Navigate to="/reports?tab=yearly"  replace />} />
-      <Route
-        path="/household"
-        element={
-          <ProtectedRoute>
-            <HouseholdPage />
-          </ProtectedRoute>
-        }
-      />
       <Route
         path="/admin"
         element={

@@ -11,16 +11,12 @@ import { createIncomeRouter } from './routes/income';
 import { createExpensesRouter } from './routes/expenses';
 import { createLoansRouter } from './routes/loans';
 import { createSavingsRouter } from './routes/savings';
-import { createHouseholdRouter } from './routes/household';
 import { createDashboardRouter } from './routes/dashboard';
 import { createReportsRouter } from './routes/reports';
 import { createExportRouter } from './routes/exportRoutes';
 import { createNotificationsRouter } from './routes/notifications';
 import { createSetupRouter } from './routes/setup';
-import { createTransactionsRouter } from './routes/transactions';
 import { createWidgetsRouter } from './routes/widgets';
-import { createOverridesRouter } from './routes/overrides';
-import { generateAutoTransactions } from './routes/transactions';
 import { checkAndCreateNotifications } from './services/notificationService';
 
 const app = express();
@@ -39,18 +35,6 @@ app.use(express.json());
 
 // Connect DB and run migrations
 const db = getDb();
-
-// Bug 15: generate auto-transactions for all users on startup
-(function startupAutoTransactions() {
-  try {
-    const users = db.prepare('SELECT id FROM users').all() as { id: number }[];
-    for (const { id } of users) {
-      generateAutoTransactions(db, id);
-    }
-  } catch (e) {
-    console.error('Startup auto-transactions failed:', e);
-  }
-})();
 
 // Bug 21: run daily notification checks
 async function runDailyChecks(): Promise<void> {
@@ -82,14 +66,11 @@ app.use(`${v1}/income`, createIncomeRouter(db));
 app.use(`${v1}/expenses`, createExpensesRouter(db));
 app.use(`${v1}/loans`, createLoansRouter(db));
 app.use(`${v1}/savings`, createSavingsRouter(db));
-app.use(`${v1}/household`, createHouseholdRouter(db));
 app.use(`${v1}/dashboard`, createDashboardRouter(db));
 app.use(`${v1}/reports`, createReportsRouter(db));
 app.use(`${v1}/export`, createExportRouter(db));
 app.use(`${v1}/notifications`, createNotificationsRouter(db));
-app.use(`${v1}/transactions`, createTransactionsRouter(db));
 app.use(`${v1}/widgets`, createWidgetsRouter(db));
-app.use(`${v1}/overrides`, createOverridesRouter(db));
 
 // Serve frontend static files
 const publicDir = path.resolve(__dirname, '../public');

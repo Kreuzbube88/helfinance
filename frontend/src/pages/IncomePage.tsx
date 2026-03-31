@@ -5,10 +5,9 @@ import { useAuth } from '../contexts/AuthContext'
 import {
   getIncome, createIncome, updateIncome, deleteIncome,
   scheduleIncomeChange, getIncomeChanges, deleteIncomeChange,
-  getCategories,
-  upsertOverride, getOverrides, deleteOverride
+  getCategories
 } from '../api'
-import type { Income, IncomeChange, Category, BookingOverride } from '../types'
+import type { Income, IncomeChange, Category } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 
@@ -56,13 +55,6 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
   // End date modal
   const [endDateTarget, setEndDateTarget] = useState<Income | null>(null)
   const [endDateValue, setEndDateValue] = useState('')
-
-  // Override modal
-  const [overrideTarget, setOverrideTarget] = useState<Income | null>(null)
-  const [overrideMonth, setOverrideMonth] = useState(new Date().toISOString().slice(0, 7))
-  const [overrideAmount, setOverrideAmount] = useState('')
-  const [existingOverrides, setExistingOverrides] = useState<BookingOverride[]>([])
-  const [overridesLoading, setOverridesLoading] = useState(false)
 
   // Confirm delete modals
   const [deleteId, setDeleteId] = useState<number | null>(null)
@@ -203,7 +195,6 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
       })
       showToast(t('common.success'), 'success')
       setChangeTarget(null)
-      // Refresh changes if detail modal is open
       if (detailItem?.id === changeTarget.id) {
         const changes = await getIncomeChanges(changeTarget.id)
         setDetailChanges(changes)
@@ -340,16 +331,6 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
                             onClick={() => { setChangeTarget(item); setChangeAmount(String(item.amount)); setChangeDate(new Date().toISOString().slice(0, 10)) }}>⏱</button>
                           <button className="btn btn-ghost btn-xs" title={t('income.setEndDate')}
                             onClick={() => { setEndDateTarget(item); setEndDateValue(item.effective_to || '') }}>⏹</button>
-                          <button
-                            className="btn btn-ghost btn-xs"
-                            title={t('income.overrideMonth')}
-                            onClick={async () => {
-                              setOverrideTarget(item); setOverrideAmount(String(item.amount))
-                              setOverrideMonth(new Date().toISOString().slice(0, 7))
-                              setOverridesLoading(true)
-                              try { const ovs = await getOverrides({ booking_type: 'income', booking_id: item.id }); setExistingOverrides(ovs) }
-                              catch { setExistingOverrides([]) } finally { setOverridesLoading(false) }
-                            }}>◎</button>
                           <button className="btn btn-ghost btn-xs text-danger" title={t('common.delete')}
                             onClick={() => setDeleteId(item.id)}>🗑</button>
                         </div>
@@ -521,21 +502,6 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
               <div className="modal-actions">
                 <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(detailItem.id)}>{t('common.delete')}</button>
                 <button className="btn btn-ghost btn-sm" title={t('income.setEndDate')} onClick={() => { setEndDateTarget(detailItem); setEndDateValue(detailItem.effective_to || '') }}>⏹</button>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  title={t('income.overrideMonth')}
-                  onClick={async () => {
-                    setOverrideTarget(detailItem)
-                    setOverrideAmount(String(detailItem.amount))
-                    setOverrideMonth(new Date().toISOString().slice(0, 7))
-                    setOverridesLoading(true)
-                    try {
-                      const ovs = await getOverrides({ booking_type: 'income', booking_id: detailItem.id })
-                      setExistingOverrides(ovs)
-                    } catch { setExistingOverrides([]) }
-                    finally { setOverridesLoading(false) }
-                  }}
-                >◎</button>
                 <button className="btn btn-secondary" onClick={() => setDetailItem(null)}>{t('common.close')}</button>
                 <button className="btn btn-primary" onClick={() => setDetailEditMode(true)}>{t('common.edit')}</button>
               </div>
@@ -605,75 +571,6 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
               }}
             >{t('common.save')}</button>
           </div>
-        </Modal>
-      )}
-
-      {overrideTarget && (
-        <Modal title={t('income.overrideMonth')} onClose={() => setOverrideTarget(null)} size="sm">
-          <p className="text-muted text-sm" style={{ marginBottom: 'var(--space-3)' }}>
-            {overrideTarget.name} — {t('income.overrideHint')}
-          </p>
-          <div className="form-group">
-            <label className="form-label">{t('common.month')}</label>
-            <input
-              className="form-input"
-              type="month"
-              value={overrideMonth}
-              onChange={e => setOverrideMonth(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">{t('income.amount')}</label>
-            <input
-              className="form-input"
-              type="number"
-              step="0.01"
-              value={overrideAmount}
-              onChange={e => setOverrideAmount(e.target.value)}
-            />
-          </div>
-          <div className="modal-actions" style={{ marginBottom: '1rem' }}>
-            <button className="btn btn-secondary" onClick={() => setOverrideTarget(null)}>{t('common.cancel')}</button>
-            <button
-              className="btn btn-primary"
-              onClick={async () => {
-                try {
-                  await upsertOverride({
-                    booking_type: 'income',
-                    booking_id: overrideTarget.id,
-                    month: overrideMonth,
-                    override_amount: parseFloat(overrideAmount),
-                  })
-                  const ovs = await getOverrides({ booking_type: 'income', booking_id: overrideTarget.id })
-                  setExistingOverrides(ovs)
-                  showToast(t('common.success'), 'success')
-                } catch { showToast(t('common.error'), 'error') }
-              }}
-            >{t('common.save')}</button>
-          </div>
-          {overridesLoading ? (
-            <p className="text-muted text-sm">{t('common.loading')}</p>
-          ) : existingOverrides.length > 0 && (
-            <div>
-              <p className="text-muted text-sm" style={{ marginBottom: '0.4rem' }}>{t('income.existingOverrides')}</p>
-              {existingOverrides.map(ov => (
-                <div key={ov.id} className="change-row">
-                  <span className="text-muted text-sm">{ov.month}</span>
-                  <span className="text-success">{fmt(ov.override_amount)}</span>
-                  <button
-                    className="btn btn-ghost btn-xs text-danger"
-                    onClick={async () => {
-                      try {
-                        await deleteOverride(ov.id)
-                        setExistingOverrides(prev => prev.filter(o => o.id !== ov.id))
-                        showToast(t('common.success'), 'success')
-                      } catch { showToast(t('common.error'), 'error') }
-                    }}
-                  >🗑</button>
-                </div>
-              ))}
-            </div>
-          )}
         </Modal>
       )}
 
