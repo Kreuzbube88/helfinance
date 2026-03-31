@@ -209,7 +209,7 @@ export function MonthlyReportPage({ embedded = false }: MonthlyReportPageProps) 
                       <tr key={i}>
                         <td>{item.name}</td>
                         <td className="text-success">{fmt(item.amount)}</td>
-                        <td><span className="badge badge-info">{item.interval}</span></td>
+                        <td><span className="badge badge-info">{t(`income.${item.interval}`)}</span></td>
                         <td className="text-success">{fmt(item.monthly_amount)}</td>
                       </tr>
                     ))}

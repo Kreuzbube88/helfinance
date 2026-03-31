@@ -86,7 +86,27 @@ export interface AmortizationRow {
 
 export interface SavingsAccount {
   initial_balance: number
+  initial_balance_date: string | null
   current_balance: number
+}
+
+export interface SavingsExpense {
+  id: number
+  name: string
+  amount: number
+  interval_months: number
+}
+
+export interface SavingsSummary {
+  initial_balance: number
+  initial_balance_date: string | null
+  monthly_contribution: number
+  total_contributions: number
+  adjustments_sum: number
+  current_balance: number
+  sparen_expenses: SavingsExpense[]
+  transactions: SavingsTransaction[]
+  projection: Array<{ year: number; month: number; balance: number }>
 }
 
 export interface SavingsTransaction {

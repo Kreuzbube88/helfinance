@@ -8,6 +8,7 @@ import type {
   AmortizationRow,
   SavingsAccount,
   SavingsTransaction,
+  SavingsSummary,
   Notification,
   MonthlySnapshot,
   DashboardData,
@@ -289,8 +290,12 @@ export function getSavingsBalance(): Promise<SavingsAccount> {
   return get<SavingsAccount>('/savings/balance')
 }
 
-export function setSavingsInitialBalance(initial_balance: number): Promise<{ initial_balance: number }> {
-  return put<{ initial_balance: number }>('/savings/balance/initial', { initial_balance })
+export function setSavingsInitialBalance(data: { initial_balance: number; initial_balance_date?: string }): Promise<{ initial_balance: number; initial_balance_date: string | null }> {
+  return put('/savings/balance/initial', data)
+}
+
+export function getSavingsSummary(): Promise<SavingsSummary> {
+  return get<SavingsSummary>('/savings/summary')
 }
 
 export function getSavingsTransactions(): Promise<SavingsTransaction[]> {

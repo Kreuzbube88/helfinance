@@ -245,6 +245,9 @@ export function runMigrations(db: Database.Database): void {
 
   // V11: Loans get booking_day
   try { db.exec('ALTER TABLE loans ADD COLUMN booking_day INTEGER DEFAULT 1'); } catch {}
+
+  // V12: Savings account gets initial_balance_date
+  try { db.exec('ALTER TABLE savings_accounts ADD COLUMN initial_balance_date TEXT'); } catch {}
 }
 
 interface DefaultCategory {

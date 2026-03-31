@@ -6,6 +6,7 @@ interface SavingsAccountRow {
   id: number;
   user_id: number;
   initial_balance: number;
+  initial_balance_date: string | null;
 }
 
 interface SavingsTransactionRow {
@@ -17,16 +18,28 @@ interface SavingsTransactionRow {
   created_at: string;
 }
 
-function getCurrentBalance(db: Database.Database, userId: number): number {
-  const account = db
-    .prepare('SELECT initial_balance FROM savings_accounts WHERE user_id = ?')
-    .get(userId) as SavingsAccountRow | undefined;
-  const initial = account?.initial_balance ?? 0;
-  const txSum = (
-    db.prepare('SELECT COALESCE(SUM(amount), 0) as total FROM savings_transactions WHERE user_id = ?')
-      .get(userId) as { total: number }
-  ).total;
-  return initial + txSum;
+interface ExpenseRow {
+  id: number;
+  name: string;
+  amount: number;
+  interval_months: number;
+}
+
+interface CategoryRow {
+  id: number;
+  name: string;
+}
+
+// Returns months elapsed from startDate (YYYY-MM-DD or YYYY-MM) to today (inclusive)
+function monthsElapsed(startDate: string): number {
+  const parts = startDate.split('-');
+  const startYear = parseInt(parts[0], 10);
+  const startMonth = parseInt(parts[1], 10);
+  const now = new Date();
+  const nowYear = now.getFullYear();
+  const nowMonth = now.getMonth() + 1;
+  const elapsed = (nowYear - startYear) * 12 + (nowMonth - startMonth);
+  return Math.max(0, elapsed);
 }
 
 export function createSavingsRouter(db: Database.Database): Router {
@@ -42,10 +55,14 @@ export function createSavingsRouter(db: Database.Database): Router {
       const account = db
         .prepare('SELECT * FROM savings_accounts WHERE user_id = ?')
         .get(userId) as SavingsAccountRow | undefined;
-      const currentBalance = getCurrentBalance(db, userId);
+      const txSum = (
+        db.prepare('SELECT COALESCE(SUM(amount), 0) as total FROM savings_transactions WHERE user_id = ?')
+          .get(userId) as { total: number }
+      ).total;
       res.json({
         initial_balance: account?.initial_balance ?? 0,
-        current_balance: Math.round(currentBalance * 100) / 100,
+        initial_balance_date: account?.initial_balance_date ?? null,
+        current_balance: Math.round(((account?.initial_balance ?? 0) + txSum) * 100) / 100,
       });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
@@ -54,23 +71,102 @@ export function createSavingsRouter(db: Database.Database): Router {
 
   router.put('/balance/initial', (req: Request, res: Response) => {
     try {
-      const { initial_balance } = req.body as { initial_balance: number };
+      const { initial_balance, initial_balance_date } = req.body as {
+        initial_balance: number;
+        initial_balance_date?: string;
+      };
       if (initial_balance == null) {
         res.status(400).json({ error: 'initial_balance is required' });
         return;
       }
       db.prepare(
-        `INSERT INTO savings_accounts (user_id, initial_balance)
-         VALUES (?, ?)
-         ON CONFLICT(user_id) DO UPDATE SET initial_balance = excluded.initial_balance`
-      ).run(req.user!.id, initial_balance);
-      res.json({ initial_balance });
+        `INSERT INTO savings_accounts (user_id, initial_balance, initial_balance_date)
+         VALUES (?, ?, ?)
+         ON CONFLICT(user_id) DO UPDATE SET
+           initial_balance = excluded.initial_balance,
+           initial_balance_date = excluded.initial_balance_date`
+      ).run(req.user!.id, initial_balance, initial_balance_date ?? null);
+      res.json({ initial_balance, initial_balance_date: initial_balance_date ?? null });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
   });
 
-  // --- Savings Transactions ---
+  // --- Savings Summary (for new SavingsPage) ---
+
+  router.get('/summary', (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+
+      const account = db
+        .prepare('SELECT * FROM savings_accounts WHERE user_id = ?')
+        .get(userId) as SavingsAccountRow | undefined;
+
+      const initialBalance = account?.initial_balance ?? 0;
+      const initialDate = account?.initial_balance_date ?? null;
+
+      // Find "Savings" category for this user
+      const savingsCat = db
+        .prepare(`SELECT id FROM categories WHERE user_id = ? AND name = 'Savings' LIMIT 1`)
+        .get(userId) as CategoryRow | undefined;
+
+      // Sparen-category expenses
+      const sparenExpenses = savingsCat
+        ? (db
+            .prepare(
+              `SELECT id, name, amount, interval_months FROM expenses
+               WHERE user_id = ? AND category_id = ? AND (is_active IS NULL OR is_active = 1)
+                 AND (effective_to IS NULL OR effective_to >= date('now'))`
+            )
+            .all(userId, savingsCat.id) as ExpenseRow[])
+        : [];
+
+      const monthlyContribution = sparenExpenses.reduce(
+        (sum, e) => sum + e.amount / e.interval_months,
+        0
+      );
+
+      const elapsed = initialDate ? monthsElapsed(initialDate) : 0;
+      const totalContributions = Math.round(monthlyContribution * elapsed * 100) / 100;
+
+      // All adjustments (savings_transactions)
+      const transactions = db
+        .prepare('SELECT * FROM savings_transactions WHERE user_id = ? ORDER BY date DESC, id DESC')
+        .all(userId) as SavingsTransactionRow[];
+
+      const adjustmentsSum = transactions.reduce((sum, t) => sum + t.amount, 0);
+
+      const currentBalance = Math.round((initialBalance + totalContributions + adjustmentsSum) * 100) / 100;
+
+      // Projection: next 12 months
+      const now = new Date();
+      const projection: Array<{ year: number; month: number; balance: number }> = [];
+      for (let i = 1; i <= 12; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        projection.push({
+          year: d.getFullYear(),
+          month: d.getMonth() + 1,
+          balance: Math.round((currentBalance + monthlyContribution * i) * 100) / 100,
+        });
+      }
+
+      res.json({
+        initial_balance: initialBalance,
+        initial_balance_date: initialDate,
+        monthly_contribution: Math.round(monthlyContribution * 100) / 100,
+        total_contributions: totalContributions,
+        adjustments_sum: Math.round(adjustmentsSum * 100) / 100,
+        current_balance: currentBalance,
+        sparen_expenses: sparenExpenses,
+        transactions,
+        projection,
+      });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  });
+
+  // --- Savings Transactions (Entnahmen & Korrekturen) ---
 
   router.get('/transactions', (req: Request, res: Response) => {
     try {
