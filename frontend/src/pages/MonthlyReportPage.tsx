@@ -75,7 +75,7 @@ export function MonthlyReportPage({ embedded = false }: MonthlyReportPageProps) 
 
   const donutData = report
     ? {
-        labels: report.expense_breakdown.map(c => c.category),
+        labels: report.expense_breakdown.map(c => t(`categories.${c.category}`, { defaultValue: c.category })),
         datasets: [
           {
             data: report.expense_breakdown.map(c => c.total),
@@ -248,7 +248,7 @@ export function MonthlyReportPage({ embedded = false }: MonthlyReportPageProps) 
                   {report.expense_breakdown.map(cat => (
                     <React.Fragment key={cat.category}>
                       <tr style={{ background: 'var(--color-surface-2)' }}>
-                        <td style={{ fontWeight: 600 }}>{cat.category}</td>
+                        <td style={{ fontWeight: 600 }}>{t(`categories.${cat.category}`, { defaultValue: cat.category })}</td>
                         <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(cat.total)}</td>
                       </tr>
                       {cat.items.map((item, i) => (
