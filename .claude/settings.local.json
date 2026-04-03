@@ -29,7 +29,10 @@
       "Bash(wc:*)",
       "Bash(grep:*)",
       "Bash(done)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(du -sh /c/Users/hendr/helfinance/frontend/src/pages/*)",
+      "Bash(find /c/Users/hendr/helfinance/frontend -type f -name *[Bb]ericht* -o -name *[Rr]eport*)"
     ]
   },
   "disabledMcpjsonServers": [
