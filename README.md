@@ -17,10 +17,11 @@ A self-hosted, privacy-first finance tracker. Manage income, expenses, loans, an
   - **Income** — Recurring income sources; schedule future amount changes
   - **Expenses** — Grouped by category; monthly/quarterly/semi-annual/annual intervals; schedule changes; budget limits per category
 - **Loans** — Annuity loan calculator with full amortization table, special payments, avalanche payoff hints
-- **Savings** — Savings balance, withdrawals & adjustments, projection chart, reserves for irregular costs
-- **Reports** — Tabs: Monthly / Yearly
-  - **Monthly** — Breakdown with category donut chart, income/expense comparison, PDF & CSV export
-  - **Yearly** — 12-column summary table, PDF & CSV export
+- **Savings Tracking** — Track savings balance, irregular expenses reserve, emergency fund recommendations
+- **Reports** — Tabs: Overview / Details / History
+  - **Overview** — 3 hero cards (Income, Expenses, Balance), donut chart, Required Savings card (top 5 items)
+  - **Details** — Income table, expense table by category, Required Savings full breakdown
+  - **History** — 6-month bar chart, snapshot archive
 
 ### Other Features
 

@@ -1,21 +1,20 @@
 # Reports & Analysis
 
-The Reports section lets you analyze your finances — by month, by year, by category.
+The Reports section lets you analyze your finances — by month, by category, over time.
 
 ---
 
 ## Navigation
 
-Under **Reports** you'll find two tabs:
+Under **Reports** you'll find three tabs:
 
-- **Monthly Report** — detailed view for a single month
-- **Yearly Report** — overview of all 12 months of a year
+- **Overview** — Hero metrics, donut chart, required savings summary
+- **Details** — Income and expense tables, full required savings breakdown
+- **History** — 6-month bar chart and snapshot archive
 
 ---
 
-## Monthly Report
-
-### Navigation
+## Month Navigation
 
 At the top you'll find navigation buttons to switch months:
 
@@ -24,27 +23,30 @@ At the top you'll find navigation buttons to switch months:
 - **Next →** — go to the next month
 - **Today** — jump to the current month
 
-### Tab Structure
+---
 
-The monthly report is split into three tabs:
+## Tab: Overview
 
-| Tab | Content |
-|-----|---------|
-| **Overview** | Hero metrics (income, expenses, net), donut chart, required savings summary |
-| **Details** | Income table, expenses by category, savings reserve breakdown |
-| **History** | 6-month bar chart, snapshot archive |
+Shows three hero cards and two cards below:
 
-### Tab: Overview
+| Hero Card | Content |
+|-----------|---------|
+| **Income** | Sum of all income in the selected month |
+| **Expenses** | Sum of all expenses in the selected month |
+| **Balance** | Income minus expenses |
 
-Shows three hero metrics and two cards below:
-- **Donut Chart** — expenses by category
-- **Required Savings** — monthly reserve needed with the most important irregular expenses
+Below that:
 
-### Tab: Details
+- **Donut Chart** — expenses visualized by category
+- **Required Savings** — shows up to 5 of the most important irregular expenses with their monthly reserve amount
 
-### Income & Expense Breakdown
+---
 
-A table with all active bookings in the selected month:
+## Tab: Details
+
+Detailed breakdown for the selected month:
+
+### Income Table
 
 | Income | Amount |
 |--------|--------|
@@ -52,35 +54,25 @@ A table with all active bookings in the selected month:
 | Child benefit | $300 |
 | **Total** | **$3,800** |
 
-| Expenses | Amount |
-|----------|--------|
-| Rent | $1,200 |
-| Electricity/Gas | $150 |
-| Internet | $60 |
-| Groceries | $480 |
-| Loan payments | $350 |
-| **Total** | **$2,240** |
+### Expenses by Category
 
-| | |
-|--|--|
-| **Free Money** | **$1,560** |
+| Category | Bookings | Total | Share |
+|----------|---------|-------|-------|
+| Housing | 3 | $1,200 | 50% |
+| Groceries | 1 | $480 | 20% |
+| Transportation | 2 | $380 | 16% |
+| Leisure | 2 | $300 | 14% |
 
-### Category Donut Chart
+### Required Savings (Full Table)
 
-A pie chart shows how your expenses are distributed across categories:
+All irregular expenses with their monthly reserve portion — full list without the 5-item limit shown in Overview.
 
-- 🔵 Housing: 50%
-- 🟢 Groceries: 20%
-- 🟡 Transportation: 16%
-- 🔴 Leisure: 14%
+---
 
-You can see at a glance where most of your money goes.
+## Tab: History
 
-![Category Donut Chart](../images/category-donut.png)
-
-### Active Loans
-
-Loans are shown as a separate expense block in the monthly report.
+- **6-month bar chart** — income, expenses, and balance for the last 6 months compared side by side
+- **Snapshot archive** — saved monthly snapshots for reference
 
 ---
 
@@ -108,32 +100,6 @@ Both reports can be exported:
 | **CSV** | Spreadsheet format for Excel, LibreOffice, or Google Sheets |
 
 Click **Export** in the top right and choose the format.
-
----
-
-## Filters & Time Periods
-
-- **Navigate months**: Previous/Next buttons at the top of the monthly report
-- **Today**: Jumps directly to the current month
-- Yearly report: Full calendar year via dropdown
-
----
-
-## Category Analysis
-
-In the monthly report, alongside the donut chart, you'll also see a category details table:
-
-| Category | Bookings | Total | Share |
-|----------|---------|-------|-------|
-| Housing | 3 | $1,200 | 50% |
-| Groceries | 1 | $480 | 20% |
-| Transportation | 2 | $380 | 16% |
-| Leisure | 2 | $300 | 14% |
-
-**What you learn from this:**
-- Which category consumes the most budget?
-- Where is there potential for savings?
-- Which categories are fixed vs. adjustable?
 
 ---
 

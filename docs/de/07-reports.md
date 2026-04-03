@@ -1,21 +1,20 @@
 # Reports & Auswertungen
 
-Im Reports-Bereich analysierst du deine Finanzen — nach Monat, nach Jahr, nach Kategorie.
+Im Reports-Bereich analysierst du deine Finanzen — nach Monat, nach Kategorie, im Verlauf.
 
 ---
 
 ## Navigation
 
-Unter **Reports** findest du zwei Tabs:
+Unter **Reports** findest du drei Tabs:
 
-- **Monatsreport** — detaillierte Ansicht für einen einzelnen Monat
-- **Jahresreport** — Überblick über alle 12 Monate eines Jahres
+- **Übersicht** — Hero-Kennzahlen, Donut-Diagramm, Rücklage-Zusammenfassung
+- **Details** — Einnahmen- und Ausgaben-Tabellen, vollständige Rücklage-Aufschlüsselung
+- **Verlauf** — 6-Monats-Balkendiagramm und Snapshot-Archiv
 
 ---
 
-## Monatsreport
-
-### Navigation
+## Monatsnavigation
 
 Oben findest du Navigations-Buttons zum Wechseln des Monats:
 
@@ -24,27 +23,30 @@ Oben findest du Navigations-Buttons zum Wechseln des Monats:
 - **Nächster →** — zum nächsten Monat
 - **Heute** — springt zum aktuellen Monat
 
-### Tab-Struktur
+---
 
-Der Monatsreport ist in drei Tabs aufgeteilt:
+## Tab: Übersicht
 
-| Tab | Inhalt |
-|-----|--------|
-| **Übersicht** | Hero-Kennzahlen (Einnahmen, Ausgaben, Saldo), Donut-Chart, Rücklage-Übersicht |
-| **Details** | Einnahmen-Tabelle, Ausgaben nach Kategorie, Rücklagen-Aufschlüsselung |
-| **Verlauf** | 6-Monats-Balkendiagramm, Snapshot-Archiv |
+Zeigt drei Hero-Karten und darunter zwei Karten:
 
-### Tab: Übersicht
+| Hero-Karte | Inhalt |
+|------------|--------|
+| **Einnahmen** | Summe aller Einnahmen im gewählten Monat |
+| **Ausgaben** | Summe aller Ausgaben im gewählten Monat |
+| **Saldo** | Einnahmen minus Ausgaben |
 
-Zeigt drei Hero-Kennzahlen und darunter zwei Karten:
-- **Donut-Chart** — Ausgaben nach Kategorie
-- **Benötigte Rücklage** — monatlicher Rücklagebedarf mit den wichtigsten unregelmäßigen Ausgaben
+Darunter:
 
-### Tab: Details
+- **Donut-Diagramm** — Ausgaben nach Kategorie visualisiert
+- **Benötigte Rücklagen** — zeigt bis zu 5 der wichtigsten unregelmäßigen Ausgaben mit monatlichem Rücklagebedarf
 
-### Einnahmen & Ausgaben-Aufschlüsselung
+---
 
-Eine Tabelle mit allen aktiven Buchungen im gewählten Monat:
+## Tab: Details
+
+Detaillierte Aufschlüsselung für den gewählten Monat:
+
+### Einnahmen-Tabelle
 
 | Einnahmen | Betrag |
 |-----------|--------|
@@ -52,35 +54,25 @@ Eine Tabelle mit allen aktiven Buchungen im gewählten Monat:
 | Kindergeld | 250€ |
 | **Gesamt** | **3.050€** |
 
-| Ausgaben | Betrag |
-|---------|--------|
-| Miete | 800€ |
-| Strom/Gas | 120€ |
-| Internet | 40€ |
-| Lebensmittel | 380€ |
-| Kreditraten | 299€ |
-| **Gesamt** | **1.639€** |
+### Ausgaben nach Kategorien
 
-| | |
-|--|--|
-| **Freies Geld** | **1.411€** |
+| Kategorie | Buchungen | Gesamt | Anteil |
+|-----------|-----------|--------|--------|
+| Wohnen | 3 | 960€ | 49% |
+| Lebensmittel | 1 | 380€ | 23% |
+| Mobilität | 2 | 299€ | 15% |
+| Freizeit | 2 | 240€ | 13% |
 
-### Kategorie-Donut-Chart
+### Benötigte Rücklagen (vollständige Tabelle)
 
-Ein Kreisdiagramm zeigt, wie sich deine Ausgaben auf Kategorien verteilen:
+Alle unregelmäßigen Ausgaben mit monatlichem Rücklage-Anteil — vollständige Auflistung ohne Begrenzung auf 5 Positionen.
 
-- 🔵 Wohnen: 49%
-- 🟢 Lebensmittel: 23%
-- 🟡 Mobilität: 15%
-- 🔴 Freizeit: 13%
+---
 
-So siehst du auf einen Blick, wo der Großteil deines Geldes hingeht.
+## Tab: Verlauf
 
-![Kategorie Donut Chart](../images/category-donut.png)
-
-### Aktive Kredite
-
-Kredite werden separat als Ausgaben-Block im Monatsreport angezeigt.
+- **6-Monats-Balkendiagramm** — Einnahmen, Ausgaben und Saldo der letzten 6 Monate im Vergleich
+- **Snapshot-Archiv** — gespeicherte Monatsabschlüsse zum Nachschlagen
 
 ---
 
@@ -108,32 +100,6 @@ Beide Reports können exportiert werden:
 | **CSV** | Tabellenformat für Excel, LibreOffice oder Google Sheets |
 
 Klicke oben rechts auf **Exportieren** und wähle das Format.
-
----
-
-## Filter & Zeiträume
-
-- **Monat navigieren**: Vorheriger/Nächster-Buttons oben im Monatsreport
-- **Heute**: Springt direkt zum aktuellen Monat
-- Jahresreport: Komplettes Kalenderjahr per Dropdown
-
----
-
-## Kategorien-Analyse
-
-Im Monatsreport siehst du neben dem Donut-Chart auch eine Tabelle mit Kategorie-Details:
-
-| Kategorie | Buchungen | Gesamt | Anteil |
-|-----------|-----------|--------|--------|
-| Wohnen | 3 | 960€ | 49% |
-| Lebensmittel | 1 | 380€ | 23% |
-| Mobilität | 2 | 299€ | 15% |
-| Freizeit | 2 | 240€ | 13% |
-
-**Was du daraus lernst:**
-- Welche Kategorie frisst das meiste Budget?
-- Wo gibt es Einsparungspotenzial?
-- Welche Kategorien sind unveränderlich (Fixkosten) vs. beeinflussbar?
 
 ---
 
