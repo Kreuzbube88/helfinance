@@ -25,10 +25,12 @@ Click **+ Add Income** and fill out the form:
 |-------|-------------|---------|
 | Name | Label for this income | "Salary" |
 | Amount | Monthly amount in your currency | 3,500 |
-| Booking Day | Day of the month the income arrives | 15 |
-| Valid From | From what date does this apply | 01/01/2025 |
-| Valid Until | Optional end date | leave blank |
 | Interval | How often the income recurs | Monthly |
+| Booking Day | Day of the month the income arrives (advanced) | 15 |
+| Valid From | From what date does this apply (advanced) | 01/01/2025 |
+| Valid Until | Optional end date (advanced) | leave blank |
+
+> ℹ️ **Note:** Income entries do not have a category.
 
 > ✅ The **live preview** on the right side of the form immediately shows how your financial overview changes with this booking.
 
@@ -58,12 +60,18 @@ HELFINANCE shows the old amount through March, the new amount from April — his
 
 ### Add New Expense
 
-Expenses work the same as income, but additionally have:
+Expenses have the following fields:
 
 | Field | Description | Example |
 |-------|-------------|---------|
-| Category | Thematic classification | "Housing" |
-| Budget Limit | Optional warning threshold (for variable expenses) | $500 |
+| Name | Label for this expense | "Rent" |
+| Amount | Amount in your currency | 1,200 |
+| Interval | Booking interval | Monthly |
+| Category | Thematic classification (basic field) | "Housing" |
+| Booking Day | Day of the debit (advanced) | 1 |
+| Valid From / Until | Validity period (advanced) | 01/01/2025 |
+
+> ℹ️ **Note:** The category is directly visible in the basic form — no need to expand advanced options.
 
 ### Expense Categories
 

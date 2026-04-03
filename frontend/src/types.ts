@@ -171,6 +171,13 @@ export interface UpcomingBooking {
   date: string
 }
 
+export interface RequiredSavingsItem {
+  name: string
+  amount: number
+  interval_months: number
+  monthly_reserve: number
+}
+
 export interface MonthlyReport {
   year: number
   month: number
@@ -182,6 +189,7 @@ export interface MonthlyReport {
   required_savings: number
   loan_monthly_total: number
   effective_net: number
+  required_savings_breakdown: RequiredSavingsItem[]
   snapshots: MonthlySnapshot[]
 }
 

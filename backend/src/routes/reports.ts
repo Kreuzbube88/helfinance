@@ -44,6 +44,19 @@ interface SnapshotRow {
   savings_total: number;
 }
 
+interface RequiredSavingsItem {
+  name: string;
+  amount: number;
+  interval_months: number;
+  monthly_reserve: number;
+}
+
+interface IrregularExpenseRow {
+  name: string;
+  amount: number;
+  interval_months: number;
+}
+
 interface LoanRow {
   monthly_rate: number | null;
   start_date: string;
@@ -130,6 +143,21 @@ export function createReportsRouter(db: Database.Database): Router {
         month,
       });
 
+      // Required savings breakdown for irregular expenses
+      const irregularExpenseRows = db
+        .prepare(
+          `SELECT name, amount, interval_months FROM expenses
+           WHERE user_id = ? AND interval_months > 1
+             AND (effective_to IS NULL OR effective_to >= ?)`
+        )
+        .all(userId, dateStr) as IrregularExpenseRow[];
+      const required_savings_breakdown: RequiredSavingsItem[] = irregularExpenseRows.map((e) => ({
+        name: e.name,
+        amount: e.amount,
+        interval_months: e.interval_months,
+        monthly_reserve: Math.round((e.amount / e.interval_months) * 100) / 100,
+      }));
+
       // Bug 27: Filter expenses by effective dates for breakdown
       const activeExpenses = expenses.filter((e) => {
         if (e.effective_from && e.effective_from > dateStr) return false;
@@ -212,6 +240,7 @@ export function createReportsRouter(db: Database.Database): Router {
         effective_net: totals.effectiveNet,
         income_breakdown: incomeBreakdown,
         expense_breakdown: expenseBreakdown,
+        required_savings_breakdown,
         snapshots: snapshots.map((s) => ({
           id: s.id,
           user_id: s.user_id,

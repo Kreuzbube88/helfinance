@@ -52,6 +52,7 @@ export function ProfilePage() {
 
   return (
     <div className="page-content">
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       <h1 className="page-title">{t('profile.title')}</h1>
 
       <div className="card">
@@ -108,6 +109,7 @@ export function ProfilePage() {
           </div>
           <button type="submit" className="btn btn-primary" disabled={changingPw}>{t('profile.changePassword')}</button>
         </form>
+      </div>
       </div>
     </div>
   )

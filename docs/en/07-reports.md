@@ -15,9 +15,34 @@ Under **Reports** you'll find two tabs:
 
 ## Monthly Report
 
-Select the month and year at the top. The report shows:
+### Navigation
 
-### Income & Expense Overview
+At the top you'll find navigation buttons to switch months:
+
+- **← Previous** — go to the previous month
+- Month name and year in the center
+- **Next →** — go to the next month
+- **Today** — jump to the current month
+
+### Tab Structure
+
+The monthly report is split into three tabs:
+
+| Tab | Content |
+|-----|---------|
+| **Overview** | Hero metrics (income, expenses, net), donut chart, required savings summary |
+| **Details** | Income table, expenses by category, savings reserve breakdown |
+| **History** | 6-month bar chart, snapshot archive |
+
+### Tab: Overview
+
+Shows three hero metrics and two cards below:
+- **Donut Chart** — expenses by category
+- **Required Savings** — monthly reserve needed with the most important irregular expenses
+
+### Tab: Details
+
+### Income & Expense Breakdown
 
 A table with all active bookings in the selected month:
 
@@ -88,9 +113,9 @@ Click **Export** in the top right and choose the format.
 
 ## Filters & Time Periods
 
-- **Choose month/year**: Dropdown at the top of the report
-- Monthly report: Single month
-- Yearly report: Full calendar year
+- **Navigate months**: Previous/Next buttons at the top of the monthly report
+- **Today**: Jumps directly to the current month
+- Yearly report: Full calendar year via dropdown
 
 ---
 

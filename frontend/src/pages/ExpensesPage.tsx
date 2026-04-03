@@ -575,6 +575,17 @@ export function ExpensesPage({ embedded = false, triggerAdd, onTriggerHandled }:
               type="expense"
               currency={currency}
             />
+            <div className="form-group">
+              <label className="form-label">
+                <Tooltip content={t('tooltips.category')}>{t('expenses.category')}</Tooltip>
+              </label>
+              <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
+                <option value="">—</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
+                ))}
+              </select>
+            </div>
             <button
               type="button"
               className="btn btn-ghost btn-sm advanced-toggle"
@@ -589,17 +600,6 @@ export function ExpensesPage({ embedded = false, triggerAdd, onTriggerHandled }:
                     <Tooltip content={t('tooltips.bookingDay')}>{t('expenses.bookingDay')}</Tooltip>
                   </label>
                   <input className="form-input" type="number" min="1" max="31" value={form.booking_day} onChange={e => f('booking_day', e.target.value)} required placeholder={t('placeholders.bookingDay')} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    <Tooltip content={t('tooltips.category')}>{t('expenses.category')}</Tooltip>
-                  </label>
-                  <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
-                    <option value="">—</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
-                    ))}
-                  </select>
                 </div>
                 <div className="form-row">
                   <div className="form-group">

@@ -171,7 +171,17 @@
     "last6Months": "Last 6 months",
     "requiredSavings": "Required Reserve",
     "loanMonthlyTotal": "Loan Payments",
-    "effectiveNet": "Effective Net"
+    "effectiveNet": "Effective Net",
+    "previousMonth": "Previous",
+    "nextMonth": "Next",
+    "today": "Today",
+    "overview": "Overview",
+    "details": "Details",
+    "history": "History",
+    "forFollowingExpenses": "For the following expenses",
+    "noIrregularExpenses": "No irregular expenses",
+    "requiredSavingsBreakdown": "Required Savings (Detailed)",
+    "monthlyReserve": "Monthly reserve"
   },
   "admin": {
     "title": "Admin",
@@ -287,7 +297,8 @@
     "import": "Import",
     "add": "Add",
     "description": "Description",
-    "amount": "Amount"
+    "amount": "Amount",
+    "more": "more"
   },
   "categories": {
     "Housing": "Housing",

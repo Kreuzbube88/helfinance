@@ -25,10 +25,12 @@ Klicke auf **+ Einnahme hinzufügen** und fülle das Formular aus:
 |------|-------------|---------|
 | Name | Bezeichnung der Einnahme | "Gehalt" |
 | Betrag | Monatlicher Betrag in deiner Währung | 2.800 |
-| Buchungstag | Tag im Monat, an dem die Einnahme eingeht | 15 |
-| Gültig ab | Ab welchem Datum gilt diese Buchung | 01.01.2025 |
-| Gültig bis | Optionales Enddatum | leer lassen |
 | Intervall | Wie oft kommt die Einnahme | Monatlich |
+| Buchungstag | Tag im Monat, an dem die Einnahme eingeht (erweitert) | 15 |
+| Gültig ab | Ab welchem Datum gilt diese Buchung (erweitert) | 01.01.2025 |
+| Gültig bis | Optionales Enddatum (erweitert) | leer lassen |
+
+> ℹ️ **Hinweis:** Einnahmen haben keine Kategorie-Zuordnung.
 
 > ✅ Die **Live-Vorschau** rechts im Formular zeigt sofort, wie sich deine Finanzübersicht mit dieser Buchung ändert.
 
@@ -58,12 +60,18 @@ HELFINANCE zeigt bis März den alten Betrag, ab April den neuen — die Historie
 
 ### Neue Ausgabe hinzufügen
 
-Ausgaben funktionieren wie Einnahmen, haben aber zusätzlich:
+Ausgaben haben folgende Felder:
 
 | Feld | Beschreibung | Beispiel |
 |------|-------------|---------|
-| Kategorie | Thematische Einordnung | "Wohnen" |
-| Budget-Limit | Optionale Warnschwelle (für variable Ausgaben) | 400€ |
+| Name | Bezeichnung der Ausgabe | "Miete" |
+| Betrag | Betrag in deiner Währung | 800 |
+| Intervall | Buchungsintervall | Monatlich |
+| Kategorie | Thematische Einordnung (Grundfeld) | "Wohnen" |
+| Buchungstag | Tag der Abbuchung (erweitert) | 1 |
+| Gültig ab / bis | Gültigkeitszeitraum (erweitert) | 01.01.2025 |
+
+> ℹ️ **Hinweis:** Die Kategorie ist direkt im Grundformular sichtbar — kein Aufklappen nötig.
 
 ### Ausgaben-Kategorien
 

@@ -15,9 +15,34 @@ Unter **Reports** findest du zwei Tabs:
 
 ## Monatsreport
 
-Wähle oben Monat und Jahr aus. Der Report zeigt:
+### Navigation
 
-### Einnahmen & Ausgaben-Übersicht
+Oben findest du Navigations-Buttons zum Wechseln des Monats:
+
+- **← Vorheriger** — zum vorherigen Monat
+- Monatsname und Jahr in der Mitte
+- **Nächster →** — zum nächsten Monat
+- **Heute** — springt zum aktuellen Monat
+
+### Tab-Struktur
+
+Der Monatsreport ist in drei Tabs aufgeteilt:
+
+| Tab | Inhalt |
+|-----|--------|
+| **Übersicht** | Hero-Kennzahlen (Einnahmen, Ausgaben, Saldo), Donut-Chart, Rücklage-Übersicht |
+| **Details** | Einnahmen-Tabelle, Ausgaben nach Kategorie, Rücklagen-Aufschlüsselung |
+| **Verlauf** | 6-Monats-Balkendiagramm, Snapshot-Archiv |
+
+### Tab: Übersicht
+
+Zeigt drei Hero-Kennzahlen und darunter zwei Karten:
+- **Donut-Chart** — Ausgaben nach Kategorie
+- **Benötigte Rücklage** — monatlicher Rücklagebedarf mit den wichtigsten unregelmäßigen Ausgaben
+
+### Tab: Details
+
+### Einnahmen & Ausgaben-Aufschlüsselung
 
 Eine Tabelle mit allen aktiven Buchungen im gewählten Monat:
 
@@ -88,9 +113,9 @@ Klicke oben rechts auf **Exportieren** und wähle das Format.
 
 ## Filter & Zeiträume
 
-- **Monat/Jahr wählen**: Dropdown oben im Report
-- Monatsreport: Einzelner Monat
-- Jahresreport: Komplettes Kalenderjahr
+- **Monat navigieren**: Vorheriger/Nächster-Buttons oben im Monatsreport
+- **Heute**: Springt direkt zum aktuellen Monat
+- Jahresreport: Komplettes Kalenderjahr per Dropdown
 
 ---
 

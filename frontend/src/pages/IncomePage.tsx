@@ -4,10 +4,9 @@ import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import {
   getIncome, createIncome, updateIncome, deleteIncome,
-  scheduleIncomeChange, getIncomeChanges, deleteIncomeChange,
-  getCategories
+  scheduleIncomeChange, getIncomeChanges, deleteIncomeChange
 } from '../api'
-import type { Income, IncomeChange, Category } from '../types'
+import type { Income, IncomeChange } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 import { Tooltip } from '../components/Tooltip'
@@ -19,8 +18,7 @@ const EMPTY_FORM = {
   interval: 'monthly' as Income['interval'],
   booking_day: '1',
   effective_from: new Date().toISOString().slice(0, 10),
-  effective_to: '',
-  category_id: ''
+  effective_to: ''
 }
 
 interface IncomePageProps {
@@ -35,7 +33,6 @@ export function IncomePage({ embedded = false, triggerAdd, onTriggerHandled }: I
   const { showToast } = useToast()
 
   const [items, setItems] = useState<Income[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 
   // Add/edit modal
@@ -70,8 +67,8 @@ export function IncomePage({ embedded = false, triggerAdd, onTriggerHandled }: I
 
   const load = () => {
     setLoading(true)
-    Promise.all([getIncome(), getCategories('income')])
-      .then(([inc, cats]) => { setItems(inc); setCategories(cats) })
+    Promise.all([getIncome()])
+      .then(([inc]) => { setItems(inc) })
       .catch(() => showToast(t('common.error'), 'error'))
       .finally(() => setLoading(false))
   }
@@ -100,8 +97,7 @@ export function IncomePage({ embedded = false, triggerAdd, onTriggerHandled }: I
       interval: item.interval,
       booking_day: String(item.booking_day),
       effective_from: item.effective_from,
-      effective_to: item.effective_to || '',
-      category_id: item.category_id ? String(item.category_id) : ''
+      effective_to: item.effective_to || ''
     })
     setShowAdvanced(true)
     setShowModal(true)
@@ -118,7 +114,6 @@ export function IncomePage({ embedded = false, triggerAdd, onTriggerHandled }: I
         booking_day: parseInt(form.booking_day),
         effective_from: form.effective_from,
         effective_to: form.effective_to || null,
-        category_id: form.category_id ? parseInt(form.category_id) : null,
         is_active: 1
       }
       if (editing) {
@@ -158,8 +153,7 @@ export function IncomePage({ embedded = false, triggerAdd, onTriggerHandled }: I
       interval: item.interval,
       booking_day: String(item.booking_day),
       effective_from: item.effective_from,
-      effective_to: item.effective_to || '',
-      category_id: item.category_id ? String(item.category_id) : ''
+      effective_to: item.effective_to || ''
     })
     setDetailLoading(true)
     try {
@@ -183,8 +177,7 @@ export function IncomePage({ embedded = false, triggerAdd, onTriggerHandled }: I
         interval: detailForm.interval,
         booking_day: parseInt(detailForm.booking_day),
         effective_from: detailForm.effective_from,
-        effective_to: detailForm.effective_to || null,
-        category_id: detailForm.category_id ? parseInt(detailForm.category_id) : null
+        effective_to: detailForm.effective_to || null
       }
       const updated = await updateIncome(detailItem.id, payload)
       setItems(prev => prev.map(i => i.id === updated.id ? updated : i))
@@ -409,17 +402,6 @@ export function IncomePage({ embedded = false, triggerAdd, onTriggerHandled }: I
                   </label>
                   <input className="form-input" type="number" min="1" max="31" value={form.booking_day} onChange={e => f('booking_day', e.target.value)} required placeholder={t('placeholders.bookingDay')} />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    <Tooltip content={t('tooltips.category')}>{t('expenses.category')}</Tooltip>
-                  </label>
-                  <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
-                    <option value="">—</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
-                    ))}
-                  </select>
-                </div>
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">
@@ -466,15 +448,6 @@ export function IncomePage({ embedded = false, triggerAdd, onTriggerHandled }: I
               <div className="form-group">
                 <label className="form-label">{t('income.bookingDay')}</label>
                 <input className="form-input" type="number" min="1" max="31" value={detailForm.booking_day} onChange={e => fd('booking_day', e.target.value)} required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">{t('expenses.category')}</label>
-                <select className="form-select" value={detailForm.category_id} onChange={e => fd('category_id', e.target.value)}>
-                  <option value="">—</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
-                  ))}
-                </select>
               </div>
               <div className="form-row">
                 <div className="form-group">

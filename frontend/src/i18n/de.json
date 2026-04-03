@@ -171,7 +171,17 @@
     "last6Months": "Letzte 6 Monate",
     "requiredSavings": "Benötigte Rücklage",
     "loanMonthlyTotal": "Kreditraten",
-    "effectiveNet": "Effektives Netto"
+    "effectiveNet": "Effektives Netto",
+    "previousMonth": "Vorheriger",
+    "nextMonth": "Nächster",
+    "today": "Heute",
+    "overview": "Übersicht",
+    "details": "Details",
+    "history": "Verlauf",
+    "forFollowingExpenses": "Für folgende Ausgaben",
+    "noIrregularExpenses": "Keine unregelmäßigen Ausgaben",
+    "requiredSavingsBreakdown": "Benötigte Rücklagen (Detail)",
+    "monthlyReserve": "Monatlich zurücklegen"
   },
   "admin": {
     "title": "Admin",
@@ -287,7 +297,8 @@
     "import": "Importieren",
     "add": "Hinzufügen",
     "description": "Beschreibung",
-    "amount": "Betrag"
+    "amount": "Betrag",
+    "more": "weitere"
   },
   "categories": {
     "Housing": "Wohnen",
