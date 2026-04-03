@@ -11,6 +11,8 @@ import {
 import type { Expense, Category, Loan } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
+import { Tooltip } from '../components/Tooltip'
+import { LivePreview } from '../components/LivePreview'
 
 const CATEGORIES = ['Housing', 'Mobility', 'Food & Groceries', 'Insurance', 'Entertainment', 'Health', 'Loans', 'Savings', 'Miscellaneous']
 const INTERVAL_VALUES = [1, 3, 6, 12]
@@ -29,9 +31,11 @@ type ExpenseChange = { id: number; expense_id: number; new_amount: number; effec
 
 interface ExpensesPageProps {
   embedded?: boolean
+  triggerAdd?: boolean
+  onTriggerHandled?: () => void
 }
 
-export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
+export function ExpensesPage({ embedded = false, triggerAdd, onTriggerHandled }: ExpensesPageProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -72,6 +76,7 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
   // Confirm delete
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [deleteChangeId, setDeleteChangeId] = useState<{ expenseId: number; changeId: number } | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const currency = user?.currency || 'EUR'
   const fmt = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency })
@@ -113,6 +118,13 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
 
   useEffect(() => { load() }, [])
 
+  useEffect(() => {
+    if (triggerAdd) {
+      openAdd()
+      onTriggerHandled?.()
+    }
+  }, [triggerAdd])
+
   const getCategoryName = (item: Expense) => {
     if (item.category_id) {
       const cat = categories.find(c => c.id === item.category_id)
@@ -146,6 +158,7 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
   const openAdd = () => {
     setEditing(null)
     setForm(EMPTY_FORM)
+    setShowAdvanced(false)
     setShowModal(true)
   }
 
@@ -160,6 +173,7 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
       effective_from: item.effective_from,
       effective_to: item.effective_to || ''
     })
+    setShowAdvanced(true)
     setShowModal(true)
   }
 
@@ -534,46 +548,73 @@ export function ExpensesPage({ embedded = false }: ExpensesPageProps) {
         <Modal title={editing ? t('common.edit') : t('expenses.add')} onClose={() => setShowModal(false)}>
           <form onSubmit={handleSave}>
             <div className="form-group">
-              <label className="form-label">{t('expenses.name')}</label>
-              <input className="form-input" value={form.name} onChange={e => f('name', e.target.value)} required />
+              <label className="form-label">
+                <Tooltip content={t('tooltips.name')}>{t('expenses.name')}</Tooltip>
+              </label>
+              <input className="form-input" value={form.name} onChange={e => f('name', e.target.value)} required placeholder={t('placeholders.expenseName')} />
             </div>
             <div className="form-group">
-              <label className="form-label">{t('expenses.amount')}</label>
-              <input className="form-input" type="number" step="0.01" value={form.amount} onChange={e => f('amount', e.target.value)} required />
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">{t('expenses.interval')}</label>
-                <select className="form-select" value={form.interval_months} onChange={e => f('interval_months', e.target.value)}>
-                  {INTERVAL_VALUES.map(v => (
-                    <option key={v} value={v}>{intervalLabel(v)}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">{t('expenses.bookingDay')}</label>
-                <input className="form-input" type="number" min="1" max="31" value={form.booking_day} onChange={e => f('booking_day', e.target.value)} required />
-              </div>
+              <label className="form-label">
+                <Tooltip content={t('tooltips.amount')}>{t('expenses.amount')}</Tooltip>
+              </label>
+              <input className="form-input" type="number" step="0.01" value={form.amount} onChange={e => f('amount', e.target.value)} required placeholder={t('placeholders.amount')} />
             </div>
             <div className="form-group">
-              <label className="form-label">{t('expenses.category')}</label>
-              <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
-                <option value="">—</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
+              <label className="form-label">
+                <Tooltip content={t('tooltips.interval')}>{t('expenses.interval')}</Tooltip>
+              </label>
+              <select className="form-select" value={form.interval_months} onChange={e => f('interval_months', e.target.value)}>
+                {INTERVAL_VALUES.map(v => (
+                  <option key={v} value={v}>{intervalLabel(v)}</option>
                 ))}
               </select>
             </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">{t('expenses.effectiveFrom')}</label>
-                <input className="form-input" type="date" value={form.effective_from} onChange={e => f('effective_from', e.target.value)} required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">{t('expenses.effectiveTo')}</label>
-                <input className="form-input" type="date" value={form.effective_to} onChange={e => f('effective_to', e.target.value)} />
-              </div>
-            </div>
+            <LivePreview
+              amount={parseFloat(form.amount) || 0}
+              interval={parseInt(form.interval_months) || 1}
+              type="expense"
+              currency={currency}
+            />
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm advanced-toggle"
+              onClick={() => setShowAdvanced(v => !v)}
+            >
+              {t('forms.advancedOptions')} {showAdvanced ? '▲' : '▼'}
+            </button>
+            {showAdvanced && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">
+                    <Tooltip content={t('tooltips.bookingDay')}>{t('expenses.bookingDay')}</Tooltip>
+                  </label>
+                  <input className="form-input" type="number" min="1" max="31" value={form.booking_day} onChange={e => f('booking_day', e.target.value)} required placeholder={t('placeholders.bookingDay')} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">
+                    <Tooltip content={t('tooltips.category')}>{t('expenses.category')}</Tooltip>
+                  </label>
+                  <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
+                    <option value="">—</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <Tooltip content={t('tooltips.effectiveDates')}>{t('expenses.effectiveFrom')}</Tooltip>
+                    </label>
+                    <input className="form-input" type="date" value={form.effective_from} onChange={e => f('effective_from', e.target.value)} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{t('expenses.effectiveTo')}</label>
+                    <input className="form-input" type="date" value={form.effective_to} onChange={e => f('effective_to', e.target.value)} />
+                  </div>
+                </div>
+              </>
+            )}
             <div className="modal-actions">
               <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>
               <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? t('common.loading') : t('common.save')}</button>

@@ -28,6 +28,23 @@
       "green": "Good",
       "yellow": "Warning",
       "red": "Critical"
+    },
+    "explainers": {
+      "healthScoreTitle": "Financial Health",
+      "healthScore": "Score from 0-100. Above 70 = good 💚, 40-70 = okay 🟡, below 40 = warning 🔴. Calculated from income, expenses, reserves and loans.",
+      "trafficLightTitle": "Budget Traffic Light",
+      "trafficLight": "Green = monthly surplus 💚, Yellow = roughly balanced 🟡, Red = monthly deficit 🔴",
+      "freeMoneyTitle": "Available Money",
+      "freeMoney": "Money available this month after all fixed expenses and savings plans",
+      "dismiss": "Got it ✓"
+    },
+    "onboarding": {
+      "welcome": "Welcome to HELFINANCE! 👋",
+      "welcomeText": "Let's get started together. First, we'll add your first income.",
+      "start": "Let's go!",
+      "skip": "Later",
+      "firstIncomeAdded": "Great! Now your first expense",
+      "allDone": "Perfect! You're all set 🎉"
     }
   },
   "income": {
@@ -322,5 +339,35 @@
     "calculate": "Calculate",
     "monthsToSave": "Months to save:",
     "monthlyImpact": "Monthly impact:"
+  },
+  "tooltips": {
+    "name": "Description of your income/expense",
+    "amount": "Amount in your currency",
+    "bookingDay": "Which day of the month is this booked? (1-31). Example: 1 = first of month, 15 = mid-month",
+    "interval": "How often does this income/expense occur?",
+    "effectiveDates": "Period during which this booking is active. Leave empty = unlimited",
+    "category": "Optional: categorize your expenses for a better overview"
+  },
+  "placeholders": {
+    "incomeName": "e.g. Salary Company XY",
+    "expenseName": "e.g. Netflix subscription",
+    "amount": "e.g. 3500",
+    "bookingDay": "e.g. 1"
+  },
+  "quickAdd": {
+    "title": "Quick Add",
+    "typeIncome": "Income",
+    "typeExpense": "Expense",
+    "submit": "Add",
+    "namePlaceholder": "Name",
+    "amountPlaceholder": "Amount"
+  },
+  "forms": {
+    "advancedOptions": "Advanced Options"
+  },
+  "livePreview": {
+    "monthly": "Monthly",
+    "reserved": "Reserved per month",
+    "once": "One-time payment"
   }
 }

@@ -28,6 +28,23 @@
       "green": "Gut",
       "yellow": "Achtung",
       "red": "Kritisch"
+    },
+    "explainers": {
+      "healthScoreTitle": "Finanz-Gesundheit",
+      "healthScore": "Wert von 0-100. Über 70 = gut 💚, 40-70 = okay 🟡, unter 40 = Achtung 🔴. Berechnet aus Einnahmen, Ausgaben, Rücklagen und Krediten.",
+      "trafficLightTitle": "Budget-Ampel",
+      "trafficLight": "Grün = monatlicher Überschuss 💚, Gelb = knapp ausgeglichen 🟡, Rot = monatliches Minus 🔴",
+      "freeMoneyTitle": "Verfügbares Geld",
+      "freeMoney": "Verfügbares Geld diesen Monat nach allen festen Ausgaben und Sparplänen",
+      "dismiss": "Verstanden ✓"
+    },
+    "onboarding": {
+      "welcome": "Willkommen bei HELFINANCE! 👋",
+      "welcomeText": "Lass uns gemeinsam starten. Zuerst tragen wir deine erste Einnahme ein.",
+      "start": "Los geht's!",
+      "skip": "Später",
+      "firstIncomeAdded": "Super! Jetzt deine erste Ausgabe",
+      "allDone": "Perfekt! Du bist startklar 🎉"
     }
   },
   "income": {
@@ -322,5 +339,35 @@
     "calculate": "Berechnen",
     "monthsToSave": "Monate bis zum Kauf:",
     "monthlyImpact": "Monatliche Auswirkung:"
+  },
+  "tooltips": {
+    "name": "Beschreibung deiner Einnahme/Ausgabe",
+    "amount": "Betrag in deiner Währung",
+    "bookingDay": "An welchem Tag im Monat wird gebucht? (1-31). Beispiel: 1 = Monatserster, 15 = Monatsmitte",
+    "interval": "Wie oft tritt diese Einnahme/Ausgabe auf?",
+    "effectiveDates": "Zeitraum in dem diese Buchung aktiv ist. Leer lassen = unbegrenzt",
+    "category": "Optional: Kategorisiere deine Ausgaben für bessere Übersicht"
+  },
+  "placeholders": {
+    "incomeName": "z.B. Gehalt Firma XY",
+    "expenseName": "z.B. Netflix Abo",
+    "amount": "z.B. 3500",
+    "bookingDay": "z.B. 1"
+  },
+  "quickAdd": {
+    "title": "Schnell hinzufügen",
+    "typeIncome": "Einnahme",
+    "typeExpense": "Ausgabe",
+    "submit": "Hinzufügen",
+    "namePlaceholder": "Name",
+    "amountPlaceholder": "Betrag"
+  },
+  "forms": {
+    "advancedOptions": "Erweiterte Optionen"
+  },
+  "livePreview": {
+    "monthly": "Monatlich",
+    "reserved": "Pro Monat reserviert",
+    "once": "Einmalige Zahlung"
   }
 }

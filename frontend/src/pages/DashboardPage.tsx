@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
-import { getDashboard, getWidgetPrefs, updateWidgetPref } from '../api'
+import { getDashboard, getWidgetPrefs, updateWidgetPref, completeOnboarding } from '../api'
 import type { DashboardData } from '../types'
 import { Modal } from '../components/Modal'
+import { QuickAdd } from '../components/QuickAdd'
 
 const WIDGET_KEYS = ['healthScore', 'budget', 'freeMoney', 'upcomingBookings'] as const
 type WidgetKey = typeof WIDGET_KEYS[number]
@@ -53,6 +55,7 @@ export function DashboardPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
+  const navigate = useNavigate()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [liquidityDismissed, setLiquidityDismissed] = useState(false)
@@ -60,6 +63,10 @@ export function DashboardPage() {
   const [widgets, setWidgets] = useState<Record<WidgetKey, boolean>>({
     healthScore: true, budget: true, freeMoney: true, upcomingBookings: true
   })
+  const [showExplainers, setShowExplainers] = useState(
+    localStorage.getItem('helfinance_explainer_dismissed') !== 'true'
+  )
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   const loadDashboard = () => {
     setLoading(true)
@@ -74,10 +81,31 @@ export function DashboardPage() {
 
   useEffect(() => { loadDashboard() }, [])
 
+  useEffect(() => {
+    if (user && data && !user.onboarding_done && data.total_income === 0 && data.total_expenses === 0) {
+      setShowOnboarding(true)
+    }
+  }, [user, data])
+
   const toggleWidget = async (key: WidgetKey) => {
     const next = !widgets[key]
     setWidgets(prev => ({ ...prev, [key]: next }))
     try { await updateWidgetPref(key, next) } catch { /* non-critical */ }
+  }
+
+  const dismissExplainers = () => {
+    localStorage.setItem('helfinance_explainer_dismissed', 'true')
+    setShowExplainers(false)
+  }
+
+  const handleOnboardingStart = () => {
+    setShowOnboarding(false)
+    navigate('/bookings?tab=income&add=true')
+  }
+
+  const handleOnboardingSkip = async () => {
+    setShowOnboarding(false)
+    try { await completeOnboarding() } catch { /* non-critical */ }
   }
 
   const currency = user?.currency || 'EUR'
@@ -118,6 +146,26 @@ export function DashboardPage() {
       {data.reserve_warning && (
         <div className="alert alert-warning">
           <span>⚠ {t('dashboard.reserveWarning', { required: fmt(data.required_reserve_monthly * 3), balance: fmt(data.savings_balance) })}</span>
+        </div>
+      )}
+
+      {showExplainers && (
+        <div className="explainer-cards">
+          <div className="explainer-card">
+            <strong>{t('dashboard.explainers.healthScoreTitle')}</strong>
+            <p>{t('dashboard.explainers.healthScore')}</p>
+          </div>
+          <div className="explainer-card">
+            <strong>{t('dashboard.explainers.trafficLightTitle')}</strong>
+            <p>{t('dashboard.explainers.trafficLight')}</p>
+          </div>
+          <div className="explainer-card">
+            <strong>{t('dashboard.explainers.freeMoneyTitle')}</strong>
+            <p>{t('dashboard.explainers.freeMoney')}</p>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={dismissExplainers}>
+            {t('dashboard.explainers.dismiss')}
+          </button>
         </div>
       )}
 
@@ -198,6 +246,22 @@ export function DashboardPage() {
           </div>
         )}
       </div>
+
+      {showOnboarding && (
+        <Modal title={t('dashboard.onboarding.welcome')} onClose={() => setShowOnboarding(false)} size="sm">
+          <p style={{ marginBottom: 'var(--space-4)' }}>{t('dashboard.onboarding.welcomeText')}</p>
+          <div className="modal-actions">
+            <button className="btn btn-secondary" onClick={handleOnboardingSkip}>
+              {t('dashboard.onboarding.skip')}
+            </button>
+            <button className="btn btn-primary" onClick={handleOnboardingStart}>
+              {t('dashboard.onboarding.start')}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      <QuickAdd onSuccess={loadDashboard} />
 
       {showCustomize && (
         <Modal title={t('dashboard.customize')} onClose={() => setShowCustomize(false)} size="sm">

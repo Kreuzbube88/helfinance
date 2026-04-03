@@ -1835,12 +1835,12 @@ tbody tr:hover {
   }
 
   .fab {
-    bottom: var(--space-4);
+    bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
     right: var(--space-4);
   }
 
   .fab-calc {
-    bottom: calc(var(--space-4) + 52px + 10px);
+    bottom: calc(var(--space-4) + 52px + 10px + env(safe-area-inset-bottom, 0px));
   }
 
   .item-card {
@@ -1850,4 +1850,183 @@ tbody tr:hover {
   .item-card-actions {
     opacity: 1;
   }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
 }
+
+/* ─── Tooltip ─────────────────────────────────────────────────────────────── */
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tooltip-icon {
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.tooltip-content {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 200;
+  background: var(--color-surface-raised, var(--color-surface));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  max-width: 280px;
+  min-width: 160px;
+  box-shadow: var(--shadow-md);
+  white-space: normal;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .tooltip-content {
+    left: 0;
+    bottom: auto;
+    top: calc(100% + 4px);
+  }
+}
+
+/* ─── Live Preview ────────────────────────────────────────────────────────── */
+.live-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface-active, rgba(99, 102, 241, 0.06));
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.live-preview-icon {
+  font-size: 16px;
+}
+
+.live-preview-label {
+  color: var(--color-text-secondary);
+}
+
+.live-preview-amount {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.live-preview-income .live-preview-amount {
+  color: var(--color-success);
+}
+
+.live-preview-expense .live-preview-amount {
+  color: var(--color-danger);
+}
+
+/* ─── Advanced Toggle ─────────────────────────────────────────────────────── */
+.advanced-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: var(--space-3);
+  color: var(--color-text-secondary);
+}
+
+/* ─── QuickAdd FAB (mobile only) ──────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .fab {
+    display: none;
+  }
+}
+
+/* ─── QuickAdd type toggle ─────────────────────────────────────────────────── */
+.quickadd-type-toggle {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.quickadd-type-btn {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 44px;
+}
+
+.quickadd-type-btn.active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
+}
+
+/* ─── Dashboard Explainer Cards ───────────────────────────────────────────── */
+.explainer-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.explainer-card {
+  background: var(--color-info-muted, rgba(99, 102, 241, 0.06));
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.explainer-card strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.explainer-card p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+/* ─── Mobile touch targets ─────────────────────────────────────────────────── */
+button, .card[role="button"], a {
+  min-height: 36px;
+}
+
+@media (max-width: 767px) {
+  button, .card[role="button"], a {
+    min-height: 44px;
+  }
+
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  .page {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* ─── Dashboard grid responsive ───────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

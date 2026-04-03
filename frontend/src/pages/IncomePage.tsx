@@ -10,6 +10,8 @@ import {
 import type { Income, IncomeChange, Category } from '../types'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
+import { Tooltip } from '../components/Tooltip'
+import { LivePreview } from '../components/LivePreview'
 
 const EMPTY_FORM = {
   name: '',
@@ -23,9 +25,11 @@ const EMPTY_FORM = {
 
 interface IncomePageProps {
   embedded?: boolean
+  triggerAdd?: boolean
+  onTriggerHandled?: () => void
 }
 
-export function IncomePage({ embedded = false }: IncomePageProps) {
+export function IncomePage({ embedded = false, triggerAdd, onTriggerHandled }: IncomePageProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -39,6 +43,7 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
   const [editing, setEditing] = useState<Income | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   // Detail modal
   const [detailItem, setDetailItem] = useState<Income | null>(null)
@@ -73,9 +78,17 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
 
   useEffect(() => { load() }, [])
 
+  useEffect(() => {
+    if (triggerAdd) {
+      openAdd()
+      onTriggerHandled?.()
+    }
+  }, [triggerAdd])
+
   const openAdd = () => {
     setEditing(null)
     setForm(EMPTY_FORM)
+    setShowAdvanced(false)
     setShowModal(true)
   }
 
@@ -90,6 +103,7 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
       effective_to: item.effective_to || '',
       category_id: item.category_id ? String(item.category_id) : ''
     })
+    setShowAdvanced(true)
     setShowModal(true)
   }
 
@@ -353,44 +367,73 @@ export function IncomePage({ embedded = false }: IncomePageProps) {
         >
           <form onSubmit={handleSave}>
             <div className="form-group">
-              <label className="form-label">{t('income.name')}</label>
-              <input className="form-input" value={form.name} onChange={e => f('name', e.target.value)} required />
+              <label className="form-label">
+                <Tooltip content={t('tooltips.name')}>{t('income.name')}</Tooltip>
+              </label>
+              <input className="form-input" value={form.name} onChange={e => f('name', e.target.value)} required placeholder={t('placeholders.incomeName')} />
             </div>
             <div className="form-group">
-              <label className="form-label">{t('income.amount')}</label>
-              <input className="form-input" type="number" step="0.01" value={form.amount} onChange={e => f('amount', e.target.value)} required />
+              <label className="form-label">
+                <Tooltip content={t('tooltips.amount')}>{t('income.amount')}</Tooltip>
+              </label>
+              <input className="form-input" type="number" step="0.01" value={form.amount} onChange={e => f('amount', e.target.value)} required placeholder={t('placeholders.amount')} />
             </div>
             <div className="form-group">
-              <label className="form-label">{t('income.interval')}</label>
+              <label className="form-label">
+                <Tooltip content={t('tooltips.interval')}>{t('income.interval')}</Tooltip>
+              </label>
               <select className="form-select" value={form.interval} onChange={e => f('interval', e.target.value)}>
                 <option value="monthly">{t('income.monthly')}</option>
                 <option value="yearly">{t('income.yearly')}</option>
                 <option value="once">{t('income.once')}</option>
               </select>
             </div>
-            <div className="form-group">
-              <label className="form-label">{t('income.bookingDay')}</label>
-              <input className="form-input" type="number" min="1" max="31" value={form.booking_day} onChange={e => f('booking_day', e.target.value)} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">{t('expenses.category')}</label>
-              <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
-                <option value="">—</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">{t('income.effectiveFrom')}</label>
-                <input className="form-input" type="date" value={form.effective_from} onChange={e => f('effective_from', e.target.value)} required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">{t('income.effectiveTo')}</label>
-                <input className="form-input" type="date" value={form.effective_to} onChange={e => f('effective_to', e.target.value)} />
-              </div>
-            </div>
+            <LivePreview
+              amount={parseFloat(form.amount) || 0}
+              interval={form.interval}
+              type="income"
+              currency={currency}
+            />
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm advanced-toggle"
+              onClick={() => setShowAdvanced(v => !v)}
+            >
+              {t('forms.advancedOptions')} {showAdvanced ? '▲' : '▼'}
+            </button>
+            {showAdvanced && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">
+                    <Tooltip content={t('tooltips.bookingDay')}>{t('income.bookingDay')}</Tooltip>
+                  </label>
+                  <input className="form-input" type="number" min="1" max="31" value={form.booking_day} onChange={e => f('booking_day', e.target.value)} required placeholder={t('placeholders.bookingDay')} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">
+                    <Tooltip content={t('tooltips.category')}>{t('expenses.category')}</Tooltip>
+                  </label>
+                  <select className="form-select" value={form.category_id} onChange={e => f('category_id', e.target.value)}>
+                    <option value="">—</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{t(`categories.${cat.name}`, { defaultValue: cat.name })}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <Tooltip content={t('tooltips.effectiveDates')}>{t('income.effectiveFrom')}</Tooltip>
+                    </label>
+                    <input className="form-input" type="date" value={form.effective_from} onChange={e => f('effective_from', e.target.value)} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{t('income.effectiveTo')}</label>
+                    <input className="form-input" type="date" value={form.effective_to} onChange={e => f('effective_to', e.target.value)} />
+                  </div>
+                </div>
+              </>
+            )}
             <div className="modal-actions">
               <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>
               <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? t('common.loading') : t('common.save')}</button>
