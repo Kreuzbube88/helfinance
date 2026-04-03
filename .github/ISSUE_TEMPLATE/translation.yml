@@ -1,0 +1,74 @@
+name: 🌐 Add Translation
+description: Contribute a new language translation to HELFINANCE
+title: "[Translation] Add [LANGUAGE] support"
+labels: ["enhancement", "i18n", "translation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing a translation! Please fill out the information below.
+
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      description: Which language are you adding?
+      placeholder: e.g., French, Spanish, Italian, Portuguese
+    validations:
+      required: true
+
+  - type: input
+    id: language_code
+    attributes:
+      label: Language Code
+      description: ISO 639-1 two-letter code
+      placeholder: e.g., fr, es, it, pt
+    validations:
+      required: true
+
+  - type: dropdown
+    id: completion
+    attributes:
+      label: Translation Completion
+      description: How complete is your translation?
+      options:
+        - 100% (all namespaces)
+        - 75-99%
+        - 50-74%
+        - <50%
+    validations:
+      required: true
+
+  - type: textarea
+    id: missing
+    attributes:
+      label: Missing / Incomplete Namespaces (if <100%)
+      description: List any namespaces that are incomplete or missing
+      placeholder: |
+        - reports (only 50% translated)
+        - admin (need help with OIDC terminology)
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: Added all keys to `frontend/src/i18n/[code].json`
+          required: true
+        - label: Kept technical terms untranslated (SQLite, JWT, OIDC, PWA)
+          required: true
+        - label: Followed existing namespace structure (common, dashboard, bookings, etc.)
+          required: true
+        - label: Updated `frontend/src/i18n/index.ts`
+          required: true
+        - label: Tested locally (`npm run dev`)
+          required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional Notes
+      description: Any context, questions, or terms you're unsure about
+      placeholder: |
+        - Not sure if "Dashboard" should be translated or kept in English
+        - "Buchungen" translates well but "Sparrate" needed context

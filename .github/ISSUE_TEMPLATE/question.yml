@@ -1,0 +1,58 @@
+name: ❓ Question / Support
+description: Ask a question or get help with HELFINANCE
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question? Need help with setup or configuration?
+
+        **Before asking:**
+        - Check the [Documentation](https://github.com/kreuzbube88/helfinance/tree/main/docs)
+        - Search [existing issues](https://github.com/kreuzbube88/helfinance/issues?q=is%3Aissue)
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      description: What is your question about?
+      options:
+        - Installation/Setup
+        - Dashboard & Health Score
+        - Income & Expenses
+        - Loans & Amortization
+        - Savings Tracking
+        - Reports & Export
+        - Admin Panel (SMTP/OIDC)
+        - PWA/Mobile
+        - Data Backup/Migration
+        - Categories & Organization
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What do you need help with?
+      placeholder: How do I correctly enter my yearly car insurance (600€/year)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What I've Tried
+      description: What steps have you already taken?
+      placeholder: |
+        - Checked the docs
+        - Tried setting Interval to Yearly
+        - Dashboard still shows wrong monthly amount
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version are you running?
+      placeholder: latest

@@ -1,0 +1,59 @@
+name: ✨ Feature Request
+description: Suggest a new feature or improvement for HELFINANCE
+labels: ["enhancement", "discussion"]
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: Which area does this feature relate to?
+      options:
+        - Dashboard/UI
+        - Bookings (Income/Expenses)
+        - Loans
+        - Savings/Reserves
+        - Reports/Export
+        - PWA/Mobile Experience
+        - Admin Panel (SMTP/OIDC)
+        - i18n/Translations
+        - Performance
+        - Data Import/Export
+        - User Experience
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Use Case
+      description: What problem does this feature solve? Why do you need it?
+      placeholder: |
+        I often need to add multiple expenses at once (e.g. after grocery shopping).
+        Currently I have to add them one by one which is time-consuming.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this to work?
+      placeholder: |
+        Add a Bulk Add feature that allows entering multiple expenses in a list format.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other solutions have you thought about?
+      placeholder: Using CSV import / copying entries manually / other workarounds
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Screenshots, mockups, links to similar features in other tools
+      placeholder: Drag & drop images or paste links here

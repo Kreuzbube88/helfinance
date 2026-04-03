@@ -1,0 +1,36 @@
+name: 📖 Documentation Issue
+description: Report an issue with documentation or suggest improvements
+labels: ["documentation"]
+body:
+  - type: dropdown
+    id: location
+    attributes:
+      label: Documentation Location
+      description: Where did you find the issue?
+      options:
+        - README.md
+        - docs/de/ (German documentation)
+        - docs/en/ (English documentation)
+        - CONTRIBUTING.md
+        - Code comments
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: Issue Description
+      description: What's wrong or missing?
+      placeholder: |
+        The installation section says to use port 8080,
+        but the default is actually 3000.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Fix
+      description: How should it be corrected or improved?
+      placeholder: Change "port 8080" to "port 3000"
