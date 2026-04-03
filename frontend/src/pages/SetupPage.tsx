@@ -64,6 +64,14 @@ export function SetupPage() {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
+            <label className="form-label">{t('setup.selectLanguage')}</label>
+            <select className="form-input" value={language} onChange={handleLanguageChange}>
+              <option value="de">🇩🇪 Deutsch</option>
+              <option value="en">🇬🇧 English</option>
+            </select>
+          </div>
+
+          <div className="form-group">
             <label className="form-label">{t('auth.username')}</label>
             <input
               className="form-input"
@@ -113,24 +121,14 @@ export function SetupPage() {
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">{t('setup.defaultLanguage')}</label>
-              <select className="form-input" value={language} onChange={handleLanguageChange}>
-                <option value="de">🇩🇪 Deutsch</option>
-                <option value="en">🇬🇧 English</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">{t('setup.defaultCurrency')}</label>
-              <select className="form-input" value={currency} onChange={e => setCurrency(e.target.value)}>
-                <option value="EUR">EUR €</option>
-                <option value="USD">USD $</option>
-                <option value="GBP">GBP £</option>
-                <option value="CHF">CHF Fr.</option>
-              </select>
-            </div>
+          <div className="form-group">
+            <label className="form-label">{t('setup.defaultCurrency')}</label>
+            <select className="form-input" value={currency} onChange={e => setCurrency(e.target.value)}>
+              <option value="EUR">EUR €</option>
+              <option value="USD">USD $</option>
+              <option value="GBP">GBP £</option>
+              <option value="CHF">CHF Fr.</option>
+            </select>
           </div>
 
           <button

@@ -8,7 +8,7 @@ interface AuthContextValue {
   isAdmin: boolean
   isLoading: boolean
   setupRequired: boolean
-  login: (token: string, user: User) => void
+  login: (token: string, user: User, persistent?: boolean) => void
   logout: () => void
   refreshUser: () => Promise<void>
   completeSetup: (token: string, user: User) => void
@@ -58,8 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const login = useCallback((t: string, u: User) => {
-    setToken(t)
+  const login = useCallback((t: string, u: User, persistent: boolean = true) => {
+    setToken(t, persistent)
     setTokenState(t)
     setUser(u)
   }, [])

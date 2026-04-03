@@ -20,16 +20,21 @@ import type {
 
 const BASE = '/api/v1'
 
-export function setToken(t: string): void {
-  localStorage.setItem('helfinance_token', t)
+export function setToken(t: string, persistent: boolean = true): void {
+  if (persistent) {
+    localStorage.setItem('helfinance_token', t)
+  } else {
+    sessionStorage.setItem('helfinance_token', t)
+  }
 }
 
 export function getToken(): string | null {
-  return localStorage.getItem('helfinance_token')
+  return localStorage.getItem('helfinance_token') || sessionStorage.getItem('helfinance_token')
 }
 
 export function clearToken(): void {
   localStorage.removeItem('helfinance_token')
+  sessionStorage.removeItem('helfinance_token')
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {

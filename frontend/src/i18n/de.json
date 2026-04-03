@@ -223,6 +223,7 @@
     "subtitle": "Admin-Konto erstellen",
     "submit": "Admin-Konto anlegen",
     "confirmPassword": "Passwort wiederholen",
+    "selectLanguage": "Sprache wählen",
     "defaultLanguage": "Standardsprache",
     "defaultCurrency": "Standardwährung",
     "passwordMismatch": "Passwörter stimmen nicht überein",
@@ -248,6 +249,7 @@
     "email": "E-Mail",
     "password": "Passwort",
     "loginWith": "Anmelden mit",
+    "rememberMe": "Angemeldet bleiben",
     "subtitle": "Persönliches Finanz-Dashboard"
   },
   "onboarding": {

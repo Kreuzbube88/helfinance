@@ -17,6 +17,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
   const [oidcConfig, setOidcConfig] = useState<{ enabled: boolean; display_name: string; url: string } | null>(null)
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export function LoginPage() {
     try {
       if (mode === 'login') {
         const res = await login(username, password)
-        authLogin(res.token, res.user)
+        authLogin(res.token, res.user, rememberMe)
         navigate('/dashboard', { replace: true })
       } else {
         if (password !== confirmPassword) {
@@ -48,7 +49,7 @@ export function LoginPage() {
           return
         }
         const res = await register(username, email, password)
-        authLogin(res.token, res.user)
+        authLogin(res.token, res.user, true)
         navigate('/dashboard', { replace: true })
       }
     } catch (err) {
@@ -126,6 +127,19 @@ export function LoginPage() {
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             />
           </div>
+
+          {mode === 'login' && (
+            <div className="form-check" style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                />
+                <span>{t('auth.rememberMe')}</span>
+              </label>
+            </div>
+          )}
 
           {mode === 'register' && (
             <div className="form-group">

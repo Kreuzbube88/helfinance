@@ -223,6 +223,7 @@
     "subtitle": "Create Admin Account",
     "submit": "Create Admin Account",
     "confirmPassword": "Confirm Password",
+    "selectLanguage": "Select Language",
     "defaultLanguage": "Default Language",
     "defaultCurrency": "Default Currency",
     "passwordMismatch": "Passwords do not match",
@@ -248,6 +249,7 @@
     "email": "Email",
     "password": "Password",
     "loginWith": "Login with",
+    "rememberMe": "Remember me",
     "subtitle": "Personal Finance Dashboard"
   },
   "onboarding": {
