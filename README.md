@@ -36,7 +36,21 @@ A self-hosted, privacy-first finance tracker. Manage income, expenses, loans, an
 
 ---
 
-## Quick Start
+## Installation
+
+### Unraid Community Applications (Recommended)
+
+HELFINANCE is available in the Unraid Community Applications Store!
+
+**Quick Install:**
+1. Unraid Web UI → **Apps** tab
+2. Search: "HELFINANCE"
+3. Click **Install**
+4. Configure:
+   - Port: 3000 (or custom)
+   - Volume: `/mnt/user/appdata/helfinance:/data`
+   - SECRET_KEY: Auto-generated (or set your own)
+5. **Apply** → Access at `http://[UNRAID-IP]:3000`
 
 ### Docker Run
 ```bash
@@ -44,20 +58,29 @@ docker run -d \
   --name helfinance \
   --restart unless-stopped \
   -p 3000:3000 \
-  -v /your/appdata/helfinance:/data \
+  -v /path/to/appdata:/data \
   -e SECRET_KEY=$(openssl rand -hex 32) \
   -e DATABASE_PATH=/data/helfinance.db \
   ghcr.io/kreuzbube88/helfinance:latest
 ```
 
-Then open `http://localhost:3000`. The first registered user is automatically assigned admin.
+Then open `http://localhost:3000`. First user = auto-admin.
 
 ### Docker Compose
-```bash
-cp .env.example .env
-# edit .env and set a strong SECRET_KEY
-docker compose up -d
-```
+
+See [Installation Guide](docs/en/01-installation.md) for docker-compose.yml
+
+---
+
+## Documentation
+
+📖 **[German Documentation](docs/de/01-installation.md)** — Vollständige Anleitung auf Deutsch
+📖 **[English Documentation](docs/en/01-installation.md)** — Complete guide in English
+
+Quick links:
+- [Getting Started](docs/en/02-getting-started.md)
+- [Dashboard Guide](docs/en/03-dashboard.md)
+- [FAQ](docs/en/09-faq.md)
 
 ---
 
@@ -70,15 +93,6 @@ docker compose up -d
 | `SECRET_KEY` | `changeme` | **Yes** | Secret used for JWT signing — use `openssl rand -hex 32` |
 
 All other configuration (SMTP, OIDC, default currency/language) lives in the Admin UI and is stored in the database.
-
----
-
-## Unraid
-
-Import the template via **Apps → Settings → Use custom template URL**:
-```
-https://raw.githubusercontent.com/Kreuzbube88/helfinance/main/helfinance.xml
-```
 
 ---
 
