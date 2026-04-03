@@ -18,7 +18,7 @@ export interface Income {
   booking_day: number
   effective_from: string
   effective_to: string | null
-  category_id: number | null
+  category_id?: number | null
   is_active?: number
   created_at: string
 }
