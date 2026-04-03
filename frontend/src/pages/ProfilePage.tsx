@@ -25,6 +25,7 @@ export function ProfilePage() {
       await updateProfile({ username, email, language: lang, currency })
       await refreshUser()
       i18n.changeLanguage(lang)
+      localStorage.setItem('helfinance_lang', lang)
       showToast(t('common.success'), 'success')
     } catch (e) {
       showToast((e as Error).message, 'error')

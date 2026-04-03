@@ -2,7 +2,7 @@
 
 **HELFINANCE** — Personal Finance Dashboard
 
-A self-hosted, privacy-first finance tracker. Manage income, expenses, loans, savings goals, and household finances from a single clean dashboard. Runs as a single Docker container, stores everything in a local SQLite database, and works offline as a PWA.
+A self-hosted, privacy-first finance tracker. Manage income, expenses, loans, and savings from a single clean dashboard. Runs as a single Docker container, stores everything in a local SQLite database, and works offline as a PWA.
 
 > ⚠️ **Hinweis:** HELFINANCE wurde vollständig mit KI (Claude.ai) erstellt. Es wurde nicht für eine öffentliche Bereitstellung im Internet konzipiert und sollte ausschließlich im lokalen Netzwerk / Homelab betrieben werden.
 
@@ -10,24 +10,29 @@ A self-hosted, privacy-first finance tracker. Manage income, expenses, loans, sa
 
 ## Features
 
-| Module | Description |
-|--------|-------------|
-| **Dashboard** | Health score gauge, budget traffic light, free money this month, upcoming bookings, savings progress |
-| **Income** | Track salaries and recurring income; schedule future amount changes |
-| **Expenses** | Group by category; monthly/quarterly/semi-annual/annual intervals; schedule changes |
-| **Loans** | Annuity loan calculator with full amortization table; avalanche payoff hints |
-| **Savings Goals** | Fixed, dynamic, or combined contribution modes; emergency reserve tracker |
-| **Cashflow Calendar** | Daily booking overview + projected running balance chart |
-| **Reports** | Monthly breakdown with category donut chart; yearly 12-column table |
-| **Export** | PDF and CSV export for monthly and yearly reports |
-| **Household** | Link two users; split shared expenses; see monthly balance ("User B owes User A: X€") |
-| **Notifications** | In-app alerts for upcoming large expenses, negative projections, savings goals reached |
-| **Email (SMTP)** | Optional email notifications via configurable SMTP; test button in admin |
-| **OIDC Login** | Optional single sign-on via any OIDC provider (Authentik, Keycloak, etc.); native login always available |
+### Navigation
+
+- **Dashboard** — Health score gauge, budget traffic light, free money this month, upcoming bookings
+- **Bookings** — Tabs: Income / Expenses
+  - **Income** — Recurring income sources; schedule future amount changes
+  - **Expenses** — Grouped by category; monthly/quarterly/semi-annual/annual intervals; schedule changes; budget limits per category
+- **Loans** — Annuity loan calculator with full amortization table, special payments, avalanche payoff hints
+- **Savings** — Savings balance, withdrawals & adjustments, projection chart, reserves for irregular costs
+- **Reports** — Tabs: Monthly / Yearly
+  - **Monthly** — Breakdown with category donut chart, income/expense comparison, PDF & CSV export
+  - **Yearly** — 12-column summary table, PDF & CSV export
+
+### Other Features
+
+| Feature | Description |
+|---------|-------------|
+| **Notifications** | In-app alerts for negative projections and large upcoming expenses |
+| **Email (SMTP)** | Optional email notifications via configurable SMTP |
+| **OIDC Login** | Optional SSO via any OIDC provider (Authentik, Keycloak, etc.); native login always available |
 | **Admin Panel** | SMTP config, OIDC config, default language/currency, user management, registration control |
 | **PWA** | Installable on desktop and mobile; offline shell via service worker |
-| **i18n** | German (default) and English; per-user language preference stored in DB |
-| **Dark/Light Mode** | System preference + manual toggle |
+| **i18n** | German (default) and English; per-user language preference |
+| **Dark/Light Mode** | Manual toggle |
 
 ---
 

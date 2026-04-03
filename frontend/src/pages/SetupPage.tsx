@@ -24,6 +24,7 @@ export function SetupPage() {
     const lang = e.target.value
     setLanguage(lang)
     i18n.changeLanguage(lang)
+    localStorage.setItem('helfinance_lang', lang)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

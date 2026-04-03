@@ -4,18 +4,16 @@ import { useTranslation } from 'react-i18next'
 const VERSION = '1.0.0'
 
 const FEATURES = [
-  { icon: '📊', key: 'Dashboard', desc: 'Health score, budget traffic light, upcoming bookings, savings progress' },
-  { icon: '💰', key: 'Einnahmen', desc: 'Wiederkehrende Einnahmen mit geplanten Änderungen' },
-  { icon: '💸', key: 'Ausgaben', desc: 'Ausgaben nach Kategorie, monatlich bis jährlich' },
-  { icon: '🏦', key: 'Kredite', desc: 'Annuitätenrechner mit Tilgungsplan und Avalanche-Hinweis' },
-  { icon: '🐷', key: 'Sparziele', desc: 'Feste, dynamische oder kombinierte Beitragsmodelle' },
-  { icon: '📅', key: 'Cashflow', desc: 'Tagesansicht mit projiziertem Kontostandverlauf' },
-  { icon: '📈', key: 'Berichte', desc: 'Monats- und Jahresberichte, PDF- und CSV-Export' },
-  { icon: '🏠', key: 'Haushalt', desc: 'Zwei Benutzer verknüpfen, Ausgaben teilen, Saldo berechnen' },
-  { icon: '🔔', key: 'Benachrichtigungen', desc: 'Warnungen bei negativen Prognosen und Zielerreichung' },
-  { icon: '🌐', key: 'OIDC', desc: 'Optionaler SSO-Login über jeden OIDC-Anbieter' },
-  { icon: '📱', key: 'PWA', desc: 'Installierbar als App, funktioniert offline' },
-  { icon: '🌍', key: 'i18n', desc: 'Deutsch und Englisch, pro Benutzer einstellbar' },
+  { icon: '📊', labelKey: 'nav.dashboard', descKey: 'about.featureDashboard' },
+  { icon: '💰', labelKey: 'nav.income', descKey: 'about.featureIncome' },
+  { icon: '💸', labelKey: 'nav.expenses', descKey: 'about.featureExpenses' },
+  { icon: '🏦', labelKey: 'nav.loans', descKey: 'about.featureLoans' },
+  { icon: '🐷', labelKey: 'nav.savings', descKey: 'about.featureSavings' },
+  { icon: '📈', labelKey: 'nav.reports', descKey: 'about.featureReports' },
+  { icon: '🔔', labelKey: 'common.notifications', descKey: 'about.featureNotifications' },
+  { icon: '🌐', labelKey: 'admin.oidc', descKey: 'about.featureOidc' },
+  { icon: '📱', labelKey: 'PWA', descKey: 'about.featurePwa' },
+  { icon: '🌍', labelKey: 'i18n', descKey: 'about.featureI18n' },
 ]
 
 const TECH = ['Node.js', 'Express', 'React', 'Vite', 'TypeScript', 'SQLite', 'better-sqlite3', 'i18next', 'pdfkit', 'nodemailer', 'openid-client', 'vite-plugin-pwa', 'Chart.js']
@@ -58,18 +56,18 @@ export function AboutPage() {
         </div>
 
         <p style={{ color: 'var(--color-text-muted)' }}>
-          Persönliches Finanz-Dashboard für Homelab-Enthusiasten. Alle Daten lokal, kein Cloud-Zwang.
+          {t('about.subtitle')}
         </p>
 
         <div>
           <div className="card-title">{t('about.features')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.75rem' }}>
             {FEATURES.map(f => (
-              <div key={f.key} style={{ display: 'flex', gap: '0.625rem', padding: '0.75rem', background: 'var(--color-surface-2)', borderRadius: '0.5rem' }}>
+              <div key={f.labelKey} style={{ display: 'flex', gap: '0.625rem', padding: '0.75rem', background: 'var(--color-surface-2)', borderRadius: '0.5rem' }}>
                 <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>{f.icon}</span>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{f.key}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{f.desc}</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{t(f.labelKey, { defaultValue: f.labelKey })}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{t(f.descKey)}</div>
                 </div>
               </div>
             ))}

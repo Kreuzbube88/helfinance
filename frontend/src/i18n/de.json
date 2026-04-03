@@ -286,6 +286,7 @@
   "about": {
     "title": "Über HELFINANCE",
     "version": "Version",
+    "subtitle": "Persönliches Finanz-Dashboard für Homelab-Enthusiasten. Alle Daten lokal, kein Cloud-Zwang.",
     "features": "Funktionen",
     "techStack": "Technologie",
     "privacy": "Datenschutz",
@@ -293,7 +294,17 @@
     "credits": "Erstellt mit Claude.ai — denn gute Prompts bauen großartige Software.",
     "changelog": "Changelog",
     "license": "Lizenz",
-    "initialRelease": "Erstveröffentlichung — alle Kernmodule"
+    "initialRelease": "Erstveröffentlichung — alle Kernmodule",
+    "featureDashboard": "Health score, Budget-Ampel, nächste Buchungen, Sparfortschritt",
+    "featureIncome": "Wiederkehrende Einnahmen mit geplanten Änderungen",
+    "featureExpenses": "Ausgaben nach Kategorie, monatlich bis jährlich",
+    "featureLoans": "Annuitätenrechner mit Tilgungsplan und Avalanche-Hinweis",
+    "featureSavings": "Sparkontostand, Entnahmen und Rücklagen für unregelmäßige Kosten",
+    "featureReports": "Monats- und Jahresberichte, PDF- und CSV-Export",
+    "featureNotifications": "Warnungen bei negativen Prognosen und Zielerreichung",
+    "featureOidc": "Optionaler SSO-Login über jeden OIDC-Anbieter",
+    "featurePwa": "Installierbar als App, funktioniert offline",
+    "featureI18n": "Deutsch und Englisch, pro Benutzer einstellbar"
   },
   "budget": {
     "limit": "Budget-Limit",

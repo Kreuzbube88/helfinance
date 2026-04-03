@@ -118,17 +118,21 @@
   },
   "savings": {
     "title": "Savings",
-    "emergencyReserve": "Emergency Reserve",
-    "savingsRate": "Savings Rate",
-    "emergencyTargetLabel": "Target: {{target}} (3× monthly income)",
-    "savingsRateDescription": "Enter this month's salary to recalculate dynamic savings contribution.",
-    "thisMonthsSalary": "This month's salary (€)",
-    "recalculate": "Recalculate",
-    "dynamicSavingsThisMonth": "Dynamic savings this month: ",
-    "currentBalance": "Current Balance",
     "initialBalance": "Initial Balance",
-    "transactions": "Transactions",
-    "addTransaction": "Add Transaction"
+    "initialBalanceDate": "Start Date",
+    "currentBalance": "Current Balance",
+    "contributions": "Savings contributions",
+    "monthlyContribution": "Monthly contribution",
+    "adjustments": "Withdrawals & Adjustments",
+    "addAdjustment": "Add Withdrawal",
+    "projection": "Projection (next 12 months)",
+    "irregularCosts": "Reserve for irregular costs",
+    "monthlyReserve": "Monthly reserve",
+    "totalReserveNeeded": "Total monthly reserve needed",
+    "noSparenExpenses": "No expenses with category 'Savings' found",
+    "noIrregularExpenses": "No irregular expenses found",
+    "transactions": "Withdrawals & Adjustments",
+    "months": "months"
   },
   "reports": {
     "title": "Reports",
@@ -282,6 +286,7 @@
   "about": {
     "title": "About HELFINANCE",
     "version": "Version",
+    "subtitle": "Personal finance dashboard for homelab enthusiasts. All data local, no cloud required.",
     "features": "Features",
     "techStack": "Tech Stack",
     "privacy": "Privacy",
@@ -289,7 +294,17 @@
     "credits": "Built with Claude.ai — because good prompts build great software.",
     "changelog": "Changelog",
     "license": "License",
-    "initialRelease": "Initial release — all core modules"
+    "initialRelease": "Initial release — all core modules",
+    "featureDashboard": "Health score, budget traffic light, upcoming bookings, savings progress",
+    "featureIncome": "Recurring income with scheduled changes",
+    "featureExpenses": "Expenses by category, monthly to yearly",
+    "featureLoans": "Annuity calculator with amortization schedule and avalanche hint",
+    "featureSavings": "Savings balance, withdrawals and reserves for irregular costs",
+    "featureReports": "Monthly and yearly reports, PDF and CSV export",
+    "featureNotifications": "Warnings for negative forecasts and goal achievement",
+    "featureOidc": "Optional SSO login via any OIDC provider",
+    "featurePwa": "Installable as app, works offline",
+    "featureI18n": "German and English, configurable per user"
   },
   "budget": {
     "limit": "Budget Limit",
