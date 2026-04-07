@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-in%20development-yellow" alt="Status">
+  <img src="https://img.shields.io/badge/status-active-brightgreen" alt="Status">
   <img src="https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen" alt="Node.js">
   <img src="https://img.shields.io/github/license/Kreuzbube88/helfinance" alt="License">
   <img src="https://img.shields.io/badge/platform-Unraid-orange" alt="Platform">
