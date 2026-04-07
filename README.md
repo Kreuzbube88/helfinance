@@ -1,59 +1,77 @@
-# ![HELFINANCE](frontend/public/logo.png)
+<p align="center">
+  <img src="frontend/public/logo.png" alt="HELFINANCE" width="450" height="450"/>
+</p>
 
-**HELFINANCE** — Personal Finance Dashboard
+<p align="center">
+  <strong>Personal Finance Dashboard for Homelab</strong>
+</p>
 
-A self-hosted, privacy-first finance tracker. Manage income, expenses, loans, and savings from a single clean dashboard. Runs as a single Docker container, stores everything in a local SQLite database, and works offline as a PWA.
+<p align="center">
+  <a href="README.de.md">🇩🇪 Deutsch</a> &nbsp;|&nbsp; 🇬🇧 English
+</p>
 
-> ⚠️ **Hinweis:** HELFINANCE wurde vollständig mit KI (Claude.ai) erstellt. Es wurde nicht für eine öffentliche Bereitstellung im Internet konzipiert und sollte ausschließlich im lokalen Netzwerk / Homelab betrieben werden.
+<p align="center">
+  <img src="https://img.shields.io/badge/status-in%20development-yellow" alt="Status">
+  <img src="https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen" alt="Node.js">
+  <img src="https://img.shields.io/github/license/Kreuzbube88/helfinance" alt="License">
+  <img src="https://img.shields.io/badge/platform-Unraid-orange" alt="Platform">
+</p>
+
+---
+
+HELFINANCE is a self-hosted personal finance tracker built for homelab enthusiasts. It runs as a single Docker container, stores everything in a local SQLite database, and gives you full control over your financial data — no cloud dependency, no subscription, works offline as a PWA.
+
+> ⚠️ HELFINANCE was built entirely with AI (Claude.ai). It is not designed for public internet exposure and should only be used within a local network / homelab.
 
 ---
 
 ## Features
 
-### Navigation
-
 - **Dashboard** — Health score gauge, budget traffic light, free money this month, upcoming bookings
-- **Bookings** — Tabs: Income / Expenses
-  - **Income** — Recurring income sources; schedule future amount changes
-  - **Expenses** — Grouped by category; monthly/quarterly/semi-annual/annual intervals; schedule changes; budget limits per category
-- **Loans** — Annuity loan calculator with full amortization table, special payments, avalanche payoff hints
-- **Savings Tracking** — Track savings balance, irregular expenses reserve, emergency fund recommendations
-- **Reports** — Tabs: Overview / Details / History
-  - **Overview** — 3 hero cards (Income, Expenses, Balance), donut chart, Required Savings card (top 5 items)
-  - **Details** — Income table, expense table by category, Required Savings full breakdown
-  - **History** — 6-month bar chart, snapshot archive
-
-### Other Features
-
-| Feature | Description |
-|---------|-------------|
-| **Notifications** | In-app alerts for negative projections and large upcoming expenses |
-| **Email (SMTP)** | Optional email notifications via configurable SMTP |
-| **OIDC Login** | Optional SSO via any OIDC provider (Authentik, Keycloak, etc.); native login always available |
-| **Admin Panel** | SMTP config, OIDC config, default language/currency, user management, registration control |
-| **PWA** | Installable on desktop and mobile; offline shell via service worker |
-| **i18n** | German (default) and English; per-user language preference |
-| **Dark/Light Mode** | Manual toggle |
+- **Bookings** — Income and expense tracking with recurring schedules, future amount changes, and category budget limits
+- **Loans** — Annuity loan calculator with full amortization table, special payments, and avalanche payoff hints
+- **Savings Tracking** — Savings balance, irregular expenses reserve, and emergency fund recommendations
+- **Reports** — Monthly/yearly overview with donut chart, income/expense tables, required savings breakdown, and 6-month history
+- **Notifications** — In-app alerts for negative projections and large upcoming expenses
+- **Email (SMTP)** — Optional email notifications via configurable SMTP
+- **OIDC Login** — Optional SSO via any OIDC provider (Authentik, Keycloak, etc.); native login always available
+- **Admin Panel** — SMTP config, OIDC config, default language/currency, user management, registration control
+- **PWA** — Installable on desktop and mobile; offline shell via service worker
+- **i18n** — German (default) and English; per-user language preference
+- **Dark/Light Mode** — Manual toggle
 
 ---
 
 ## Installation
 
-### Unraid Community Applications (Recommended)
+### Unraid Community Apps (recommended)
 
-HELFINANCE is available in the Unraid Community Applications Store!
+1. Open the **Apps** tab in Unraid
+2. Search for **HELFINANCE**
+3. Click **Install** and follow the template
 
-**Quick Install:**
-1. Unraid Web UI → **Apps** tab
-2. Search: "HELFINANCE"
-3. Click **Install**
-4. Configure:
-   - Port: 3000 (or custom)
-   - Volume: `/mnt/user/appdata/helfinance:/data`
-   - SECRET_KEY: Auto-generated (or set your own)
-5. **Apply** → Access at `http://[UNRAID-IP]:3000`
+HELFINANCE will be available at `http://YOUR-UNRAID-IP:3000`.
+
+### Docker Compose
+
+```yaml
+services:
+  helfinance:
+    image: ghcr.io/kreuzbube88/helfinance:latest
+    container_name: helfinance
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - SECRET_KEY=your_secret_here   # openssl rand -hex 32
+      - DATABASE_PATH=/data/helfinance.db
+      - TZ=Europe/Berlin
+    volumes:
+      - /mnt/user/appdata/helfinance:/data
+```
 
 ### Docker Run
+
 ```bash
 docker run -d \
   --name helfinance \
@@ -65,27 +83,21 @@ docker run -d \
   ghcr.io/kreuzbube88/helfinance:latest
 ```
 
-Then open `http://localhost:3000`. First user = auto-admin.
+---
 
-### Docker Compose
+## Quick Start
 
-See [Installation Guide](docs/en/01-installation.md) for docker-compose.yml
+After installation, open the web UI at `http://YOUR-IP:3000`. The first registered user becomes the admin automatically. Head to the **Admin** panel to configure SMTP, OIDC, default currency, and language.
 
 ---
 
 ## Documentation
 
-📖 **[German Documentation](docs/de/01-installation.md)** — Vollständige Anleitung auf Deutsch
-📖 **[English Documentation](docs/en/01-installation.md)** — Complete guide in English
-
-Quick links:
-- [Getting Started](docs/en/02-getting-started.md)
-- [Dashboard Guide](docs/en/03-dashboard.md)
-- [FAQ](docs/en/09-faq.md)
+Full documentation is available in the [`docs/`](docs/en/01-installation.md) folder in both German and English, covering installation, bookings, loans, savings, reports, and admin configuration.
 
 ---
 
-## Environment Variables
+## Requirements
 
 | Variable | Default | Required | Description |
 |----------|---------|----------|-------------|
@@ -97,22 +109,6 @@ All other configuration (SMTP, OIDC, default currency/language) lives in the Adm
 
 ---
 
-## Development
+## License
 
-Requirements: Node.js 20+
-
-```bash
-# Backend (starts on :3000)
-cd backend && npm install && npm run dev
-
-# Frontend (starts on :5173, proxies /api → :3000)
-cd frontend && npm install && npm run dev
-```
-
----
-
-## About
-
-HELFINANCE is a self-hosted personal finance tool built for homelab enthusiasts who want full control over their financial data without any cloud dependency.
-
-*Coded with Claude.ai — because good prompts build great software.*
+MIT © 2024 HEL*Apps
