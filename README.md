@@ -111,4 +111,4 @@ All other configuration (SMTP, OIDC, default currency/language) lives in the Adm
 
 ## License
 
-MIT © 2024 HEL*Apps
+MIT © HEL*Apps
